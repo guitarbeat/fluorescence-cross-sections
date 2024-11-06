@@ -1,0 +1,46 @@
+Name,Wavelength,Cross_Section,Reference
+tdTomato,1050,250,Pizza
+Rhodamine B,800,200,Xu et al. (1996)
+tdKatushka2,1100,150,Dana et al. (2016)
+DsRed2,1050,100,Pizza
+TagRFP,1050,100,Drobizhev et al. (2011)
+Neptune,1200,90,Dana et al. (2016)
+mNeptune,1200,90,Dana et al. (2016)
+mOrange,1100,70,Drobizhev et al. (2011)
+mKate2,1200,70,Dana et al. (2016)
+Katushka2,1200,70,Dana et al. (2016)
+Alexa680,1300,65,Kobat et al. (2009)
+mAmetrine,900,50,Drobizhev et al. (2011)
+mBanana,1100,50,Drobizhev et al. (2011)
+Katushka,1100,45,Dana et al. (2016)
+mKate,1200,45,Dana et al. (2016)
+Alexa700,1300,45,Kobat et al. (2009)
+EGFP,800,40,Drobizhev et al. (2011)
+mKOk,1100,40,Drobizhev et al. (2011)
+mRFP,1100,40,Drobizhev et al. (2011)
+Alexa647,1300,40,Kobat et al. (2009)
+GCaMP6f,920,35,"Janelia, Harris Lab"
+Cy5,1200,35,Kobat et al. (2009)
+Fluorescein,780,35,Xu et al. (1996)
+mKalama1,800,30,Drobizhev et al. (2011)
+TagGFP2,900,30,Drobizhev et al. (2011)
+mCherry,1100,30,Drobizhev et al. (2011)
+mGrape3,1200,30,Dana et al. (2016)
+Cy5.5,1300,30,Kobat et al. (2009)
+ECFP_Cerulean,850,25,Drobizhev et al. (2011)
+mRaspberry,1100,25,Drobizhev et al. (2011)
+eqFP670,1200,25,Dana et al. (2016)
+GCaMP6s,920,25,"Janelia, Harris Lab"
+E2-Crimson,1100,25,Dana et al. (2016)
+mTFP1.0b,900,25,Drobizhev et al. (2011)
+EBFP2.0,780,20,Drobizhev et al. (2011)
+mStrawberry,1000,20,Drobizhev et al. (2011)
+mPlum,1100,20,Dana et al. (2016)
+RCaMP1b,1100,20,"Janelia, Harris Lab"
+RCaMP1h,1100,20,"Janelia, Harris Lab"
+TagBFP,800,15,Drobizhev et al. (2011)
+mTangerine,1000,15,Drobizhev et al. (2011)
+mCitrine,1000,15,Drobizhev et al. (2011)
+YFP,1000,10,Drobizhev et al. (2011)
+mWasabi,900,10,Drobizhev et al. (2011)
+jRCaMP1a,1100,10,"Janelia, Harris Lab"
