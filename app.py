@@ -228,33 +228,127 @@ def main() -> None:
         # Initialize session state
         initialize_session_state()
 
-        # Sidebar with collapsible sections
+        # Sidebar with better organization
         with st.sidebar:
-            st.title("Controls")
+            st.title("🔬 Deep Tissue Optimizer")
             
-            # Global Parameters in expander
-            with st.expander("🌐 Global Parameters", expanded=False):
-                update_global_params()
+            # Search and Database Section
+            render_search_panel()
             
-            # Laser Management in expander
-            with st.expander("🔦 Laser Management", expanded=False):
-                render_laser_manager()
+            st.divider()
             
-            # Search Panel in expander
-            with st.expander("🔍 FPbase Search", expanded=False):
-                render_search_panel()
+            # Plot Settings Section
+            with st.expander("📊 Plot Settings", expanded=False):
+                # Theme Controls
+                st.markdown("#### Theme")
+                plot_theme = st.selectbox(
+                    "Color Theme",
+                    options=["Auto", "Light", "Dark"],
+                    help="Select plot color theme. Auto matches Streamlit's theme."
+                )
+                if plot_theme != "Auto":
+                    st.session_state.global_params["plot_theme"] = plot_theme.lower()
+                else:
+                    st.session_state.global_params["plot_theme"] = (
+                        "dark" if st.get_option("theme.base") == "dark" else "light"
+                    )
+                
+                # Plot Display Options
+                st.markdown("#### Display Options")
+                st.session_state.plot_settings["show_grid"] = st.checkbox(
+                    "Show Grid", 
+                    value=st.session_state.plot_settings["show_grid"],
+                    help="Toggle grid lines on plots"
+                )
+                st.session_state.plot_settings["show_legend"] = st.checkbox(
+                    "Show Legend", 
+                    value=st.session_state.plot_settings["show_legend"],
+                    help="Toggle plot legends"
+                )
+            
+            st.divider()
+            
+            # Analysis Parameters Section
+            with st.expander("⚙️ Analysis Parameters", expanded=True):
+                st.markdown("#### Wavelength Settings")
+                # Wavelength Range
+                wavelength_range = st.slider(
+                    "Analysis Range (nm)",
+                    min_value=700,
+                    max_value=2400,
+                    value=st.session_state.global_params["wavelength_range"],
+                    step=10,
+                    help="Global wavelength range for all plots and analysis"
+                )
+                st.session_state.global_params["wavelength_range"] = wavelength_range
+                
+                # Normalization Wavelength
+                norm_wavelength = st.number_input(
+                    "Normalization λ (nm)",
+                    min_value=800,
+                    max_value=2400,
+                    value=st.session_state.global_params["normalization_wavelength"],
+                    step=10,
+                    help="Wavelength at which to normalize the photon fraction"
+                )
+                st.session_state.global_params["normalization_wavelength"] = norm_wavelength
+                
+                st.markdown("#### Tissue Parameters")
+                # Imaging Depth
+                depth = st.number_input(
+                    "Tissue Depth (mm)",
+                    min_value=0.1,
+                    max_value=2.0,
+                    value=st.session_state.global_params["depth"],
+                    step=0.1,
+                    help="Global imaging depth for analysis"
+                )
+                st.session_state.global_params["depth"] = depth
+                
+                # Absorption Threshold
+                absorption_threshold = st.slider(
+                    "Absorption Threshold (%)",
+                    min_value=0,
+                    max_value=100,
+                    value=st.session_state.global_params["absorption_threshold"],
+                    help="Threshold for absorption shading"
+                )
+                st.session_state.global_params["absorption_threshold"] = absorption_threshold
+            
+            st.divider()
+            
+            # Laser Management Section
+            render_laser_manager()
+            
+            # Footer with info
+            st.markdown("---")
+            st.markdown("""
+                <div style='text-align: center; color: gray; font-size: 0.8em;'>
+                Developed by Aaron Woods<br>
+                Data from <a href="https://www.fpbase.org">FPbase</a>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
 
         # Main content area
         st.title("Deep Tissue Imaging Optimizer")
 
-        # View mode selector with expanders
-        with st.expander("📊 Cross-sections Overview", expanded=True):
+        # View mode selector
+        st.markdown("### Plot Display")
+        tab1, tab2, tab3 = st.tabs([
+            "Cross-sections Overview",
+            "Tissue Penetration",
+            "Non-Degenerate Analysis"
+        ])
+
+        with tab1:
             render_plot_container("cross_sections", st.session_state.fluorophore_df)
 
-        with st.expander("🔬 Tissue Penetration", expanded=False):
+        with tab2:
             render_plot_container("tissue_penetration")
             
-        with st.expander("🔄 Non-Degenerate Analysis", expanded=False):
+        with tab3:
             st.markdown("### Non-Degenerate Two-Photon Analysis")
             
             col1, col2 = st.columns([1, 2])

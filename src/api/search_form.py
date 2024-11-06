@@ -7,41 +7,41 @@ def create_search_filters() -> Dict[str, Any]:
     """Create focused search filters for fluorophore exploration."""
     filters = {}
     
-    # Remove expander, just use columns
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Emission range
-        em_min, em_max = st.slider(
-            "Emission Range (nm)",
-            min_value=350,
-            max_value=800,
-            value=(450, 550),
-            help="Filter by emission maximum wavelength"
-        )
-        filters["em_max__range"] = f"{em_min},{em_max}"
+    with st.expander("Spectral Filters"):
+        col1, col2 = st.columns(2)
         
-        # Quantum yield
-        min_qy = st.number_input(
-            "Minimum Quantum Yield",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.0,
-            help="Filter by minimum quantum yield"
-        )
-        if min_qy > 0:
-            filters["qy__gte"] = min_qy
+        with col1:
+            # Emission range
+            em_min, em_max = st.slider(
+                "Emission Range (nm)",
+                min_value=350,
+                max_value=800,
+                value=(450, 550),
+                help="Filter by emission maximum wavelength"
+            )
+            filters["em_max__range"] = f"{em_min},{em_max}"
+            
+            # Quantum yield
+            min_qy = st.number_input(
+                "Minimum Quantum Yield",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.0,
+                help="Filter by minimum quantum yield"
+            )
+            if min_qy > 0:
+                filters["qy__gte"] = min_qy
 
-    with col2:
-        # Brightness filter
-        min_brightness = st.number_input(
-            "Minimum Brightness",
-            min_value=0.0,
-            value=0.0,
-            help="Filter by minimum brightness (QY × EC / 1000)"
-        )
-        if min_brightness > 0:
-            filters["brightness__gte"] = min_brightness
+        with col2:
+            # Brightness filter
+            min_brightness = st.number_input(
+                "Minimum Brightness",
+                min_value=0.0,
+                value=0.0,
+                help="Filter by minimum brightness (QY × EC / 1000)"
+            )
+            if min_brightness > 0:
+                filters["brightness__gte"] = min_brightness
 
     return filters
 
