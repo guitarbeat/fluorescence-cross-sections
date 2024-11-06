@@ -1,13 +1,16 @@
-import requests
-import pandas as pd
 import logging
-from typing import Dict, Any, Optional, List, Iterator
-from backoff import on_exception, expo
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+import requests
+from backoff import expo, on_exception
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from src.api.fpbase_types import ProteinData, FPbaseAPIError
+
+from src.api.fpbase_types import FPbaseAPIError, ProteinData
 
 logger = logging.getLogger(__name__)
+
 
 class FPbaseAPI:
     """Interface for FPbase REST API with enhanced retry logic and pagination."""
@@ -17,7 +20,7 @@ class FPbaseAPI:
         "proteins": "api/proteins/",
         "basic": "api/proteins/basic/",
         "spectra": "api/proteins/spectra/",
-        "search": "search/"
+        "search": "search/",
     }
 
     def __init__(self, session: Optional[requests.Session] = None) -> None:
@@ -27,23 +30,25 @@ class FPbaseAPI:
     def _create_session(self) -> requests.Session:
         """Create a new session with retry configuration."""
         session = requests.Session()
-        
+
         # Configure retry strategy
         retry_strategy = Retry(
             total=3,  # number of retries
             backoff_factor=0.5,  # wait 0.5, 1, 2... seconds between retries
             status_forcelist=[429, 500, 502, 503, 504],
         )
-        
+
         adapter = HTTPAdapter(max_retries=retry_strategy)
         session.mount("http://", adapter)
         session.mount("https://", adapter)
-        
-        session.headers.update({
-            "Accept": "application/json",
-            "User-Agent": "FluorescenceCrossSections/1.0",
-        })
-        
+
+        session.headers.update(
+            {
+                "Accept": "application/json",
+                "User-Agent": "FluorescenceCrossSections/1.0",
+            }
+        )
+
         return session
 
     @on_exception(expo, requests.exceptions.RequestException, max_tries=3)
@@ -56,7 +61,7 @@ class FPbaseAPI:
 
         # Validate and clean parameters
         validated_params = self._validate_params(params)
-        
+
         # Construct URL properly
         url = f"{self.BASE_URL.rstrip('/')}/{self.ENDPOINTS[endpoint].lstrip('/')}"
 
@@ -100,54 +105,11 @@ class FPbaseAPI:
 
         return validated
 
-    def get_paginated_results(
-        self, endpoint: str, params: Dict[str, Any], timeout: int = 10
-    ) -> Iterator[Dict[str, Any]]:
-        """Retrieve paginated results from the API."""
-        params = self._validate_params(params)
-        next_url = f"{self.BASE_URL}/{self.ENDPOINTS[endpoint]}"
-
-        while next_url:
-            response = self.session.get(next_url, params=params, timeout=timeout)
-            response.raise_for_status()
-            data = response.json()
-
-            if isinstance(data, dict) and "results" in data:
-                yield from data["results"]
-                next_url = data.get("next")
-                params = {}  # Clear params for subsequent requests
-            else:
-                yield from data
-                break
-
     def get_search_url(self, params: Dict[str, Any]) -> str:
         """Generate a human-readable search URL."""
         base = f"{self.BASE_URL}{self.ENDPOINTS['search']}"
         params_str = "&".join(f"{k}={v}" for k, v in params.items())
         return f"{base}?{params_str}"
-
-    def get_spectra(self, protein_name: str) -> Dict[str, Any]:
-        """
-        Retrieve spectral data for a specific protein.
-        
-        Args:
-            protein_name (str): The name of the protein
-            
-        Returns:
-            Dict containing spectral data including:
-            - excitation spectrum
-            - emission spectrum
-            - two_photon spectrum (if available)
-        """
-        url = f"{self.BASE_URL}{self.ENDPOINTS['spectra']}{protein_name.lower()}/"
-        
-        try:
-            response = self.session.get(url, params={"format": "json"})
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to get spectra for {protein_name}: {str(e)}")
-            return {}
 
     def search_proteins(
         self, params: Dict[str, Any], timeout: int = 10
@@ -158,23 +120,23 @@ class FPbaseAPI:
         try:
             # Use 'basic' endpoint for simpler response structure
             endpoint = "basic"
-            
+
             # Generate human-readable URL for reference
             search_url = self.get_search_url(params)
             logger.info(f"Equivalent search URL: {search_url}")
-            
+
             # Make request with timeout
             response = self._make_request(endpoint, params, timeout=timeout)
-            
+
             # Log raw response
             logger.debug(f"Raw API Response Status: {response.status_code}")
             logger.debug(f"Raw API Response Headers: {dict(response.headers)}")
             logger.debug(f"Raw API Response Content: {response.text}")
-            
+
             # Only try to parse JSON if we got a successful response
             if response.status_code == 200:
                 data = response.json()
-                
+
                 proteins = []
                 for item in data:
                     try:
@@ -187,7 +149,9 @@ class FPbaseAPI:
                 logger.info(f"Retrieved {len(proteins)} proteins")
                 return proteins
             else:
-                logger.error(f"API request failed with status code: {response.status_code}")
+                logger.error(
+                    f"API request failed with status code: {response.status_code}"
+                )
                 return []
 
         except Exception as e:

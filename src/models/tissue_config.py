@@ -1,16 +1,7 @@
 """Configuration for tissue penetration modeling."""
 
-from typing import Dict, Tuple, Any
 
-# Laser configurations
-LASER_RANGES: Dict[str, Tuple[int, int]] = {
-    "Ti:Sapphire": (800, 1000),
-    "Yb fiber": (1050, 1070),
-    "2C2P": (1150, 1200),
-    "Diamond": (1250, 1300),
-    "Er fiber": (1550, 1600),
-    "OPO/OPA": (1100, 2200),
-}
+
 
 # Default tissue parameters to match the paper
 DEFAULT_TISSUE_PARAMS = {
@@ -25,15 +16,9 @@ DEFAULT_TISSUE_PARAMS = {
         "enabled": False,  # Switch for two-photon comparison
         "lambda_a": 800,  # First wavelength
         "lambda_b": 1040,  # Second wavelength
-    }
+    },
 }
 
-# Wavelength ranges for different phenomena
-WAVELENGTH_RANGES = {
-    "water_peaks": [1450, 1950],  # Major water absorption peaks
-    "optimal_windows": [1300, 1700],  # Optimal imaging windows
-    "absorption_threshold": 50,  # Percentage threshold for high absorption
-}
 
 # Formula configurations
 TISSUE_FORMULA_CONFIG = {
@@ -105,24 +90,4 @@ TISSUE_FORMULA_CONFIG = {
             ),
         },
     ],
-}
-
-# Plot styling to match the reference image
-PLOT_STYLE = {
-    "colors": {
-        "photon_fraction": "blue",  # Blue line for photon fraction
-        "absorption": "red",  # Red line for absorption
-        "absorption_fill": "rgba(255,0,0,0.2)",  # Light red shading for >50% absorption
-    },
-    "markers": {
-        "laser": dict(symbol="star", size=15, color="green"),  # Green stars for lasers
-    },
-    "lines": {
-        "laser_range": dict(
-            color="green", 
-            width=2, 
-            dash="solid"
-        ),  # Green arrows for laser ranges
-    },
-    "absorption_threshold": 50,  # 50% threshold for absorption shading
 }

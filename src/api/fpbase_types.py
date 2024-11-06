@@ -1,13 +1,14 @@
-from dataclasses import dataclass
-from typing import Optional, Dict, Any
 import logging
-from math import log10
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ProteinState:
     """Represents fluorescence-related properties of a protein's state."""
+
     ex_max: Optional[float]
     em_max: Optional[float]
     qy: Optional[float]
@@ -17,11 +18,11 @@ class ProteinState:
     stokes: Optional[float]
     lifetime: Optional[float]
     maturation: Optional[float]
-    bleach: Optional[float]
 
     @classmethod
     def from_api_response(cls, data: Dict[str, Any]) -> "ProteinState":
         """Create a ProteinState instance with validated data."""
+
         def safe_float(value: Any, field_name: str) -> Optional[float]:
             if value is None or value == "":  # Handle empty strings
                 return None
@@ -41,14 +42,15 @@ class ProteinState:
             stokes=safe_float(data.get("stokes"), "stokes"),
             lifetime=safe_float(data.get("lifetime"), "lifetime"),
             maturation=safe_float(data.get("maturation"), "maturation"),
-            bleach=safe_float(data.get("bleach"), "bleach")
+            bleach=safe_float(data.get("bleach"), "bleach"),
         )
+
 
 @dataclass
 class ProteinData:
     """Stores information about a fluorescent protein."""
+
     name: str
-    slug: str
     url: str
     default_state: ProteinState
 
@@ -62,15 +64,15 @@ class ProteinData:
             name = str(data["name"])
 
         state = ProteinState.from_api_response(data)
-        
+
         return cls(
             name=name,
             slug=data.get("slug", "").lower(),
             url=data.get("url", ""),
-            default_state=state
+            default_state=state,
         )
+
 
 class FPbaseAPIError(Exception):
     """Custom exception for FPbase API errors."""
 
-    pass

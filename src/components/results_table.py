@@ -1,39 +1,52 @@
-import streamlit as st
+
 import pandas as pd
-from typing import Optional
+import streamlit as st
 
 
 def render_results_panel() -> None:
     """Render the search results panel with enhanced layout."""
     panel_id = st.session_state.get("active_panel_id", "main")
-    
+
     if "fluorophore_df" not in st.session_state:
-        st.session_state.fluorophore_df = pd.DataFrame(columns=[
-            'Name', 'Em_Max', 'Cross_Section', 'Reference',
-            'Ex_Max', 'QY', 'EC', 'pKa', 'Brightness'
-        ])
-    
+        st.session_state.fluorophore_df = pd.DataFrame(
+            columns=[
+                "Name",
+                "Em_Max",
+                "Cross_Section",
+                "Reference",
+                "Ex_Max",
+                "QY",
+                "EC",
+                "pKa",
+                "Brightness",
+            ]
+        )
+
     # Main database interface
     with st.container():
         # Action buttons in a clean row
         col1, col2 = st.columns(2)
-        
+
         with col1:
-            if st.button("📥 Import Selected", 
-                       key=f"import_btn_{panel_id}",
-                       use_container_width=True,
-                       help="Import selected search results into database"):
-                if ("search_results" in st.session_state 
-                        and not st.session_state.search_results.empty):
+            if st.button(
+                "📥 Import Selected",
+                key=f"import_btn_{panel_id}",
+                use_container_width=True,
+                help="Import selected search results into database",
+            ):
+                if (
+                    "search_results" in st.session_state
+                    and not st.session_state.search_results.empty
+                ):
                     with st.form("select_proteins"):
                         st.write("Select proteins to import:")
                         selected = {}
                         for idx, row in st.session_state.search_results.iterrows():
                             selected[idx] = st.checkbox(
-                                f"{row['Name']} (Em: {row['Em_Max']}nm)", 
-                                key=f"select_{idx}"
+                                f"{row['Name']} (Em: {row['Em_Max']}nm)",
+                                key=f"select_{idx}",
                             )
-                        
+
                         if st.form_submit_button("Import Selected"):
                             selected_df = st.session_state.search_results[
                                 [selected[idx] for idx in selected.keys()]
@@ -41,7 +54,7 @@ def render_results_panel() -> None:
                             if not selected_df.empty:
                                 with st.spinner("Importing selected results..."):
                                     # Add reference as "FPbase" for imported data
-                                    selected_df['Reference'] = "FPbase"
+                                    selected_df["Reference"] = "FPbase"
                                     new_df = pd.concat(
                                         [st.session_state.fluorophore_df, selected_df],
                                         ignore_index=True,
@@ -114,15 +127,17 @@ def render_results_panel() -> None:
             hide_index=True,
             key=f"fluorophore_editor_{panel_id}",
             use_container_width=True,
-            height=300
+            height=300,
         )
 
         # Save button
-        if st.button("💾 Save Changes", 
-                   key=f"save_btn_{panel_id}",
-                   type="primary",
-                   use_container_width=True,
-                   help="Save changes to database"):
+        if st.button(
+            "💾 Save Changes",
+            key=f"save_btn_{panel_id}",
+            type="primary",
+            use_container_width=True,
+            help="Save changes to database",
+        ):
             with st.spinner("Saving changes..."):
                 if edited_df["Name"].isna().any():
                     st.error("❌ All fluorophores must have a name")
@@ -135,16 +150,18 @@ def render_results_panel() -> None:
     # Add helpful resources section
     with st.expander("📚 Helpful Resources", expanded=False):
         tab1, tab2, tab3 = st.tabs(["FPbase Resources", "References", "Notes"])
-        
+
         with tab1:
-            st.markdown("""
+            st.markdown(
+                """
             ### FPbase Resources
             - [FPbase Spectra Viewer](https://www.fpbase.org/spectra/)
             - [Activity Charts](https://www.fpbase.org/activity/)
             - [Popular Proteins](https://www.fpbase.org/proteins/)
             - [Spectra URL Builder](https://www.fpbase.org/spectra_url_builder/)
-            """)
-            
+            """
+            )
+
             # Embed spectra viewer using markdown
             st.markdown(
                 """
@@ -156,11 +173,12 @@ def render_results_panel() -> None:
                     style="border:none;">
                 </iframe>
                 """,
-                unsafe_allow_html=True
+                unsafe_allow_html=True,
             )
-        
+
         with tab2:
-            st.markdown("""
+            st.markdown(
+                """
             ### Two-Photon Cross Section References
             Peak two-photon absorption cross sections compiled from:
             - 🔵 Dana et al. (2016) [26]
@@ -168,13 +186,16 @@ def render_results_panel() -> None:
             - 💗 Harris [28]
             - 🔷 Kobat et al. (2009) [29]
             - ⬜ Xu et al. (1996) [30]
-            """)
-        
+            """
+            )
+
         with tab3:
-            st.info("""
+            st.info(
+                """
             **Note:** Organic dyes are not yet searchable in the database, but spectra 
             for a selection of organic dyes are available on the 
             [spectra page](https://www.fpbase.org/spectra/).
             
             You can manually add data from literature sources using the data editor above.
-            """)
+            """
+            )

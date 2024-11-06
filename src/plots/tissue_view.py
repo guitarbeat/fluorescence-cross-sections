@@ -1,7 +1,8 @@
 import numpy as np
 import streamlit as st
 
-from src.models.tissue_config import DEFAULT_TISSUE_PARAMS, TISSUE_FORMULA_CONFIG
+from src.models.tissue_config import (DEFAULT_TISSUE_PARAMS,
+                                      TISSUE_FORMULA_CONFIG)
 from src.models.tissue_model import calculate_tissue_parameters
 from src.plots.tissue_plot import create_tissue_plot
 
@@ -14,7 +15,7 @@ def render_tissue_penetration_view(
     """
     if controls_only:
         # Initialize tissue parameters in session state if not present
-        st.session_state.setdefault('tissue_params', DEFAULT_TISSUE_PARAMS.copy())
+        st.session_state.setdefault("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
 
         # Main formula and explanation
         st.latex(TISSUE_FORMULA_CONFIG["main_formula"])
@@ -51,7 +52,11 @@ def render_tissue_penetration_view(
                 )
 
             with col2:
-                a_preset_options = {"Low (0.8)": 0.8, "Normal (1.1)": 1.1, "High (1.4)": 1.4}
+                a_preset_options = {
+                    "Low (0.8)": 0.8,
+                    "Normal (1.1)": 1.1,
+                    "High (1.4)": 1.4,
+                }
                 a_preset = st.radio(
                     "Scattering Scale (a)",
                     options=list(a_preset_options.keys()),
@@ -89,28 +94,30 @@ def render_tissue_penetration_view(
             value=st.session_state.tissue_params.get("absorption_threshold", 50),
             help="Threshold for absorption shading (regions above this value will be shaded)",
         )
-        
+
         # Update session state
-        st.session_state.tissue_params.update({
-            "water_content": water_content,
-            "g": g,
-            "a": a,
-            "b": b,
-            "absorption_threshold": absorption_threshold,
-        })
+        st.session_state.tissue_params.update(
+            {
+                "water_content": water_content,
+                "g": g,
+                "a": a,
+                "b": b,
+                "absorption_threshold": absorption_threshold,
+            }
+        )
         return
 
     # Use global parameters for calculations
     wavelength_range = st.session_state.get("global_wavelength_range", (800, 2400))
     wavelengths = np.linspace(wavelength_range[0], wavelength_range[1], 1000)
-    
+
     # Get global parameters
     depth = st.session_state.get("global_depth", 1.0)
     norm_wavelength = st.session_state.get("global_norm_wavelength", 1300)
-    
+
     # Calculate parameters for plot
     tissue_params = st.session_state.get("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
-    
+
     # Use global parameters for calculation
     calculation_params = {
         "g": tissue_params["g"],
@@ -120,7 +127,7 @@ def render_tissue_penetration_view(
         "depth": depth,  # Use global depth
         "normalization_wavelength": norm_wavelength,  # Use global normalization wavelength
     }
-    
+
     # Calculate tissue parameters
     tissue_data = calculate_tissue_parameters(wavelengths, **calculation_params)
 
@@ -133,7 +140,9 @@ def render_tissue_penetration_view(
             "two_photon_data": tissue_data.get("two_photon_data"),
         },
         normalization_wavelength=norm_wavelength,
-        absorption_threshold=st.session_state.tissue_params.get("absorption_threshold", 50)
+        absorption_threshold=st.session_state.tissue_params.get(
+            "absorption_threshold", 50
+        ),
     )
 
     if plot_only:

@@ -1,5 +1,6 @@
 """Configuration for plot styling and themes."""
-from typing import Dict, Any
+
+from typing import Any, Dict
 
 # Theme configurations
 PLOT_THEMES = {
@@ -19,8 +20,10 @@ PLOT_THEMES = {
     },
 }
 
+
 def get_theme_colors() -> Dict[str, Any]:
     """Get current theme colors based on Streamlit's theme."""
     import streamlit as st
+
     theme = "dark" if st.get_option("theme.base") == "dark" else "light"
-    return PLOT_THEMES[theme] 
+    return PLOT_THEMES[theme]
