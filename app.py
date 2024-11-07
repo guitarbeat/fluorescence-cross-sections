@@ -1,6 +1,4 @@
 import logging
-import os
-import sys
 from typing import Optional
 
 import numpy as np
@@ -9,26 +7,18 @@ import streamlit as st
 
 from src.api.fpbase_client import FPbaseAPI
 from src.api.search_form import render_search_panel
+from src.components.fluorophore_manager import render_results_panel
 from src.components.laser_manager import render_laser_manager
-from src.components.results_table import render_results_panel
-from src.models.tissue_model import calculate_tissue_parameters
 from src.plots.cross_section_plot import (create_cross_section_plot,
                                           get_marker_settings,
                                           marker_settings_ui)
-from src.plots.tissue_plot import create_tissue_plot
-
+from src.plots.tissue_view import (calculate_tissue_parameters,
+                                   create_tissue_plot)
+from src.config.tissue_config import render_math_view, DEFAULT_TISSUE_PARAMS
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Add 'src' directory to Python path
-try:
-    src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    if src_path not in sys.path:
-        sys.path.append(src_path)
-except Exception as e:
-    logger.error(f"Error setting up Python path: {e}")
-    st.error("Error initializing application. Please check logs.")
 
 
 def initialize_session_state() -> None:
@@ -67,11 +57,9 @@ def initialize_session_state() -> None:
     session_state.setdefault(
         "global_params",
         {
-            "wavelength_range": (700, 2000),
-            "depth": 1.0,
+            "wavelength_range": (700, 1700),
             "normalization_wavelength": 1300,
             "absorption_threshold": 50,
-            "plot_theme": "dark" if st.get_option("theme.base") == "dark" else "light",
         },
     )
 
@@ -79,6 +67,7 @@ def initialize_session_state() -> None:
     session_state.setdefault(
         "tissue_params",
         {
+            "depth": 1.0,
             "water_content": 0.75,
             "g": 0.9,
             "a": 1.1,
@@ -87,15 +76,7 @@ def initialize_session_state() -> None:
         },
     )
 
-    # Initialize plot settings
-    session_state.setdefault(
-        "plot_settings",
-        {
-            "show_lasers": True,
-            "show_grid": True,
-            "show_legend": True,
-        },
-    )
+
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_cached_tissue_data(wavelengths, depth, norm_wavelength):
@@ -108,22 +89,20 @@ def get_cached_tissue_data(wavelengths, depth, norm_wavelength):
 def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> None:
     """Render plot containers with consistent error handling."""
     try:
+        # Ensure tissue_params are initialized
+        if "tissue_params" not in st.session_state:
+            st.session_state.tissue_params = DEFAULT_TISSUE_PARAMS.copy()
+
         # Get parameters from session state
         global_params = st.session_state.global_params
-        depth = global_params["depth"]
+        tissue_params = st.session_state.tissue_params
+        depth = tissue_params.get("depth", DEFAULT_TISSUE_PARAMS["depth"])
         norm_wavelength = global_params["normalization_wavelength"]
         wavelength_range = global_params["wavelength_range"]
+        absorption_threshold = global_params["absorption_threshold"]
 
         if plot_type == "cross_sections":
-            # Create two columns: one for controls/data, one for plot
-            col1, col2 = st.columns([1, 2])
-
-            with col1:
-                render_results_panel()
-                st.divider()
-                marker_settings_ui()
-
-            with col2:
+            with st.expander("Cross-sections Overview", expanded=True):
                 if df is not None and not df.empty:
                     markers_dict = get_marker_settings()
                     fig = create_cross_section_plot(
@@ -132,36 +111,35 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                         normalization_wavelength=norm_wavelength,
                         depth=depth,
                         wavelength_range=wavelength_range,
+                        absorption_threshold=absorption_threshold,
                     )
                     st.plotly_chart(fig, use_container_width=True, theme=None)
                 else:
                     st.info("No data to display - try searching for fluorophores.")
-
+                with st.popover("Marker Settings"):
+                    marker_settings_ui()
+            render_results_panel()
+            
         elif plot_type == "tissue_penetration":
-            col1, col2 = st.columns([1, 2])
-
-            with col1:
-                from src.plots.tissue_view import \
-                    render_tissue_penetration_view
-
-                render_tissue_penetration_view(controls_only=True)
-
-            with col2:
+            with st.expander("Tissue Penetration", expanded=True):
                 # Calculate tissue parameters with caching
-                wavelengths = np.linspace(
-                    wavelength_range[0], wavelength_range[1], 1000
-                )
+                wavelengths = np.linspace(wavelength_range[0], wavelength_range[1], 1000)
                 tissue_data = get_cached_tissue_data(
-                    wavelengths, depth, norm_wavelength
+                    wavelengths=wavelengths,
+                    depth=depth,
+                    norm_wavelength=norm_wavelength
                 )
 
                 fig = create_tissue_plot(
                     wavelengths=wavelengths,
                     tissue_data=tissue_data,
                     normalization_wavelength=norm_wavelength,
-                    depth=depth,
+                    absorption_threshold=absorption_threshold,
+                    wavelength_range=wavelength_range,
+                    depth=depth
                 )
                 st.plotly_chart(fig, use_container_width=True, theme=None)
+            render_math_view()
 
     except Exception as e:
         logger.error(f"Error rendering {plot_type} plot: {e}")
@@ -188,39 +166,6 @@ def main() -> None:
 
             # Search and Database Section
             render_search_panel()
-
-            st.divider()
-
-            # Plot Settings Section
-            with st.expander("📊 Plot Settings", expanded=False):
-                # Theme Controls
-                st.markdown("#### Theme")
-                plot_theme = st.selectbox(
-                    "Color Theme",
-                    options=["Auto", "Light", "Dark"],
-                    help="Select plot color theme. Auto matches Streamlit's theme.",
-                )
-                if plot_theme != "Auto":
-                    st.session_state.global_params["plot_theme"] = plot_theme.lower()
-                else:
-                    st.session_state.global_params["plot_theme"] = (
-                        "dark" if st.get_option("theme.base") == "dark" else "light"
-                    )
-
-                # Plot Display Options
-                st.markdown("#### Display Options")
-                st.session_state.plot_settings["show_grid"] = st.checkbox(
-                    "Show Grid",
-                    value=st.session_state.plot_settings["show_grid"],
-                    help="Toggle grid lines on plots",
-                )
-                st.session_state.plot_settings["show_legend"] = st.checkbox(
-                    "Show Legend",
-                    value=st.session_state.plot_settings["show_legend"],
-                    help="Toggle plot legends",
-                )
-
-            st.divider()
 
             # Analysis Parameters Section
             with st.expander("⚙️ Analysis Parameters", expanded=True):
@@ -250,17 +195,6 @@ def main() -> None:
                 )
 
                 st.markdown("#### Tissue Parameters")
-                # Imaging Depth
-                depth = st.number_input(
-                    "Tissue Depth (mm)",
-                    min_value=0.1,
-                    max_value=2.0,
-                    value=st.session_state.global_params["depth"],
-                    step=0.1,
-                    help="Global imaging depth for analysis",
-                )
-                st.session_state.global_params["depth"] = depth
-
                 # Absorption Threshold
                 absorption_threshold = st.slider(
                     "Absorption Threshold (%)",
@@ -273,9 +207,6 @@ def main() -> None:
                     absorption_threshold
                 )
 
-            st.divider()
-
-            # Laser Management Section
             render_laser_manager()
 
             # Footer with info

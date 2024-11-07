@@ -75,4 +75,3 @@ class ProteinData:
 
 class FPbaseAPIError(Exception):
     """Custom exception for FPbase API errors."""
-

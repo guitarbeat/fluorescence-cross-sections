@@ -1,152 +1,216 @@
+import logging
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
+from plotly.subplots import make_subplots
 
-from src.models.tissue_config import (DEFAULT_TISSUE_PARAMS,
-                                      TISSUE_FORMULA_CONFIG)
-from src.models.tissue_model import calculate_tissue_parameters
-from src.plots.tissue_plot import create_tissue_plot
+from src.config.tissue_config import (DEFAULT_TISSUE_PARAMS)
+
+from ..components.laser_manager import overlay_lasers
+from ..config.plot_config import TissuePlotConfig
+from ..utils.data_loader import load_water_absorption_data  # Updated import
+
+logger = logging.getLogger(__name__)
 
 
-def render_tissue_penetration_view(
-    plot_only: bool = False, controls_only: bool = False
-):
-    """
-    Render the tissue penetration view with interactive controls.
-    """
-    if controls_only:
-        # Initialize tissue parameters in session state if not present
-        st.session_state.setdefault("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
+def calculate_two_photon_wavelength(lambda_a: float, lambda_b: float) -> float:
+    """Calculate the effective two-photon excitation wavelength."""
+    # Round to nearest 5nm as in MATLAB code
+    effective_wavelength = 2 / ((1 / lambda_a) + (1 / lambda_b))
+    return round(effective_wavelength / 5) * 5
 
-        # Main formula and explanation
-        st.latex(TISSUE_FORMULA_CONFIG["main_formula"])
-        st.markdown(
-            """
-            The blue line shows the fraction of photons reaching depth z, normalized at 1300 nm.
-            The red line shows the percentage absorbed, with shaded regions indicating >50% absorption.
-            """
-        )
 
-        # Scattering Parameters Section
-        st.markdown("#### Scattering Properties")
-        with st.expander("Scattering Coefficient", expanded=True):
-            st.latex(TISSUE_FORMULA_CONFIG["additional_formulas"][0]["formula"])
-            col1, col2 = st.columns(2)
+def calculate_tissue_parameters(
+    wavelengths: npt.NDArray[np.float64],
+    g: float = None,
+    a: float = None,
+    water_content: float = None,
+    b: float = None,
+    depth: float = None,
+    normalization_wavelength: float = None,
+    lambda_a: Optional[float] = None,
+    lambda_b: Optional[float] = None,
+) -> Dict[str, Any]:
+    """Calculate tissue penetration parameters using experimental data."""
+    # Get parameters from session state if not provided
+    if "tissue_params" not in st.session_state:
+        st.session_state.tissue_params = DEFAULT_TISSUE_PARAMS.copy()
+    
+    params = st.session_state.tissue_params
+    g = g if g is not None else params.get("g", DEFAULT_TISSUE_PARAMS["g"])
+    a = a if a is not None else params.get("a", DEFAULT_TISSUE_PARAMS["a"])
+    water_content = water_content if water_content is not None else params.get("water_content", DEFAULT_TISSUE_PARAMS["water_content"])
+    b = b if b is not None else params.get("b", DEFAULT_TISSUE_PARAMS["b"])
+    depth = depth if depth is not None else params.get("depth", DEFAULT_TISSUE_PARAMS["depth"])
+    
+    # Get normalization wavelength from global params if not provided
+    if normalization_wavelength is None:
+        normalization_wavelength = st.session_state.global_params.get("normalization_wavelength", 1300)
 
-            with col1:
-                g = st.slider(
-                    "Anisotropy Factor (g)",
-                    0.0,
-                    1.0,
-                    st.session_state.tissue_params.get("g", 0.9),
-                    0.05,
-                    help="g=0: Any direction, g=1: Forward only",
-                )
+    try:
+        # Load water absorption data
+        water_data = load_water_absorption_data()
 
-                b = st.number_input(
-                    "Scattering Power (b)",
-                    min_value=0.5,
-                    max_value=2.0,
-                    value=st.session_state.tissue_params.get("b", 1.37),
-                    step=0.05,
-                    help="Wavelength dependence (≈1.37 for brain tissue)",
-                )
+        # Interpolate water absorption to match wavelengths
+        mua = np.interp(wavelengths, water_data["wavelength"], water_data["absorption"])
+        mua = mua * water_content / 10  # Scale by water content and convert units
 
-            with col2:
-                a_preset_options = {
-                    "Low (0.8)": 0.8,
-                    "Normal (1.1)": 1.1,
-                    "High (1.4)": 1.4,
-                }
-                a_preset = st.radio(
-                    "Scattering Scale (a)",
-                    options=list(a_preset_options.keys()),
-                    index=1,
-                    help="Scattering amplitude [mm⁻¹]",
-                )
-                a = a_preset_options[a_preset]
+        # Calculate scattering coefficient
+        mus_prime = a * (wavelengths / 500) ** (-b)
+        mus = mus_prime / (1 - g)
 
-        # Absorption Parameters Section
-        st.markdown("#### Absorption Properties")
-        with st.expander("Absorption Coefficient", expanded=True):
-            st.latex(TISSUE_FORMULA_CONFIG["additional_formulas"][1]["formula"])
-            st.markdown(
-                """
-                In brain tissue, water is the primary absorber at higher wavelengths:
-                - No fat or pigment present
-                - Hemoglobin doesn't absorb at higher wavelengths
-                - Major water absorption peaks at 1450 nm and 1950 nm
-                """
-            )
+        # Calculate total attenuation
+        total_mu = mus + mua
 
-            water_content = st.select_slider(
-                "Water Content",
-                options=[i / 100 for i in range(0, 105, 5)],
-                value=st.session_state.tissue_params.get("water_content", 0.75),
-                help="Fraction of tissue that is water (≈75% for brain)",
-            )
+        # Calculate transmission and normalize
+        T = np.exp(-total_mu * depth)
+        norm_idx = np.abs(wavelengths - normalization_wavelength).argmin()
+        T = T / T[norm_idx]  # Normalize at specified wavelength
 
-        # Add absorption threshold control
-        st.markdown("#### Absorption Settings")
-        absorption_threshold = st.slider(
-            "Absorption Threshold (%)",
-            min_value=0,
-            max_value=100,
-            value=st.session_state.tissue_params.get("absorption_threshold", 50),
-            help="Threshold for absorption shading (regions above this value will be shaded)",
-        )
+        # Calculate water absorption percentage
+        Tw = 1 - np.exp(-mua * depth)  # Match MATLAB calculation
 
-        # Update session state
-        st.session_state.tissue_params.update(
-            {
-                "water_content": water_content,
-                "g": g,
-                "a": a,
-                "b": b,
-                "absorption_threshold": absorption_threshold,
+        # Find wavelength with maximum transmission
+        max_trans_wavelength = wavelengths[np.argmax(T)]
+
+        # Calculate depth-dependent parameters
+        z_range = np.arange(0, 2.1, 0.1)  # 0 to 2mm in 0.1mm steps
+        z = z_range[:, np.newaxis]  # Shape (n_z, 1)
+        T_z = np.exp(-(mua + mus) * z)
+        T_z = T_z / T_z[:, norm_idx][:, np.newaxis]  # Normalize at each depth
+        Tw_z = 1 - np.exp(-mua * z)
+
+        # Two-photon comparison if wavelengths provided
+        two_photon_data = None
+        if lambda_a is not None and lambda_b is not None:
+            lambda_c = calculate_two_photon_wavelength(lambda_a, lambda_b)
+            # Get values at specific wavelengths
+            idx_a = np.abs(wavelengths - lambda_a).argmin()
+            idx_b = np.abs(wavelengths - lambda_b).argmin()
+            idx_c = np.abs(wavelengths - lambda_c).argmin()
+
+            two_photon_data = {
+                "wavelengths": [lambda_a, lambda_b, lambda_c],
+                "T": [T[idx_a], T[idx_b], T[idx_c]],
+                "Tw": [Tw[idx_a], Tw[idx_b], Tw[idx_c]],
             }
+
+        return {
+            "T": T,
+            "Tw": Tw,
+            "T_z": T_z,
+            "Tw_z": Tw_z,
+            "z_range": z_range,
+            "max_transmission_wavelength": max_trans_wavelength,
+            "two_photon_data": two_photon_data,
+            "normalization_wavelength": normalization_wavelength,  # Add this to return dict
+        }
+
+    except Exception as e:
+        logger.error(f"Error calculating tissue parameters: {e}")
+        return {}
+
+
+def create_tissue_plot(
+    wavelengths: npt.NDArray[np.float64],
+    tissue_data: Dict[str, Any],
+    normalization_wavelength: float = 1300,
+    absorption_threshold: float = 50,
+    wavelength_range: Optional[Tuple[float, float]] = None,
+    depth: float = 1.0,
+) -> go.Figure:
+    """Create tissue penetration plot with consistent styling."""
+    config = TissuePlotConfig()
+    
+    # Always update the wavelength range from the global settings
+    if wavelength_range:
+        config.wavelength_range = wavelength_range
+
+    # Create figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    # Normalize photon fraction at specified wavelength
+    norm_idx = np.abs(wavelengths - normalization_wavelength).argmin()
+    normalized_fraction = tissue_data["T"] / tissue_data["T"][norm_idx]
+
+    # Add photon fraction trace using config
+    fig.add_trace(
+        go.Scatter(**config.get_photon_trace(wavelengths, normalized_fraction)),
+        secondary_y=False,
+    )
+
+    # Calculate absorption mask
+    absorption = tissue_data["Tw"] * 100  # Convert to percentage
+    absorption_mask = absorption >= absorption_threshold
+
+    # Find indices where absorption_mask changes
+    indices = np.where(np.diff(absorption_mask.astype(int)) != 0)[0] + 1
+    indices = np.concatenate(([0], indices, [len(wavelengths)]))
+
+    # Add water absorption percentage line using config
+    for start, end in zip(indices[:-1], indices[1:]):
+        is_above_threshold = absorption_mask[start]
+        # Clip absorption values to 100%
+        clipped_absorption = np.minimum(absorption[start:end], 100)
+        fig.add_trace(
+            go.Scatter(**config.get_absorption_trace(
+                wavelengths[start:end], 
+                clipped_absorption, 
+                is_above_threshold
+            )),
+            secondary_y=True,
         )
-        return
 
-    # Use global parameters for calculations
-    wavelength_range = st.session_state.get("global_wavelength_range", (800, 2400))
-    wavelengths = np.linspace(wavelength_range[0], wavelength_range[1], 1000)
+    # Add shading for absorption regions using config
+    for start, end in zip(indices[:-1], indices[1:]):
+        if absorption_mask[start]:
+            fig.add_shape(
+                type="rect",
+                x0=wavelengths[start],
+                x1=wavelengths[end-1],
+                y0=0,
+                y1=1,
+                **config.absorption_shape,
+                yref="paper"  # Use paper coordinates for full height
+            )
 
-    # Get global parameters
-    depth = st.session_state.get("global_depth", 1.0)
-    norm_wavelength = st.session_state.get("global_norm_wavelength", 1300)
+    # Add laser overlays
+    fig = overlay_lasers(fig, plot_type="tissue")
 
-    # Calculate parameters for plot
-    tissue_params = st.session_state.get("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
-
-    # Use global parameters for calculation
-    calculation_params = {
-        "g": tissue_params["g"],
-        "a": tissue_params["a"],
-        "water_content": tissue_params["water_content"],
-        "b": tissue_params["b"],
-        "depth": depth,  # Use global depth
-        "normalization_wavelength": norm_wavelength,  # Use global normalization wavelength
-    }
-
-    # Calculate tissue parameters
-    tissue_data = calculate_tissue_parameters(wavelengths, **calculation_params)
-
-    # Create and return plot with threshold
-    fig = create_tissue_plot(
-        wavelengths=wavelengths,
-        tissue_data={
-            "photon_fraction": tissue_data["T"],
-            "absorption": tissue_data["Tw"] * 100,
-            "two_photon_data": tissue_data.get("two_photon_data"),
-        },
-        normalization_wavelength=norm_wavelength,
-        absorption_threshold=st.session_state.tissue_params.get(
-            "absorption_threshold", 50
+    # Update layout using config
+    max_y = max(normalized_fraction) * 1.2  # Add 20% padding
+    fig.update_layout(
+        **config.get_layout(),
+        xaxis=dict(
+            title="Wavelength (nm)",
+            range=config.wavelength_range,  # Always use config wavelength range
+            showgrid=False,
+            zeroline=False,
+            titlefont=config.font,
+            tickfont=config.font,
+        ),
+        yaxis=dict(
+            title=f"Normalized photon fraction at z={depth} mm",
+            range=[0, max_y],  # Dynamic range based on data
+            showgrid=False,
+            zeroline=False,
+            titlefont=config.font,  # Use titlefont for axis title
+            tickfont=config.font,   # Use tickfont for tick labels
+        ),
+        yaxis2=dict(
+            title="Percent photons absorbed",
+            range=[0, 100],  # Fix range to 0-100%
+            showgrid=False,
+            zeroline=False,
+            titlefont=config.font,  # Use titlefont for axis title
+            tickfont=config.font,   # Use tickfont for tick labels
         ),
     )
 
-    if plot_only:
-        return fig
+    return fig
 
-    # Display plot with custom theme
-    st.plotly_chart(fig, use_container_width=True, theme=None)

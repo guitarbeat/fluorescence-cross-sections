@@ -1,144 +1,279 @@
-import streamlit as st
-import plotly.graph_objects as go
-from src.models.laser_model import initialize_laser_data, add_laser
+from dataclasses import dataclass
+from typing import Tuple
 
-DEFAULT_LASERS: dict[str, list] = {
-    "Name": ["Ti:Sapphire", "Yb fiber", "2C2P", "Diamond", "Er fiber", "OPO/OPA"],
-    "Range": [
-        (800, 1000),
-        (1050, 1070),
-        (1150, 1200),
-        (1250, 1300),
-        (1550, 1600),
-        (1100, 2200),
-    ],
-    "Color": [
-        "#ff4b4b",  # Red
-        "#4b4bff",  # Blue
-        "#37c463",  # Green
-        "#ff9d42",  # Orange
-        "#42fff9",  # Cyan
-        "#f942ff",  # Magenta
-    ],
-}
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+
+
+@dataclass
+class LaserConfig:
+    """Configuration for default lasers"""
+
+    name: str
+    wavelength_range: Tuple[int, int]
+    color: str
+
+
+DEFAULT_LASERS = [
+    LaserConfig("Ti:Sapphire", (800, 1000), "#ff4b4b"),  # Red
+    LaserConfig("Yb fiber", (1050, 1070), "#4b4bff"),  # Blue
+    LaserConfig("2C2P", (1150, 1200), "#37c463"),  # Green
+    LaserConfig("Diamond", (1250, 1300), "#ff9d42"),  # Orange
+    LaserConfig("Er fiber", (1550, 1600), "#42fff9"),  # Cyan
+    LaserConfig("OPO/OPA", (1100, 2200), "#f942ff"),  # Magenta
+]
+
+
+def initialize_laser_data() -> pd.DataFrame:
+    """Create a DataFrame from default laser configurations."""
+    return pd.DataFrame(
+        {
+            "Name": [laser.name for laser in DEFAULT_LASERS],
+            "Start_nm": [laser.wavelength_range[0] for laser in DEFAULT_LASERS],
+            "End_nm": [laser.wavelength_range[1] for laser in DEFAULT_LASERS],
+            "Color": [laser.color for laser in DEFAULT_LASERS],
+        }
+    )
+
+
+def get_laser_df() -> pd.DataFrame:
+    """Get or initialize the laser DataFrame from session state."""
+    if "laser_df" not in st.session_state:
+        st.session_state.laser_df = initialize_laser_data()
+    return st.session_state.laser_df
+
+
+def add_laser(name: str, start_nm: float, end_nm: float, color: str) -> bool:
+    """Add a new laser to the session state."""
+    if not name:
+        return False
+
+    try:
+        new_laser = pd.DataFrame(
+            {
+                "Name": [name],
+                "Start_nm": [start_nm],
+                "End_nm": [end_nm],
+                "Color": [color],
+            }
+        )
+
+        laser_df = get_laser_df()
+        st.session_state.laser_df = pd.concat([laser_df, new_laser], ignore_index=True)
+        return True
+
+    except Exception as e:
+        st.error(f"Error adding laser: {str(e)}")
+        return False
+
+
+def render_add_laser_form() -> None:
+    """Render the form for adding a new laser."""
+    # Get global wavelength range
+    wavelength_range = st.session_state.get("global_params", {}).get("wavelength_range", (700, 2400))
+    min_wavelength, max_wavelength = wavelength_range
+    
+    with st.form("add_laser_form"):
+        name = st.text_input("Name", key="new_laser_name")
+        col1, col2 = st.columns(2)
+        with col1:
+            start_nm = st.number_input(
+                "Start (nm)", 
+                value=min_wavelength,  # Use global min
+                min_value=min_wavelength,
+                max_value=max_wavelength
+            )
+        with col2:
+            end_nm = st.number_input(
+                "End (nm)", 
+                value=min(max_wavelength, start_nm + 200),  # Reasonable default span
+                min_value=min_wavelength,
+                max_value=max_wavelength
+            )
+        color = st.color_picker("Color", "#00ff00", key="new_laser_color")
+
+        if st.form_submit_button("Add Laser", use_container_width=True):
+            if add_laser(name, start_nm, end_nm, color):
+                st.success(f"Added laser: {name}")
+                st.rerun()
+            else:
+                st.error("Please provide a name for the laser")
+
+
+def render_laser_editor() -> None:
+    """Render the interface for editing existing lasers."""
+    # Get global wavelength range
+    wavelength_range = st.session_state.get("global_params", {}).get("wavelength_range", (700, 2400))
+    min_wavelength, max_wavelength = wavelength_range
+    
+    st.session_state.edited_df = st.data_editor(
+        get_laser_df(),
+        num_rows="dynamic",
+        column_config={
+            "Name": st.column_config.TextColumn(
+                "Name",
+                help="Laser name",
+                required=True,
+            ),
+            "Start_nm": st.column_config.NumberColumn(
+                "Start (nm)",
+                help="Starting wavelength",
+                min_value=min_wavelength,  # Use global min
+                max_value=max_wavelength,  # Use global max
+                step=1,
+                format="%d",
+            ),
+            "End_nm": st.column_config.NumberColumn(
+                "End (nm)",
+                help="Ending wavelength",
+                min_value=min_wavelength,  # Use global min
+                max_value=max_wavelength,  # Use global max
+                step=1,
+                format="%d",
+            ),
+            "Color": st.column_config.TextColumn(
+                "Color",
+                help="Laser color in plots (hex code)",
+            ),
+        },
+        hide_index=True,
+        key="laser_editor",
+        use_container_width=True,
+    )
+
+
+def render_color_picker() -> None:
+    """Render the color picker interface."""
+    with st.popover("Change Colors"):
+        if not st.session_state.edited_df.empty:
+            selected_indices = st.multiselect(
+                "Select lasers",
+                options=st.session_state.edited_df.index,
+                format_func=lambda x: st.session_state.edited_df.loc[x, "Name"],
+            )
+
+            if selected_indices:
+                new_color = st.color_picker(
+                    "Pick new color",
+                    st.session_state.edited_df.loc[selected_indices[0], "Color"],
+                )
+                if st.button("Update Color"):
+                    st.session_state.edited_df.loc[selected_indices, "Color"] = (
+                        new_color
+                    )
 
 
 def render_laser_manager() -> None:
     """Render the laser management interface."""
-    st.markdown("### Laser Management")
+    with st.container():
 
-    # Initialize laser data if needed
-    initialize_laser_data()
+        st.toggle(
+            "Show Lasers",
+            value=st.session_state.get("show_lasers", True),
+            key="show_lasers",
+            help="Toggle visibility of laser ranges on all plots",
+        )
+        
+        if st.session_state.show_lasers:
+            add_tab, edit_tab = st.tabs(["Add New Laser", "Edit Lasers"])
 
-    # Global laser visibility toggle
-    st.toggle(
-        "Show Lasers",
-        value=st.session_state.get("show_lasers", True),
-        key="show_lasers",
-        help="Toggle visibility of laser ranges on all plots",
-    )
+            with add_tab:
+                render_add_laser_form()
 
-    if st.session_state.show_lasers:  # Only show laser controls if lasers are visible
-        with st.expander("Laser Controls", expanded=False):  # Start collapsed
-            # Add new laser form
-            st.markdown("#### Add New Laser")
-            with st.form("add_laser_form"):
-                name = st.text_input("Name", key="new_laser_name")
-                color = st.color_picker("Color", "#00ff00", key="new_laser_color")
+            with edit_tab:
+                render_laser_editor()
+                render_color_picker()
 
-                if st.form_submit_button("Add Laser", use_container_width=True):
-                    if add_laser(name, 800, 1000, color):  # Default range
-                        st.success(f"Added laser: {name}")
-                        st.rerun()
-                    else:
-                        st.error("Please provide a name for the laser")
-
-            # Existing lasers table as editable dataframe
-            st.markdown("#### Existing Lasers")
-
-            edited_df = st.data_editor(
-                st.session_state.laser_df,
-                num_rows="dynamic",
-                column_config={
-                    "Name": st.column_config.TextColumn(
-                        "Name",
-                        help="Laser name",
-                        required=True,
-                    ),
-                    "Start_nm": st.column_config.NumberColumn(
-                        "Start (nm)",
-                        help="Starting wavelength",
-                        min_value=700,
-                        max_value=2400,
-                        step=1,
-                        format="%d",
-                    ),
-                    "End_nm": st.column_config.NumberColumn(
-                        "End (nm)",
-                        help="Ending wavelength",
-                        min_value=700,
-                        max_value=2400,
-                        step=1,
-                        format="%d",
-                    ),
-                    "Color": st.column_config.TextColumn(
-                        "Color",
-                        help="Laser color in plots (hex code)",
-                    ),
-                },
-                hide_index=True,
-                key="laser_editor",
-                use_container_width=True,
-            )
-
-            # Color picker for selected row
-            if not edited_df.empty:
-                selected_indices = st.multiselect(
-                    "Select laser to change color",
-                    options=edited_df.index,
-                    format_func=lambda x: edited_df.loc[x, "Name"],
-                )
-
-                if selected_indices:
-                    new_color = st.color_picker(
-                        "Pick new color", edited_df.loc[selected_indices[0], "Color"]
-                    )
-                    if st.button("Update Color"):
-                        edited_df.loc[selected_indices, "Color"] = new_color
-
-            if st.button("💾 Save Changes", use_container_width=True):
-                st.session_state.laser_df = edited_df
-                st.success("Laser changes saved")
-                st.rerun()
+                if st.button("💾 Save Changes", use_container_width=True):
+                    st.session_state.laser_df = st.session_state.edited_df
+                    st.success("Laser changes saved")
+                    st.rerun()
 
 
-def overlay_lasers(fig: go.Figure, plot_type: str = "tissue") -> go.Figure:
-    """Add laser overlays to a plot with consistent positioning.
+def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:
+    """Configure the plot layout for laser overlays."""
+    main_domain = [0, 0.85]
 
-    Args:
-        fig: The plotly figure to add lasers to
-        plot_type: Either "tissue" or "cross_section" to determine layout
-    """
-    if not st.session_state.get("show_lasers", True):
-        return fig
-
-    # Configure layout for laser domain
-    if plot_type == "cross_section":
-        main_domain = [0, 0.9]
-        laser_domain = [0.92, 1.0]
-    else:  # tissue plot
-        main_domain = [0, 0.9]
-        laser_domain = [0.92, 1.0]
-
-    # Update layout to accommodate laser domain
+    # Configure axis domains
     if plot_type == "tissue":
         fig.update_layout(
             yaxis=dict(domain=main_domain), yaxis2=dict(domain=main_domain)
         )
-    else:
+    else:  # cross_section
         fig.update_layout(yaxis=dict(domain=main_domain))
 
-    # Create a new y-axis for lasers
+    # Update layout with transparent background and hidden axes
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis3=dict(
+            domain=[0.87, 0.92],
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
+            range=[0, 1],
+            fixedrange=True,
+            anchor="x",
+            showline=False,
+            visible=False,
+            autorange=False,  # Disable autoranging
+        ),
+        yaxis4=dict(
+            domain=[0.93, 1.0],
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
+            range=[0, 1],
+            fixedrange=True,
+            anchor="x",
+            showline=False,
+            visible=False,
+            autorange=False,  # Disable autoranging
+        ),
+        xaxis=dict(
+            showline=True,
+            mirror=False,
+            showgrid=False,
+        ),
+    )
+
+
+def add_laser_overlays(fig: go.Figure) -> None:
+    """Add laser overlays and annotations to the plot."""
+    laser_df = get_laser_df()
+    for _, laser in laser_df.iterrows():
+        # Add colored rectangle
+        fig.add_shape(
+            type="rect",
+            x0=laser["Start_nm"],
+            x1=laser["End_nm"],
+            y0=0,
+            y1=1,
+            fillcolor=laser["Color"],
+            opacity=0.3,
+            layer="above",
+            line_width=0,
+            yref="y3",
+        )
+
+        # Add text above the rectangle
+        fig.add_annotation(
+            x=(laser["Start_nm"] + laser["End_nm"]) / 2,
+            y=0.5,
+            text=laser["Name"],
+            showarrow=False,
+            yref="y4",
+            font=dict(size=10, color=laser["Color"]),
+        )
+
+
+def overlay_lasers(fig: go.Figure, plot_type: str = "tissue") -> go.Figure:
+    """Add laser overlays to a plot with consistent positioning."""
+    if not st.session_state.get("show_lasers", True):
+        return fig
+
+    # Add empty trace for laser axis
     fig.add_trace(
         go.Scatter(
             x=[None],
@@ -148,44 +283,7 @@ def overlay_lasers(fig: go.Figure, plot_type: str = "tissue") -> go.Figure:
         )
     )
 
-    # Configure the laser axis
-    fig.update_layout(
-        yaxis3=dict(
-            domain=laser_domain,
-            showticklabels=False,
-            showgrid=False,
-            zeroline=False,
-            range=[0, 1],
-            fixedrange=True,
-            anchor="x",
-        )
-    )
-
-    # Add laser annotations
-    if hasattr(st.session_state, "laser_df"):
-        for _, laser in st.session_state.laser_df.iterrows():
-            # Add shaded region for laser range
-            fig.add_shape(
-                type="rect",
-                x0=laser["Start_nm"],
-                x1=laser["End_nm"],
-                y0=0,
-                y1=1,
-                fillcolor=laser["Color"],
-                opacity=0.3,
-                layer="above",
-                line_width=0,
-                yref="y3",
-            )
-
-            # Add laser label
-            fig.add_annotation(
-                x=(laser["Start_nm"] + laser["End_nm"]) / 2,
-                y=0.5,
-                text=laser["Name"],
-                showarrow=False,
-                yref="y3",
-                font=dict(size=10, color=laser["Color"]),
-            )
+    configure_plot_layout(fig, plot_type)
+    add_laser_overlays(fig)
 
     return fig
