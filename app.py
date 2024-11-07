@@ -1,3 +1,4 @@
+"""Main application module for Deep Tissue Imaging Optimizer."""
 import logging
 from typing import Optional
 
@@ -5,84 +6,43 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src.api.fpbase_client import FPbaseAPI
 from src.api.search_form import render_search_panel
-from src.components.fluorophore_manager import render_results_panel
+from src.components.fluorophore_manager import render_fluorophore_manager
 from src.components.laser_manager import render_laser_manager
+from src.config.tissue_config import DEFAULT_TISSUE_PARAMS, render_math_view
 from src.plots.cross_section_plot import (create_cross_section_plot,
                                           get_marker_settings,
                                           marker_settings_ui)
 from src.plots.tissue_view import (calculate_tissue_parameters,
                                    create_tissue_plot)
-from src.config.tissue_config import render_math_view, DEFAULT_TISSUE_PARAMS
+from src.state.session_state import initialize_session_state
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
-def initialize_session_state() -> None:
-    """Initialize or reset session state variables with parameters from src."""
-    session_state = st.session_state
-
-    # Initialize API client
-    session_state.setdefault("fpbase_client", FPbaseAPI())
-
-    # Load existing fluorophores from CSV
-    try:
-        fluorophore_df = pd.read_csv("data/fluorophores.csv")
-    except (FileNotFoundError, pd.errors.EmptyDataError):
-        fluorophore_df = pd.DataFrame(
-            columns=[
-                "Name",
-                "Wavelength",
-                "Cross_Section",
-                "Reference",
-                "Ex_Max",
-                "Em_Max",
-                "QY",
-                "EC",
-                "pKa",
-                "Brightness",
-            ]
-        )
-
-    # Initialize dataframes
-    session_state.setdefault("fluorophore_df", fluorophore_df)
-    session_state.setdefault(
-        "search_results", pd.DataFrame(columns=fluorophore_df.columns)
-    )
-
-    # Initialize global parameters with defaults
-    session_state.setdefault(
-        "global_params",
-        {
-            "wavelength_range": (700, 1700),
-            "normalization_wavelength": 1300,
-            "absorption_threshold": 50,
-        },
-    )
-
-    # Initialize tissue parameters
-    session_state.setdefault(
-        "tissue_params",
-        {
-            "depth": 1.0,
-            "water_content": 0.75,
-            "g": 0.9,
-            "a": 1.1,
-            "b": 1.37,
-            "mu_a_base": 1.37,
-        },
-    )
-
-
-
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def get_cached_tissue_data(wavelengths, depth, norm_wavelength):
-    """Cache tissue calculations to improve performance."""
+def get_cached_tissue_data(
+    wavelengths: np.ndarray,
+    depth: float,
+    norm_wavelength: float,
+) -> dict:
+    """
+    Cache tissue calculations to improve performance.
+
+    Args:
+        wavelengths: Array of wavelengths to calculate parameters for
+        depth: Tissue depth in mm
+        norm_wavelength: Wavelength for normalization
+
+    Returns:
+        Dictionary containing calculated tissue parameters
+    """
     return calculate_tissue_parameters(
-        wavelengths=wavelengths, depth=depth, normalization_wavelength=norm_wavelength
+        wavelengths=wavelengths,
+        depth=depth,
+        normalization_wavelength=norm_wavelength,
     )
 
 
@@ -113,12 +73,12 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                         wavelength_range=wavelength_range,
                         absorption_threshold=absorption_threshold,
                     )
-                    st.plotly_chart(fig, use_container_width=True, theme=None)
+                    st.plotly_chart(fig, use_container_width=True, theme="streamlit")
                 else:
                     st.info("No data to display - try searching for fluorophores.")
                 with st.popover("Marker Settings"):
                     marker_settings_ui()
-            render_results_panel()
+            render_fluorophore_manager()
             
         elif plot_type == "tissue_penetration":
             with st.expander("Tissue Penetration", expanded=True):
@@ -138,12 +98,15 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                     wavelength_range=wavelength_range,
                     depth=depth
                 )
-                st.plotly_chart(fig, use_container_width=True, theme=None)
+                st.plotly_chart(fig, use_container_width=True, theme="streamlit")
             render_math_view()
 
-    except Exception as e:
-        logger.error(f"Error rendering {plot_type} plot: {e}")
+    except (ValueError, KeyError) as e:
+        logger.error("Error rendering %s plot: %s", plot_type, str(e))
         st.error(f"Error creating {plot_type} plot: {str(e)}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error("Unexpected error rendering %s plot: %s", plot_type, str(e))
+        st.error("An unexpected error occurred. Please check the logs.")
 
 
 def main() -> None:
@@ -305,8 +268,11 @@ def main() -> None:
                     """
                     )
 
-    except Exception as e:
-        logger.error(f"Application error: {e}")
+    except (ValueError, KeyError) as e:
+        logger.error("Application error: %s", str(e))
+        st.error(f"Configuration error: {str(e)}")
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error("Unexpected application error: %s", str(e))
         st.error("An unexpected error occurred. Please check the logs.")
 
 

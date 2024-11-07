@@ -1,9 +1,16 @@
+"""
+Data loading utilities
+"""
+
 import logging
-import numpy as np
-import pandas as pd
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import streamlit as st
+
 logger = logging.getLogger(__name__)
+
 
 def load_water_absorption_data() -> pd.DataFrame:
     """Load water absorption data from kou93b.dat."""
@@ -20,8 +27,8 @@ def load_water_absorption_data() -> pd.DataFrame:
         # Flip the data as in the MATLAB code
         df = df.iloc[::-1].reset_index(drop=True)
         return df
-    except Exception as e:
-        logger.error(f"Error loading water absorption data: {e}")
+    except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+        st.error(f"Error loading water absorption data: {e}")
         # Return a minimal dataset if loading fails
         return pd.DataFrame(
             {

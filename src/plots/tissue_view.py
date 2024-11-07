@@ -1,15 +1,13 @@
 import logging
-from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from src.config.tissue_config import (DEFAULT_TISSUE_PARAMS)
+from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
 
 from ..components.laser_manager import overlay_lasers
 from ..config.plot_config import TissuePlotConfig
@@ -184,11 +182,13 @@ def create_tissue_plot(
 
     # Update layout using config
     max_y = max(normalized_fraction) * 1.2  # Add 20% padding
-    fig.update_layout(
-        **config.get_layout(),
+    base_layout = config.get_layout()
+    base_layout.update(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         xaxis=dict(
             title="Wavelength (nm)",
-            range=config.wavelength_range,  # Always use config wavelength range
+            range=config.wavelength_range,
             showgrid=False,
             zeroline=False,
             titlefont=config.font,
@@ -196,21 +196,22 @@ def create_tissue_plot(
         ),
         yaxis=dict(
             title=f"Normalized photon fraction at z={depth} mm",
-            range=[0, max_y],  # Dynamic range based on data
+            range=[0, max_y],
             showgrid=False,
             zeroline=False,
-            titlefont=config.font,  # Use titlefont for axis title
-            tickfont=config.font,   # Use tickfont for tick labels
+            titlefont=config.font,
+            tickfont=config.font,
         ),
         yaxis2=dict(
             title="Percent photons absorbed",
-            range=[0, 100],  # Fix range to 0-100%
+            range=[0, 100],
             showgrid=False,
             zeroline=False,
-            titlefont=config.font,  # Use titlefont for axis title
-            tickfont=config.font,   # Use tickfont for tick labels
+            titlefont=config.font,
+            tickfont=config.font,
         ),
     )
+    fig.update_layout(base_layout)
 
     return fig
 

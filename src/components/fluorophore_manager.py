@@ -1,225 +1,155 @@
+from pathlib import Path
 from typing import Any, Dict
 
 import pandas as pd
 import streamlit as st
 
+# Constants
+DATA_PATH = Path("data/fluorophores.csv")
+DEFAULT_COLUMNS = [
+    "Name", "Wavelength", "Cross_Section", "Reference",  # Core plotting data
+    "Em_Max", "Ex_Max", "QY", "EC", "pKa", "Brightness"  # Additional properties
+]
 
-def get_column_config() -> Dict[str, Any]:
-    """Return the configuration for the data editor columns."""
-    return {
-        "Name": st.column_config.TextColumn(
-            "Fluorophore",
-            help="Protein name",
-            required=True,
-        ),
-        "Em_Max": st.column_config.NumberColumn(
-            "Em λ (nm)",
-            help="Peak emission wavelength",
-            min_value=0,
-            max_value=1000,
-            step=1,
-            format="%d",
-        ),
-        "Ex_Max": st.column_config.NumberColumn(
-            "Ex λ (nm)",
-            help="Peak excitation wavelength",
-            min_value=0,
-            max_value=1000,
-            step=1,
-            format="%d",
-        ),
-        "Cross_Section": st.column_config.NumberColumn(
-            "Cross Section (GM)",
-            help="Two-photon cross section in Göppert-Mayer units",
-            min_value=0,
-            format="%.1f",
-        ),
-        "Reference": st.column_config.LinkColumn(
-            "FPbase Link",
-            help="Click to view on FPbase",
-            width="medium",
-        ),
-        "EC": st.column_config.NumberColumn(
-            "EC (M⁻¹cm⁻¹)",
-            help="Extinction coefficient",
-            format="%d",
-        ),
-        "QY": st.column_config.NumberColumn(
-            "QY",
-            help="Quantum yield",
-            min_value=0,
-            max_value=1,
-            format="%.2f",
-        ),
-        "Brightness": st.column_config.NumberColumn(
-            "Brightness",
-            help="Relative brightness (EC × QY / 1000)",
-            format="%.2f",
-        ),
-        "pKa": st.column_config.NumberColumn(
-            "pKa",
-            help="pH at which fluorescence is 50% of maximum",
-            format="%.1f",
-        ),
-    }
+class FluorophoreManager:
+    def __init__(self):
+        if "fluorophore_df" not in st.session_state:
+            st.session_state.fluorophore_df = pd.DataFrame(columns=DEFAULT_COLUMNS)
 
-
-def handle_import_selection() -> None:
-    """Handle the import selection process."""
-    if (
-        "search_results" not in st.session_state
-        or st.session_state.search_results.empty
-    ):
-        return
-
-    with st.form("select_proteins"):
-        st.write("Select proteins to import:")
-        selected = {
-            idx: st.checkbox(
-                f"{row['Name']} (Em: {row['Em_Max']}nm)",
-                key=f"select_{idx}",
-            )
-            for idx, row in st.session_state.search_results.iterrows()
+    @staticmethod
+    def get_column_config() -> Dict[str, Any]:
+        """Column configurations for the data editor."""
+        return {
+            "Name": st.column_config.TextColumn(
+                "Fluorophore", help="Protein name", required=True
+            ),
+            "Wavelength": st.column_config.NumberColumn(
+                "2P λ (nm)", help="Two-photon excitation wavelength", format="%d", required=True
+            ),
+            "Cross_Section": st.column_config.NumberColumn(
+                "Cross Section (GM)", help="Two-photon cross section (GM)", format="%.1f"
+            ),
+            "Reference": st.column_config.TextColumn(
+                "Reference", help="Citation or link to source"
+            ),
+            "Em_Max": st.column_config.NumberColumn(
+                "Em λ (nm)", help="Peak emission wavelength", format="%d"
+            ),
+            "Ex_Max": st.column_config.NumberColumn(
+                "Ex λ (nm)", help="Peak excitation wavelength", format="%d"
+            ),
+            "QY": st.column_config.NumberColumn(
+                "QY", help="Quantum yield", min_value=0, max_value=1, format="%.2f"
+            ),
+            "EC": st.column_config.NumberColumn(
+                "EC (M⁻¹cm⁻¹)", help="Extinction coefficient", format="%d"
+            ),
+            "Brightness": st.column_config.NumberColumn(
+                "Brightness", help="EC × QY / 1000", format="%.2f", disabled=True
+            ),
+            "pKa": st.column_config.NumberColumn(
+                "pKa", help="pH at 50% fluorescence", format="%.1f"
+            ),
         }
 
-        if st.form_submit_button("Import Selected"):
-            selected_df = st.session_state.search_results[
-                [selected[idx] for idx in selected.keys()]
-            ]
-            if not selected_df.empty:
-                import_selected_data(selected_df)
+    def save_data(self, df: pd.DataFrame) -> None:
+        """Save and validate fluorophore data."""
+        try:
+            if df["Name"].isna().any():
+                raise ValueError("All fluorophores must have a name")
+            
+            # Calculate brightness
+            df["Brightness"] = (df["EC"] * df["QY"] / 1000).round(2)
+            
+            # Save to file
+            DATA_PATH.parent.mkdir(exist_ok=True)
+            df.to_csv(DATA_PATH, index=False)
+            st.session_state.fluorophore_df = df
+            
+        except Exception as e:
+            st.error(f"Failed to save data: {str(e)}")
+            raise
 
-
-def import_selected_data(selected_df: pd.DataFrame) -> None:
-    """Import selected data into the database."""
-    with st.spinner("Importing selected results..."):
-        selected_df["Reference"] = "FPbase"
-        new_df = pd.concat(
-            [st.session_state.fluorophore_df, selected_df],
-            ignore_index=True,
-        ).drop_duplicates(subset=["Name"], keep="last")
-        save_fluorophore_data(new_df)
-        st.success("Selected results imported")
-        st.rerun()
-
-
-def save_fluorophore_data(df: pd.DataFrame) -> None:
-    """Save fluorophore data to CSV and update session state."""
-    df.to_csv("data/fluorophores.csv", index=False)
-    st.session_state.fluorophore_df = df
-
-
-def render_helpful_resources() -> None:
-    """Render the helpful resources section."""
-    with st.expander("📚 Helpful Resources", expanded=False):
-        tab1, tab2, tab3 = st.tabs(["FPbase Resources", "References", "Notes"])
-
-        with tab1:
-            st.markdown(
-                """
-                ### FPbase Resources
-                - [FPbase Spectra Viewer](https://www.fpbase.org/spectra/)
-                - [Activity Charts](https://www.fpbase.org/activity/)
-                - [Popular Proteins](https://www.fpbase.org/proteins/)
-                - [Spectra URL Builder](https://www.fpbase.org/spectra_url_builder/)
-                """
-            )
-            st.markdown(
-                """
-                <iframe 
-                    src="https://www.fpbase.org/spectra/?embed=true" 
-                    width="100%" 
-                    height="600" 
-                    frameborder="0"
-                    style="border:none;">
-                </iframe>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        with tab2:
-            st.markdown(
-                """
-                ### Two-Photon Cross Section References
-                Peak two-photon absorption cross sections compiled from:
-                - 🔵 Dana et al. (2016) [26]
-                - ⬛ Drobizhev et al. (2011) [27]
-                - 💗 Harris [28]
-                - 🔷 Kobat et al. (2009) [29]
-                - ⬜ Xu et al. (1996) [30]
-                """
-            )
-
-        with tab3:
-            st.info(
-                """
-                **Note:** Organic dyes are not yet searchable in the database, but spectra 
-                for a selection of organic dyes are available on the 
-                [spectra page](https://www.fpbase.org/spectra/).
-                
-                You can manually add data from literature sources using the data editor above.
-                """
-            )
-
-
-def initialize_fluorophore_df() -> None:
-    """Initialize the fluorophore DataFrame if it doesn't exist."""
-    if "fluorophore_df" not in st.session_state:
-        st.session_state.fluorophore_df = pd.DataFrame(
-            columns=[
-                "Name",
-                "Em_Max",
-                "Cross_Section",
-                "Reference",
-                "Ex_Max",
-                "QY",
-                "EC",
-                "pKa",
-                "Brightness",
-            ]
-        )
-
-
-def render_results_panel() -> None:
-    """Render the search results panel with enhanced layout."""
-    panel_id = st.session_state.get("active_panel_id", "main")
-    initialize_fluorophore_df()
-
-    with st.container():
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button(
-                "📥 Import Selected",
-                key=f"import_btn_{panel_id}",
-                use_container_width=True,
-                help="Import selected search results into database",
-            ):
-                handle_import_selection()
-
+    def render_editor(self) -> None:
+        """Render the fluorophore editor interface."""
         edited_df = st.data_editor(
             st.session_state.fluorophore_df,
             num_rows="dynamic",
-            column_config=get_column_config(),
+            column_config=self.get_column_config(),
             hide_index=True,
-            key=f"fluorophore_editor_{panel_id}",
+            key="fluorophore_editor",
             use_container_width=True,
-            height=300,
+            height=400,
+            column_order=DEFAULT_COLUMNS,
+            disabled=["Brightness"],
         )
 
-        if st.button(
-            "💾 Save Changes",
-            key=f"save_btn_{panel_id}",
-            type="primary",
-            use_container_width=True,
-            help="Save changes to database",
-        ):
-            with st.spinner("Saving changes..."):
-                if edited_df["Name"].isna().any():
-                    st.error("❌ All fluorophores must have a name")
-                    return
-                save_fluorophore_data(edited_df)
-                st.success("✅ Changes saved successfully")
-                st.rerun()
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("💾 Save Changes", type="primary", use_container_width=True):
+                with st.status("Saving changes...") as status:
+                    try:
+                        self.save_data(edited_df)
+                        status.update(label="✅ Saved", state="complete")
+                        st.rerun()
+                    except Exception:
+                        status.update(label="Failed to save", state="error")
 
-    render_helpful_resources()
+        with col2:
+            if st.button("📥 Import Selected", use_container_width=True):
+                self._handle_import()
+
+        # FPbase viewer
+        with st.expander("📚 FPbase Resources", expanded=False):
+            st.markdown(
+                """
+                - [Spectra Viewer](https://www.fpbase.org/spectra/)
+                - [Activity Charts](https://www.fpbase.org/activity/)
+                - [Popular Proteins](https://www.fpbase.org/proteins/)
+                """
+            )
+            st.components.v1.iframe(
+                src="https://www.fpbase.org/spectra/?embed=true",
+                height=600,
+                scrolling=False
+            )
+
+    def _handle_import(self) -> None:
+        """Handle importing fluorophores from search results."""
+        if "search_results" not in st.session_state or st.session_state.search_results.empty:
+            st.info("No search results available")
+            return
+
+        with st.form("select_proteins", clear_on_submit=True):
+            st.write("Select proteins to import:")
+            selected = {
+                idx: st.checkbox(f"{row['Name']} (Em: {row['Em_Max']}nm)")
+                for idx, row in st.session_state.search_results.iterrows()
+            }
+
+            if st.form_submit_button("Import"):
+                selected_df = st.session_state.search_results[
+                    [selected[idx] for idx in selected.keys()]
+                ]
+                
+                if not selected_df.empty:
+                    with st.status("Importing...") as status:
+                        try:
+                            selected_df["Reference"] = "FPbase"
+                            new_df = pd.concat(
+                                [st.session_state.fluorophore_df, selected_df],
+                                ignore_index=True
+                            ).drop_duplicates(subset=["Name"], keep="last")
+                            
+                            self.save_data(new_df)
+                            status.update(label="✅ Imported", state="complete")
+                            st.rerun()
+                        except Exception as e:
+                            status.update(label=f"Import failed: {e}", state="error")
+                else:
+                    st.warning("No proteins selected")
+
+def render_fluorophore_manager():
+    """Main entry point."""
+    manager = FluorophoreManager()
+    manager.render_editor()

@@ -1,8 +1,10 @@
 """Configuration for tissue penetration modeling."""
-import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-from ..utils.data_loader import load_water_absorption_data
+import streamlit as st
+
+# Changed from relative to absolute import
+from src.utils.data_loader import load_water_absorption_data
 
 # Formula display configuration
 MAIN_FORMULA_SIZE = r"\huge"  # Size for the main formula
@@ -12,12 +14,14 @@ FORMULA_SPACING = 2          # Number of blank lines after formulas
 # Plot configuration
 PLOT_CONFIG = {
     "height": 300,
-    "small_height": 150,  # Height for parameter effect plots
-    "margin": dict(l=0, r=0, t=30, b=0),
-    "small_margin": dict(l=0, r=0, t=20, b=0),  # Tighter margins for small plots
+    "small_height": 250,  # Increased height for parameter plots
+    "margin": dict(l=20, r=20, t=40, b=20),  # Adjusted margins
+    "small_margin": dict(l=20, r=20, t=40, b=20),
     "hovermode": 'x unified',
     "wavelength_range": [800, 2400],
     "reference_wavelength": 1300,
+    "showlegend": False,  # Hide legend by default
+    "aspect_ratio": 1.2,  # For more square-like appearance
 }
 
 # Default tissue parameters to match the paper
@@ -30,36 +34,37 @@ DEFAULT_TISSUE_PARAMS = {
     "absorption_threshold": 50,  # Percentage threshold for shading
 }
 
+
 def create_coefficient_plot(
     wavelengths: np.ndarray,
     y_values: np.ndarray,
     title: str,
     line_color: str,
     marker_color: str,
-    ref_value: float,
 ) -> go.Figure:
     """Create a coefficient plot with consistent styling."""
     fig = go.Figure()
-    
+
     # Add main line
     fig.add_trace(go.Scatter(
         x=wavelengths,
         y=y_values,
         mode='lines',
-        name=title,
+        showlegend=False,
         line=dict(color=line_color)
     ))
-    
+
     # Add reference point
-    ref_idx = np.abs(wavelengths - PLOT_CONFIG["reference_wavelength"]).argmin()
+    ref_idx = np.abs(
+        wavelengths - PLOT_CONFIG["reference_wavelength"]).argmin()
     fig.add_trace(go.Scatter(
         x=[PLOT_CONFIG["reference_wavelength"]],
         y=[y_values[ref_idx]],
         mode='markers',
-        name=f'Value at {PLOT_CONFIG["reference_wavelength"]}nm: {y_values[ref_idx]:.2f}',
+        showlegend=False,
         marker=dict(size=10, color=marker_color)
     ))
-    
+
     # Update layout
     fig.update_layout(
         title=title,
@@ -67,58 +72,18 @@ def create_coefficient_plot(
         yaxis_title=f"{title} (mm⁻¹)",
         height=PLOT_CONFIG["height"],
         margin=PLOT_CONFIG["margin"],
-        hovermode=PLOT_CONFIG["hovermode"]
+        hovermode=PLOT_CONFIG["hovermode"],
+        showlegend=False
     )
-    
+
     return fig
+
 
 def add_formula_spacing():
     """Add consistent spacing after formulas."""
     for _ in range(FORMULA_SPACING):
         st.write("")
 
-def create_parameter_effect_plot(
-    wavelengths: np.ndarray,
-    y_values_list: list[np.ndarray],
-    param_values: list[float],
-    title: str,
-    line_color: str,
-) -> go.Figure:
-    """Create a plot showing the effect of a parameter."""
-    fig = go.Figure()
-    
-    # Calculate color with different transparencies
-    base_color = line_color
-    alphas = np.linspace(0.3, 1.0, len(param_values))
-    
-    for y_values, param_value, alpha in zip(y_values_list, param_values, alphas):
-        # Convert color to rgba
-        if base_color == 'blue':
-            rgba_color = f'rgba(0, 0, 255, {alpha})'
-        elif base_color == 'red':
-            rgba_color = f'rgba(255, 0, 0, {alpha})'
-        
-        fig.add_trace(go.Scatter(
-            x=wavelengths,
-            y=y_values,
-            mode='lines',
-            name=f'{param_value:.2f}',
-            line=dict(color=rgba_color, width=2)
-        ))
-    
-    # Update layout
-    fig.update_layout(
-        title=title,
-        xaxis_title="Wavelength (nm)",
-        yaxis_title="Coefficient (mm⁻¹)",
-        height=PLOT_CONFIG["small_height"],
-        margin=PLOT_CONFIG["small_margin"],
-        hovermode=PLOT_CONFIG["hovermode"],
-        showlegend=True,
-        legend_title="Parameter Value"
-    )
-    
-    return fig
 
 def create_parameter_relationship_plot(
     param_values: np.ndarray,
@@ -129,98 +94,121 @@ def create_parameter_relationship_plot(
 ) -> go.Figure:
     """Create a plot showing direct relationship between parameter and coefficient."""
     fig = go.Figure()
-    
+
     # Add main line
     fig.add_trace(go.Scatter(
         x=param_values,
         y=coefficients,
         mode='lines',
-        name='Coefficient',
+        showlegend=False,  # Hide legend
         line=dict(color=line_color)
     ))
-    
+
     # Add point for current value
     fig.add_trace(go.Scatter(
         x=[current_value],
         y=[np.interp(current_value, param_values, coefficients)],
         mode='markers',
-        name='Current Value',
+        showlegend=False,  # Hide legend
         marker=dict(size=10, color='black')
     ))
-    
-    # Update layout
+
+    # Update layout for more square-like appearance
     fig.update_layout(
-        title=f"Coefficient vs {param_name}",
+        title=dict(
+            text=f"Coefficient vs {param_name}",
+            y=0.95,  # Adjust title position
+            x=0.5,
+            xanchor='center',
+            yanchor='top'
+        ),
         xaxis_title=param_name,
         yaxis_title="Coefficient (mm⁻¹)",
         height=PLOT_CONFIG["small_height"],
         margin=PLOT_CONFIG["small_margin"],
-        hovermode='x unified'
+        hovermode='x unified',
+        showlegend=False,
+        # Make plot more square-like
+        width=PLOT_CONFIG["small_height"] * PLOT_CONFIG["aspect_ratio"]
     )
-    
+
     return fig
 
-def render_scattering_section(col, params):
-    """Render the scattering properties section."""
-    # Get normalization wavelength from global params
-    normalization_wavelength = st.session_state.global_params.get("normalization_wavelength", 1300)
-    
-    # Update reference wavelength in plots
-    ref_wavelength = normalization_wavelength
-    
-    # Main scattering plot
-    wavelengths = np.linspace(*PLOT_CONFIG["wavelength_range"], 1000)
-    mus_prime = params['a'] * (wavelengths / 500) ** (-params['b'])
-    mus = mus_prime / (1 - params['g'])
-    
-    fig = create_coefficient_plot(
-        wavelengths=wavelengths,
-        y_values=mus,
-        title="Scattering Coefficient",
-        line_color='blue',
-        marker_color='red',
-        ref_value=mus[np.abs(wavelengths - ref_wavelength).argmin()]
-    )
-    col.plotly_chart(fig, use_container_width=True)
-    add_formula_spacing()
-    # Formula with current values
-    scattering_formula = (
-        f"{FORMULA_SIZE} \\mu_s(\\lambda) = \\frac{{a}}{{1-g}} \\cdot "
-        r"\left(\frac{\lambda}{500}\right)^{-b} "
-        f"\\quad = \\frac{{\\color{{red}}{{{params['a']:.2f}}}}}"
-        f"{{1-\\color{{red}}{{{params['g']:.2f}}}}} \\cdot "
-        r"\left(\frac{\lambda}{500}\right)^{" + 
-        f"\\color{{red}}{{-{params['b']:.2f}}}" + "}"
-    )
-    col.latex(scattering_formula)
-    add_formula_spacing()
-    # Parameter controls with relationship plots in 3 columns
-    col.markdown("##### Parameter Controls")
-    param_col1, param_col2, param_col3 = col.columns(3)
-    
-    # Column 1: Anisotropy factor (g)
-    with param_col1:
-        g = st.slider(
-            "Anisotropy Factor (g)",
-            0.0, 1.0, params["g"], 0.05,
-            help="g=0: Any direction, g=1: Forward only",
+
+def render_scattering_section(col, params) -> tuple[float, float, float]:
+    """
+    Render the scattering properties section.
+
+    Args:
+        col: Streamlit column object
+        params: Dictionary of tissue parameters
+
+    Returns:
+        tuple[float, float, float]: Updated (g, b, a) parameters
+    """
+
+    # Create two columns for plot and controls
+    plot_col, controls_col = col.columns([2, 1])
+
+    with plot_col:
+        # Main scattering plot
+        wavelengths = np.linspace(*PLOT_CONFIG["wavelength_range"], 1000)
+        mus_prime = params['a'] * (wavelengths / 500) ** (-params['b'])
+        mus = mus_prime / (1 - params['g'])
+
+        fig = create_coefficient_plot(
+            wavelengths=wavelengths,
+            y_values=mus,
+            title="Scattering Coefficient",
+            line_color='blue',
+            marker_color='red'
         )
-        
-        with st.popover("Show g relationship"):
-            g_values = np.linspace(0.1, 0.99, 100)  # Avoid g=1 which gives infinity
-            mus_g = params['a'] / (1 - g_values)  # Simplified relationship at reference wavelength
-            
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Scattering formula below the plot
+        st.markdown("#### Scattering Formula")
+        scattering_formula = (
+            f"{FORMULA_SIZE} \\mu_s(\\lambda) = \\frac{{a}}{{1-g}} \\cdot "
+            r"\left(\frac{\lambda}{500}\right)^{-b} "
+            f"\\quad = \\frac{{\\color{{red}}{{{params['a']:.2f}}}}}"
+            f"{{1-\\color{{red}}{{{params['g']:.2f}}}}} \\cdot "
+            r"\left(\frac{\lambda}{500}\right)^{" +
+            f"\\color{{red}}{{-{params['b']:.2f}}}" + "}"
+        )
+        st.latex(scattering_formula)
+
+    with controls_col:
+        st.markdown("### Parameter Controls")
+
+        # Column 1: Anisotropy
+        g = st.slider(
+            "Anisotropy (g)",
+            0.0, 1.0, params["g"], 0.05,
+            help="Controls directional scattering: g=0 (isotropic) to g=1 (forward only)",
+        )
+
+        with st.expander("📊 Anisotropy Impact"):
+            g_values = np.linspace(0.1, 0.99, 100)
+            mus_g = params['a'] / (1 - g_values)
+
             g_fig = create_parameter_relationship_plot(
                 param_values=g_values,
                 coefficients=mus_g,
-                param_name="Anisotropy (g)",
+                param_name="Anisotropy",
                 current_value=g,
                 line_color='blue'
             )
             st.plotly_chart(g_fig, use_container_width=True)
+            st.markdown("""
+                **Impact of Anisotropy:**
+                - Higher values → more forward scattering
+                - Lower values → more uniform scattering
+                - Brain tissue typically ≈ 0.9
+                
+                *g represents the average cosine of the scattering angle*
+            """)
 
-    # Column 2: Scattering power (b)
-    with param_col2:
+        # Column 2: Scattering power (b)
         b = st.number_input(
             "Scattering Power (b)",
             min_value=0.5,
@@ -229,12 +217,13 @@ def render_scattering_section(col, params):
             step=0.05,
             help="Wavelength dependence (≈1.37 for brain tissue)",
         )
-        
-        with st.popover("Show b relationship"):
+
+        with st.expander("📈 Wavelength Dependence Impact"):
             b_values = np.linspace(0.5, 2.0, 100)
             ref_wavelength = PLOT_CONFIG["reference_wavelength"]
-            mus_b = params['a'] * (ref_wavelength / 500) ** (-b_values) / (1 - params['g'])
-            
+            mus_b = params['a'] * (ref_wavelength /
+                                   500) ** (-b_values) / (1 - params['g'])
+
             b_fig = create_parameter_relationship_plot(
                 param_values=b_values,
                 coefficients=mus_b,
@@ -243,9 +232,14 @@ def render_scattering_section(col, params):
                 line_color='blue'
             )
             st.plotly_chart(b_fig, use_container_width=True)
+            st.markdown("""
+                **Impact of Scattering Power:**
+                - Controls wavelength dependence
+                - Higher b → stronger λ dependence
+                - Brain tissue b ≈ 1.37
+            """)
 
-    # Column 3: Scattering scale (a)
-    with param_col3:
+        # Column 3: Scattering scale (a)
         a = st.number_input(
             "Scattering Scale (a)",
             min_value=0.5,
@@ -254,11 +248,13 @@ def render_scattering_section(col, params):
             step=0.1,
             help="Scattering amplitude [mm⁻¹]",
         )
-        
-        with st.popover("Show a relationship"):
+
+        with st.expander("📉 Scattering Amplitude Impact"):
             a_values = np.linspace(0.5, 2.0, 100)
-            mus_a = a_values * (PLOT_CONFIG["reference_wavelength"] / 500) ** (-params['b']) / (1 - params['g'])
-            
+            mus_a = a_values * \
+                (PLOT_CONFIG["reference_wavelength"] /
+                 500) ** (-params['b']) / (1 - params['g'])
+
             a_fig = create_parameter_relationship_plot(
                 param_values=a_values,
                 coefficients=mus_a,
@@ -267,150 +263,213 @@ def render_scattering_section(col, params):
                 line_color='blue'
             )
             st.plotly_chart(a_fig, use_container_width=True)
-    
+            st.markdown("""
+                **Impact of Scattering Scale:**
+                - Controls overall scattering strength
+                - Higher a → more scattering
+                - Brain tissue a ≈ 1.1 mm⁻¹
+            """)
+
     return g, b, a
 
-def render_absorption_section(col, params):
-    """Render the absorption properties section."""
-    # Get normalization wavelength from global params
-    normalization_wavelength = st.session_state.global_params.get("normalization_wavelength", 1300)
-    
-    # Update reference wavelength in plots
-    ref_wavelength = normalization_wavelength
-    
-    # Main absorption plot
-    water_data = load_water_absorption_data()
-    wavelengths = np.linspace(*PLOT_CONFIG["wavelength_range"], 1000)
-    mua = np.interp(wavelengths, water_data["wavelength"], water_data["absorption"])
-    mua = mua * params['water_content'] / 10  # Scale by water content and convert units
-    
-    fig = create_coefficient_plot(
-        wavelengths=wavelengths,
-        y_values=mua,
-        title="Absorption Coefficient",
-        line_color='red',
-        marker_color='blue',
-        ref_value=mua[np.abs(wavelengths - ref_wavelength).argmin()]
-    )
-    col.plotly_chart(fig, use_container_width=True)
-    add_formula_spacing()
 
-    # Formula with current value
-    absorption_formula = (
-        f"{FORMULA_SIZE} \\mu_a(\\lambda) = \\mu_{{a,base}} \\cdot w "
-        f"\\quad = \\mu_{{a,base}} \\cdot \\color{{red}}{{{params['water_content']:.2f}}}"
-    )
-    col.latex(absorption_formula)
-    add_formula_spacing()
+def render_absorption_section(col, params) -> float:
+    """
+    Render the absorption properties section.
 
+    Args:
+        col: Streamlit column object
+        params: Dictionary of tissue parameters
 
-    col.markdown("##### Parameter Controls")
-    col.markdown(
-        """
-        In brain tissue, water is the primary absorber at higher wavelengths:
-        - No fat or pigment present
-        - Hemoglobin doesn't absorb at higher wavelengths
-        - Major water absorption peaks at 1450 nm and 1950 nm
-        """
-    )
+    Returns:
+        float: Updated water_content parameter
+    """
 
-    # Water content control and relationship plot
-    water_content = col.select_slider(
-        "Water Content",
-        options=[i / 100 for i in range(0, 105, 5)],
-        value=params["water_content"],
-        help="Fraction of tissue that is water (≈75% for brain)",
-    )
-    
-    with col.popover("Show water content relationship"):
-        w_values = np.linspace(0, 1, 100)
+    # Create two columns for plot and controls
+    plot_col, controls_col = col.columns([2, 1])
+
+    with plot_col:
+        # Main absorption plot
         water_data = load_water_absorption_data()
-        ref_wavelength = PLOT_CONFIG["reference_wavelength"]
-        base_absorption = np.interp(ref_wavelength, water_data["wavelength"], water_data["absorption"]) / 10
-        mua_w = base_absorption * w_values
-        
-        w_fig = create_parameter_relationship_plot(
-            param_values=w_values,
-            coefficients=mua_w,
-            param_name="Water Content",
-            current_value=water_content,
-            line_color='red'
+        wavelengths = np.linspace(*PLOT_CONFIG["wavelength_range"], 1000)
+        mua = np.interp(
+            wavelengths, water_data["wavelength"], water_data["absorption"])
+        mua = mua * params['water_content'] / 10
+
+        fig = create_coefficient_plot(
+            wavelengths=wavelengths,
+            y_values=mua,
+            title="Absorption Coefficient",
+            line_color='red',
+            marker_color='blue'
         )
-        st.plotly_chart(w_fig, use_container_width=True)
-    
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Absorption formula below the plot
+        st.markdown("#### Absorption Formula")
+        absorption_formula = (
+            f"{FORMULA_SIZE} \\mu_a(\\lambda) = \\mu_{{a,base}} \\cdot w "
+            f"\\quad = \\mu_{{a,base}} \\cdot \\color{{red}}{{{
+                params['water_content']:.2f}}}"
+        )
+        st.latex(absorption_formula)
+
+    with controls_col:
+        st.markdown("### Parameter Controls")
+
+        # Water content control
+        water_content = st.select_slider(
+            "Water Content",
+            options=[i / 100 for i in range(0, 105, 5)],
+            value=params["water_content"],
+            help="Fraction of tissue that is water (≈75% for brain)",
+        )
+
+        with st.expander("💧 Water Content Impact"):
+            w_values = np.linspace(0, 1, 100)
+            water_data = load_water_absorption_data()
+            ref_wavelength = PLOT_CONFIG["reference_wavelength"]
+            base_absorption = np.interp(
+                ref_wavelength, water_data["wavelength"], water_data["absorption"]) / 10
+            mua_w = base_absorption * w_values
+
+            w_fig = create_parameter_relationship_plot(
+                param_values=w_values,
+                coefficients=mua_w,
+                param_name="Water Content",
+                current_value=water_content,
+                line_color='red'
+            )
+            st.plotly_chart(w_fig, use_container_width=True)
+            st.markdown("""
+                **Impact of Water Content:**
+                - Controls absorption strength
+                - Linear relationship with absorption
+                - Brain tissue ≈ 75% water
+                - Major peaks at 1450nm and 1950nm
+            """)
+
     return water_content
 
+
 def render_math_view():
-    """Render the tissue penetration controls."""
+    """Render the tissue penetration controls with improved layout."""
     # Initialize tissue parameters in session state if not present
     st.session_state.setdefault("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
     params = st.session_state.tissue_params
-    
+
     # Get global parameters
-    wavelength_range = st.session_state.global_params.get("wavelength_range", (800, 2400))
-    normalization_wavelength = st.session_state.global_params.get("normalization_wavelength", 1300)
-    
+    wavelength_range = st.session_state.global_params.get(
+        "wavelength_range", (800, 2400))
+    normalization_wavelength = st.session_state.global_params.get(
+        "normalization_wavelength", 1300)
+
     # Update plot config with global settings
     PLOT_CONFIG["wavelength_range"] = wavelength_range
-    PLOT_CONFIG["reference_wavelength"] = normalization_wavelength  # Update reference wavelength
+    PLOT_CONFIG["reference_wavelength"] = normalization_wavelength
 
-    # Main formula and explanation with depth parameter
-    depth = params.get("depth", 1.0)
-    main_formula_with_depth = (
-        f"{MAIN_FORMULA_SIZE} T(\\lambda, z) = e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda))z}} "
-        f"\\quad = e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda)) \\cdot \\color{{red}}{depth:.1f}}}"
-    )
-    st.latex(main_formula_with_depth)
-    add_formula_spacing()
-    
-    # Add depth slider at the top level
-    new_depth = st.slider(
-        "Depth (z) [mm]",
-        min_value=0.1,
-        max_value=2.0,
-        value=depth,
-        step=0.1,
-        help="Distance light travels through tissue",
-    )
+    # Create main container for the math view
+    main_container = st.container()
 
-    # Update depth in session state if changed
-    if new_depth != depth:
-        st.session_state.tissue_params["depth"] = new_depth
-        # Force rerun to update all plots
-        st.rerun()
+    with main_container:
+        # Header section with main formula and depth control
+        header = st.container()
+        with header:
+            # Title and description in columns
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                st.markdown("### Tissue Penetration Model")
+                st.markdown(
+                    """
+                    This model describes how light penetrates through tissue, accounting for 
+                    both scattering and absorption effects.
+                    """
+                )
 
-    st.markdown(
-        """
-        The blue line shows the fraction of photons reaching depth z, normalized at 1300 nm.
-        The red line shows the percentage absorbed, with shaded regions indicating >50% absorption.
-        """
-    )
-    add_formula_spacing()
+            with col2:
+                # Depth control in its own column
+                depth = params.get("depth", 1.0)
+                new_depth = st.slider(
+                    "Depth (z) [mm]",
+                    min_value=0.1,
+                    max_value=2.0,
+                    value=depth,
+                    step=0.1,
+                    help="Distance light travels through tissue",
+                )
 
-    # Create two columns for scattering and absorption
-    scattering_col, divider_col, absorption_col = st.columns([10, 1, 10])
+                if new_depth != depth:
+                    st.session_state.tissue_params["depth"] = new_depth
+                    st.rerun()
 
-    # Render sections
-    g, b, a = render_scattering_section(scattering_col, params)
-    
-    # Vertical divider
-    with divider_col:
-        st.markdown(
-            """
-            <div style="width: 100%; height: 100%; border-left: 2px solid #E0E0E0;"></div>
-            """,
-            unsafe_allow_html=True
-        )
-    
-    water_content = render_absorption_section(absorption_col, params)
+        # Main formula in an expander
+        with st.expander("📐 Mathematical Model", expanded=True):
+            # Main formula
+            main_formula_with_depth = (
+                f"{MAIN_FORMULA_SIZE} T(\\lambda, z) = "
+                f"e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda))z}} \\quad = "
+                f"e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda)) \\cdot "
+                f"\\color{{red}}{depth:.1f}}}"
+            )
+            st.latex(main_formula_with_depth)
 
-    # Update session state
-    st.session_state.tissue_params.update(
-        {
-            "water_content": water_content,
-            "g": g,
-            "a": a,
-            "b": b,
-            "depth": depth,
-        }
-    )
+            # Description of variables
+            st.markdown("""
+                where:
+                - T(λ,z) is the transmission at wavelength λ and depth z
+                - μₛ(λ) is the scattering coefficient
+                - μₐ(λ) is the absorption coefficient
+            """)
+            add_formula_spacing()
+
+        # Results interpretation
+        with st.container():
+            st.markdown("#### Model Output Interpretation")
+            interpretation_col1, interpretation_col2 = st.columns(2)
+
+            with interpretation_col1:
+                st.markdown("""
+                    🔵 **Photon Fraction**
+                    - Shows percentage of photons reaching depth z
+                    - Normalized at reference wavelength
+                """)
+
+            with interpretation_col2:
+                st.markdown("""
+                    🔴 **Absorption**
+                    - Shows percentage of photons absorbed
+                    - Shaded regions indicate >50% absorption
+                """)
+
+        # Parameters section with tabs
+        param_tabs = st.tabs(
+            ["Scattering Properties", "Absorption Properties"])
+
+        # Initialize variables with default values
+        g, b, a = params["g"], params["b"], params["a"]
+        water_content = params["water_content"]
+
+        try:
+            with param_tabs[0]:
+                # Scattering parameters
+                scattering_result = render_scattering_section(st, params)
+                if scattering_result is not None:
+                    g, b, a = scattering_result
+
+            with param_tabs[1]:
+                # Absorption parameters
+                absorption_result = render_absorption_section(st, params)
+                if absorption_result is not None:
+                    water_content = absorption_result
+
+            # Update session state only if we got valid results
+            st.session_state.tissue_params.update({
+                "water_content": water_content,
+                "g": g,
+                "a": a,
+                "b": b,
+                "depth": depth,
+            })
+
+        except (ValueError, TypeError, AttributeError) as e:
+            st.error(f"Error updating parameters: {str(e)}")

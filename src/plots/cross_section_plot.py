@@ -7,8 +7,8 @@ import streamlit as st
 
 from ..components.laser_manager import overlay_lasers
 from ..config.plot_config import CrossSectionPlotConfig
-from ..plots.tissue_view import calculate_tissue_parameters
 from ..config.tissue_config import DEFAULT_TISSUE_PARAMS
+from ..plots.tissue_view import calculate_tissue_parameters
 
 
 def get_marker_settings() -> Dict[str, Tuple[str, str]]:
@@ -24,10 +24,9 @@ def marker_settings_ui() -> None:
     if not st.session_state.get("marker_settings"):
         return
 
-
     # Create two columns for the entire interface
     main_col, preview_col = st.columns([3, 1])
-    
+
     with main_col:
         # Define marker options
         marker_options = {
@@ -44,10 +43,11 @@ def marker_settings_ui() -> None:
         # Create a row for each reference
         for ref in st.session_state.marker_settings.keys():
             col1, col2, col3 = st.columns([2, 2, 1])
-            
+
             with col1:
                 current_marker = st.session_state.marker_settings[ref][0]
-                marker_idx = list(marker_options.values()).index(current_marker)
+                marker_idx = list(marker_options.values()
+                                  ).index(current_marker)
                 marker = st.selectbox(
                     ref,
                     options=marker_list,
@@ -59,10 +59,10 @@ def marker_settings_ui() -> None:
                     marker_options[marker],
                     st.session_state.marker_settings[ref][1],
                 )
-            
+
             with col2:
                 st.markdown(f"<small>{ref}</small>", unsafe_allow_html=True)
-            
+
             with col3:
                 color = st.color_picker(
                     "Color",
@@ -75,11 +75,10 @@ def marker_settings_ui() -> None:
                     color,
                 )
 
-
     with preview_col:
-        
-        st.button("Reset to Defaults", use_container_width=True, 
-                 on_click=lambda: reset_marker_settings(st.session_state.marker_settings.keys()))
+
+        st.button("Reset to Defaults", use_container_width=True,
+                  on_click=lambda: reset_marker_settings(st.session_state.marker_settings.keys()))
 
         # Show compact preview with just reference names in their colors
         for ref, (_, color) in st.session_state.marker_settings.items():
@@ -88,15 +87,17 @@ def marker_settings_ui() -> None:
                 f"{ref}</div>",  # Just show first word of reference
                 unsafe_allow_html=True,
             )
-            
-                # Add reset button
+
+            # Add reset button
 
 
 def reset_marker_settings(refs):
     """Reset marker settings to defaults."""
-    default_markers = ["circle", "square", "diamond", "triangle-up", "triangle-down", "star"]
-    default_colors = ["#00008B", "#000000", "#FFC0CB", "#008080", "#808080", "#4B0082"]
-    
+    default_markers = ["circle", "square", "diamond",
+                       "triangle-up", "triangle-down", "star"]
+    default_colors = ["#00008B", "#000000",
+                      "#FFC0CB", "#008080", "#808080", "#4B0082"]
+
     st.session_state.marker_settings = {
         ref: (
             default_markers[i % len(default_markers)],
@@ -122,7 +123,8 @@ def create_cross_section_plot(
 
     # Get depth from session state if not provided
     if depth is None:
-        depth = st.session_state.tissue_params.get("depth", DEFAULT_TISSUE_PARAMS["depth"])
+        depth = st.session_state.tissue_params.get(
+            "depth", DEFAULT_TISSUE_PARAMS["depth"])
 
     threshold_norm = absorption_threshold / 100
 
@@ -206,8 +208,10 @@ def create_cross_section_plot(
     fig = overlay_lasers(fig, plot_type="cross_section")
 
     # Update layout with log scale and proper ranges
-    layout = config.get_layout()
-    layout.update(
+    base_layout = config.get_layout()
+    base_layout.update(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         yaxis=dict(
             type="log",
             range=[np.log10(min_y), np.log10(max_y)],
@@ -218,6 +222,6 @@ def create_cross_section_plot(
             range=[config.wavelength_range[0], config.wavelength_range[1]],
         ),
     )
-    fig.update_layout(layout)
+    fig.update_layout(base_layout)
 
     return fig
