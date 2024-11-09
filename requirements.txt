@@ -5,7 +5,6 @@ numpy
 requests
 plotly
 types-requests
-types-plotly
 pandas-stubs
 types-matplotlib
 types-setuptools
