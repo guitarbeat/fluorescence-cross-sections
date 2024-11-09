@@ -1,20 +1,27 @@
-Name,Wavelength,Cross_Section,Reference
-tdTomato,1050,200,Drobizhev et al. (2011)
-Rhodamine B,800,200,Xu et al. (1996)
-tdKatushka2,1100,150,Dana et al. (2016)
-DsRed2,1050,100,Drobizhev et al. (2011)
-Neptune,1200,90,Dana et al. (2016)
-mNeptune,1200,90,Dana et al. (2016)
-mKate2,1200,70,Dana et al. (2016)
-Katushka2,1200,70,Dana et al. (2016)
-Katushka,1100,45,Dana et al. (2016)
-mKate,1200,45,Dana et al. (2016)
-EGFP,850,40,Drobizhev et al. (2011)
-mGrape3,1200,30,Dana et al. (2016)
-eqFP670,1200,25,Dana et al. (2016)
-E2-Crimson,1100,25,Dana et al. (2016)
-mPlum,1100,20,Dana et al. (2016)
-Cy5,1200,35,Kobat et al. (2009)
-GCaMP6f,920,35,"Janelia, Harris Lab"
-RCaMP1h,1100,25,"Janelia, Harris Lab"
-mRaspberry,1100,25,"Janelia, Harris Lab"
+Name,Wavelength,Cross_Section,Reference,Em_Max,QY,EC,pKa
+tdTomato,1050.0,278.0,Drobizhev et al. (2011),,,,
+Rhodamine B,841.0,210.0,Xu et al. (1996),,,,
+tdKatushka2,1100.0,143.0,Dana et al. (2016),,,,
+DsRed2,1051.0,104.0,Drobizhev et al. (2011),,,,
+Neptune,1200.0,73.0,Dana et al. (2016),,,,
+mNeptune,1104.0,71.0,Dana et al. (2016),,,,
+mKate2,1140.0,73.0,Dana et al. (2016),,,,
+Katushka2,1200.0,70.0,Dana et al. (2016),,,,
+Katushka,1140.0,63.0,Dana et al. (2016),,,,
+mKate,1080.0,67.0,Dana et al. (2016),,,,
+EGFP,1120.0,52.0,Drobizhev et al. (2011),,,,
+mGrape3,826.0,40.0,Dana et al. (2016),,,,
+eqFP670,1139.0,32.0,Dana et al. (2016),,,,
+E2-Crimson,1118.0,23.0,Dana et al. (2016),,,,
+mPlum,1106.0,22.0,Dana et al. (2016),,,,
+Cy5,1220.0,40.0,Kobat et al. (2009),,,,
+GCaMP6s,920.0,19.0,Dana et al. (2016),,,,
+jRCaMP1a,1079.0,7.0,Dana et al. (2016),,,,
+mRaspberry,1081.0,27.0,"Janelia, Harris Lab",,,,
+Alexa 680,1274.0,75.0,Kobat et al. (2009),,,,
+Cy5.5,1276.0,60.0,Kobat et al. (2009),,,,
+Alexa 700,1301.0,52.0,Kobat et al. (2009),,,,
+Alexa 647,1243.0,45.0,Kobat et al. (2009),,,,
+mCherry,1081.0,27.0,Drobizhev et al. (2011),,,,
+RhodamineB in Methanol,700.0,280.0,Zipfel Lab,,,,
+Fluoresecein,770.0,37.33,Zipfel Lab,,,,

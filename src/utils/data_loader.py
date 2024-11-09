@@ -1,9 +1,13 @@
 """
-Data loading utilities
+Data loading utilities for handling various data sources including:
+- Water absorption data
+- Fluorophore data
+- Two-photon cross-section data
 """
 
 import logging
 from pathlib import Path
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -11,10 +15,24 @@ import streamlit as st
 
 logger = logging.getLogger(__name__)
 
+# Constants
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
+XSECTION_DIR = DATA_DIR / "2p-xsections"
+DEFAULT_COLUMNS = [
+    "Name", "Wavelength", "Cross_Section", "Reference",
+    "Ex_Max", "Em_Max", "QY", "EC", "pKa", "Brightness"
+]
+
+
 
 def load_water_absorption_data() -> pd.DataFrame:
-    """Load water absorption data from kou93b.dat."""
-    data_path = Path(__file__).parent.parent.parent / "data" / "kou93b.dat"
+    """
+    Load water absorption data from kou93b.dat.
+
+    Returns:
+        pd.DataFrame: DataFrame containing wavelength and absorption data
+    """
+    data_path = DATA_DIR / "kou93b.dat"
     try:
         df = pd.read_csv(
             data_path,
@@ -29,10 +47,194 @@ def load_water_absorption_data() -> pd.DataFrame:
         return df
     except (FileNotFoundError, pd.errors.EmptyDataError) as e:
         st.error(f"Error loading water absorption data: {e}")
-        # Return a minimal dataset if loading fails
-        return pd.DataFrame(
-            {
-                "wavelength": np.linspace(800, 2400, 1000),
-                "absorption": np.zeros(1000),
-            }
+        return pd.DataFrame({
+            "wavelength": np.linspace(800, 2400, 1000),
+            "absorption": np.zeros(1000),
+        })
+
+
+
+def load_fluorophore_data() -> pd.DataFrame:
+    """
+    Load existing fluorophores from CSV or create empty DataFrame.
+
+    Returns:
+        pd.DataFrame: DataFrame containing fluorophore data
+    """
+    try:
+        fluorophore_df = pd.read_csv(DATA_DIR / "fluorophores.csv")
+        return fluorophore_df
+    except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+        st.warning(f"No existing fluorophore data found: {e}")
+        return pd.DataFrame(columns=DEFAULT_COLUMNS)
+
+
+def load_cross_section_data() -> Dict[str, pd.DataFrame]:
+    """Load all two-photon cross-section data files."""
+    cross_sections: Dict[str, pd.DataFrame] = {}
+
+    if not XSECTION_DIR.exists():
+        st.error(f"Cross-section directory not found: {XSECTION_DIR}")
+        return cross_sections
+
+    # Define special case configurations with exact header handling
+    SPECIAL_CASES = {
+        "IntrinsicFluorophores": {
+            "skiprows": [0, 1],  # Skip title and separator lines
+            "names": ["wavelength", "riboflavin", "folic_acid", "cholecalciferol", "retinol"],
+            "description": "Intrinsic fluorophores including riboflavin, folic acid, etc.",
+            "delimiter": r"\s+",
+            "encoding": "utf-8",
+            "decimal": ".",  # Handle scientific notation
+            "thousands": None  # No thousands separator
+        },
+        "NADH-ProteinBound": {
+            "skiprows": [0, 1, 2],  # Skip all header lines
+            "names": ["wavelength", "gm_mean", "sd", "gm_mdh", "gm_ad"],
+            "description": "NADH in different binding states",
+            "delimiter": r"\s+",
+            "encoding": "utf-8",
+            "decimal": ".",
+            "thousands": None
+        },
+        "Fura2": {
+            "skiprows": [0, 1, 2],  # Skip header lines
+            "names": ["wavelength", "gm_mean_ca", "sd_ca", "gm_mean_free", "sd_free"],
+            "description": "Fura-2 with and without calcium",
+            "delimiter": r"\s+",
+            "encoding": "utf-8",
+            "decimal": ".",
+            "thousands": None
+        }
+    }
+
+    for file_path in XSECTION_DIR.glob("*.txt"):
+        try:
+            fluorophore_name = file_path.stem
+            
+            if fluorophore_name in SPECIAL_CASES:
+                config = SPECIAL_CASES[fluorophore_name]
+                # Read the file with exact configuration
+                df = pd.read_csv(
+                    file_path,
+                    sep=config["delimiter"],
+                    skiprows=config["skiprows"],
+                    names=config["names"],
+                    encoding=config["encoding"],
+                    engine='python',
+                    decimal=config["decimal"],
+                    thousands=config["thousands"]
+                )
+                # Add metadata
+                df.attrs['description'] = config.get('description', '')
+            else:
+                # Count header lines
+                with open(file_path) as f:
+                    header = [next(f) for _ in range(5)]
+                
+                skiprows = sum(1 for line in header if 
+                             line.startswith('--') or 
+                             line.startswith('nm') or 
+                             line.strip() == '')
+                
+                # Read data
+                df = pd.read_csv(
+                    file_path,
+                    delim_whitespace=True,
+                    skiprows=skiprows,
+                    comment="-",
+                    header=None,
+                    on_bad_lines='skip'
+                )
+                
+                # Assign column names based on number of columns
+                if len(df.columns) == 3:
+                    df.columns = ["wavelength", "cross_section", "std_dev"]
+                else:
+                    df.columns = ["wavelength", "cross_section"]
+
+            # Clean and validate data
+            df = df.drop_duplicates()
+            
+            # Convert all numeric columns to float, handling scientific notation
+            for col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+            # Drop any rows where all numeric columns are NaN
+            df = df.dropna(how='all', subset=df.columns[1:])  # Keep row if any numeric data exists
+            df = df.sort_values('wavelength')
+            
+            # Additional validation
+            if df.empty or df['wavelength'].isna().all():
+                logger.warning(f"No valid data found in {file_path}")
+                continue
+
+            # Log the first few rows for debugging
+            logger.debug(f"First few rows of {fluorophore_name}:\n{df.head()}")
+            
+            cross_sections[fluorophore_name] = df
+      
+        except Exception as e:
+            st.error(f"Error loading cross-section data for {file_path.name}: {e}")
+            logger.error(f"Failed to load {file_path}: {str(e)}", exc_info=True)
+
+    if not cross_sections:
+        st.warning("No cross-section data files were loaded successfully")
+
+    return cross_sections
+
+
+def validate_data(df: pd.DataFrame, required_columns: list) -> Optional[pd.DataFrame]:
+    """
+    Validate that DataFrame contains required columns and is not empty.
+
+    Args:
+        df: DataFrame to validate
+        required_columns: List of required column names
+
+    Returns:
+        Optional[pd.DataFrame]: Validated DataFrame or None if validation fails
+    """
+    if df.empty:
+        st.warning("Empty DataFrame provided for validation")
+        return None
+
+    missing_cols = set(required_columns) - set(df.columns)
+    if missing_cols:
+        st.error(f"Missing required columns: {missing_cols}")
+        return None
+
+    return df
+
+
+def load_tissue_properties() -> pd.DataFrame:
+    """
+    Load tissue optical properties (absorption and scattering coefficients) from mua_mus.txt.
+    
+    The data contains:
+    - Wavelength (nm)
+    - Total attenuation coefficient (mm⁻¹)
+    - Scattering coefficient (mm⁻¹) 
+    - Absorption coefficient (mm⁻¹)
+
+    Returns:
+        pd.DataFrame: DataFrame containing wavelength and optical properties
+    """
+    data_path = DATA_DIR / "mua_mus.txt"
+    try:
+        df = pd.read_csv(
+            data_path,
+            delim_whitespace=True,
+            names=["wavelength", "total_attenuation", "scattering", "absorption"]
         )
+        return df
+    except (FileNotFoundError, pd.errors.EmptyDataError) as e:
+        st.error(f"Error loading tissue properties data: {e}")
+        # Return dummy data if file not found
+        wavelengths = np.linspace(800, 2000, 1000)
+        return pd.DataFrame({
+            "wavelength": wavelengths,
+            "total_attenuation": np.ones_like(wavelengths) * 10,
+            "scattering": np.ones_like(wavelengths) * 9,
+            "absorption": np.ones_like(wavelengths) * 1
+        })

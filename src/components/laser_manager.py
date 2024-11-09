@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Tuple
+from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -24,10 +25,17 @@ DEFAULT_LASERS = [
     LaserConfig("OPO/OPA", (1100, 2200), "#f942ff"),  # Magenta
 ]
 
+# Add constant for laser data path
+LASER_DATA_PATH = Path("data/lasers.csv")
+
 
 def initialize_laser_data() -> pd.DataFrame:
-    """Create a DataFrame from default laser configurations."""
-    return pd.DataFrame(
+    """Create a DataFrame from default laser configurations or load from CSV."""
+    if LASER_DATA_PATH.exists():
+        return pd.read_csv(LASER_DATA_PATH)
+    
+    # If no CSV exists, create from defaults
+    default_df = pd.DataFrame(
         {
             "Name": [laser.name for laser in DEFAULT_LASERS],
             "Start_nm": [laser.wavelength_range[0] for laser in DEFAULT_LASERS],
@@ -35,6 +43,11 @@ def initialize_laser_data() -> pd.DataFrame:
             "Color": [laser.color for laser in DEFAULT_LASERS],
         }
     )
+    
+    # Save default configuration
+    LASER_DATA_PATH.parent.mkdir(exist_ok=True)
+    default_df.to_csv(LASER_DATA_PATH, index=False)
+    return default_df
 
 
 def get_laser_df() -> pd.DataFrame:
@@ -45,7 +58,7 @@ def get_laser_df() -> pd.DataFrame:
 
 
 def add_laser(name: str, start_nm: float, end_nm: float, color: str) -> bool:
-    """Add a new laser to the session state."""
+    """Add a new laser to the session state and save to CSV."""
     if not name:
         return False
 
@@ -61,11 +74,23 @@ def add_laser(name: str, start_nm: float, end_nm: float, color: str) -> bool:
 
         laser_df = get_laser_df()
         st.session_state.laser_df = pd.concat([laser_df, new_laser], ignore_index=True)
+        
+        # Save to CSV
+        save_laser_data(st.session_state.laser_df)
         return True
 
     except Exception as e:
         st.error(f"Error adding laser: {str(e)}")
         return False
+
+
+def save_laser_data(df: pd.DataFrame) -> None:
+    """Save laser data to CSV file."""
+    try:
+        LASER_DATA_PATH.parent.mkdir(exist_ok=True)
+        df.to_csv(LASER_DATA_PATH, index=False)
+    except Exception as e:
+        st.error(f"Failed to save laser data: {str(e)}")
 
 
 def render_add_laser_form() -> None:
@@ -103,10 +128,6 @@ def render_add_laser_form() -> None:
 
 def render_laser_editor() -> None:
     """Render the interface for editing existing lasers."""
-    # Get global wavelength range
-    wavelength_range = st.session_state.get("global_params", {}).get("wavelength_range", (700, 2400))
-    min_wavelength, max_wavelength = wavelength_range
-    
     st.session_state.edited_df = st.data_editor(
         get_laser_df(),
         num_rows="dynamic",
@@ -114,22 +135,15 @@ def render_laser_editor() -> None:
             "Name": st.column_config.TextColumn(
                 "Name",
                 help="Laser name",
-                required=True,
             ),
             "Start_nm": st.column_config.NumberColumn(
                 "Start (nm)",
                 help="Starting wavelength",
-                min_value=min_wavelength,  # Use global min
-                max_value=max_wavelength,  # Use global max
-                step=1,
                 format="%d",
             ),
             "End_nm": st.column_config.NumberColumn(
                 "End (nm)",
                 help="Ending wavelength",
-                min_value=min_wavelength,  # Use global min
-                max_value=max_wavelength,  # Use global max
-                step=1,
                 format="%d",
             ),
             "Color": st.column_config.TextColumn(
@@ -141,6 +155,23 @@ def render_laser_editor() -> None:
         key="laser_editor",
         use_container_width=True,
     )
+
+    if st.button("💾 Save Changes", use_container_width=True, key="laser_editor_save"):
+        st.session_state.laser_df = st.session_state.edited_df
+        save_laser_data(st.session_state.laser_df)
+        st.success("Laser changes saved")
+        st.rerun()
+
+    # Add download button
+    if not st.session_state.edited_df.empty:
+        csv = st.session_state.edited_df.to_csv(index=False)
+        st.download_button(
+            label="📥 Download Laser Config",
+            data=csv,
+            file_name="laser_config.csv",
+            mime="text/csv",
+            key="laser_download"
+        )
 
 
 def render_color_picker() -> None:
@@ -167,28 +198,23 @@ def render_color_picker() -> None:
 def render_laser_manager() -> None:
     """Render the laser management interface."""
     with st.container():
-
         st.toggle(
             "Show Lasers",
-            value=st.session_state.get("show_lasers", True),
+            value=st.session_state.get("show_lasers"),
             key="show_lasers",
             help="Toggle visibility of laser ranges on all plots",
         )
         
         if st.session_state.show_lasers:
-            add_tab, edit_tab = st.tabs(["Add New Laser", "Edit Lasers"])
+            # Remove tabs and just show editor directly
+            render_laser_editor()
+            render_color_picker()
 
-            with add_tab:
-                render_add_laser_form()
-
-            with edit_tab:
-                render_laser_editor()
-                render_color_picker()
-
-                if st.button("💾 Save Changes", use_container_width=True):
-                    st.session_state.laser_df = st.session_state.edited_df
-                    st.success("Laser changes saved")
-                    st.rerun()
+            if st.button("💾 Save Changes", use_container_width=True, key="laser_save_button"):
+                st.session_state.laser_df = st.session_state.edited_df
+                save_laser_data(st.session_state.laser_df)
+                st.success("Laser changes saved")
+                st.rerun()
 
 
 def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:
@@ -270,7 +296,7 @@ def add_laser_overlays(fig: go.Figure) -> None:
 
 def overlay_lasers(fig: go.Figure, plot_type: str = "tissue") -> go.Figure:
     """Add laser overlays to a plot with consistent positioning."""
-    if not st.session_state.get("show_lasers", True):
+    if not st.session_state.get("show_lasers"):
         return fig
 
     # Add empty trace for laser axis

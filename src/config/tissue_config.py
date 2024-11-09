@@ -7,8 +7,8 @@ import streamlit as st
 from src.utils.data_loader import load_water_absorption_data
 
 # Formula display configuration
-MAIN_FORMULA_SIZE = r"\huge"  # Size for the main formula
-FORMULA_SIZE = r"\large"      # Size for other formulas
+MAIN_FORMULA_SIZE = r"\large"  # Size for the main formula
+FORMULA_SIZE = r""      # Size for other formulas
 FORMULA_SPACING = 2          # Number of blank lines after formulas
 
 # Plot configuration

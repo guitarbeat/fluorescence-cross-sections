@@ -18,6 +18,7 @@ class ProteinState:
     stokes: Optional[float]
     lifetime: Optional[float]
     maturation: Optional[float]
+    bleach: Optional[float]
 
     @classmethod
     def from_api_response(cls, data: Dict[str, Any]) -> "ProteinState":
@@ -52,6 +53,7 @@ class ProteinData:
 
     name: str
     url: str
+    slug: str
     default_state: ProteinState
 
     @classmethod
@@ -67,8 +69,8 @@ class ProteinData:
 
         return cls(
             name=name,
-            slug=data.get("slug", "").lower(),
             url=data.get("url", ""),
+            slug=data.get("slug", "").lower(),
             default_state=state,
         )
 

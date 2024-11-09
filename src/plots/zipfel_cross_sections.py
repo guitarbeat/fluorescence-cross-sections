@@ -1,0 +1,221 @@
+import plotly.graph_objects as go
+import pandas as pd
+import numpy as np
+from typing import Dict, Optional, List, Tuple
+
+def get_marker_styles(num_traces: int) -> List[Tuple[str, str]]:
+    """
+    Get marker styles for multiple traces.
+    
+    Args:
+        num_traces: Number of traces needed
+        
+    Returns:
+        List of (marker_symbol, color) tuples
+    """
+    # Updated color scheme for better visibility
+    markers = ['circle', 'square', 'triangle-up', 'diamond', 'triangle-down']
+    colors = [
+        '#1f77b4',  # Blue
+        '#ff7f0e',  # Orange
+        '#2ca02c',  # Green
+        '#d62728',  # Red
+        '#9467bd',  # Purple
+        '#8c564b',  # Brown
+        '#e377c2',  # Pink
+        '#7f7f7f',  # Gray
+    ]
+    
+    styles = []
+    for i in range(num_traces):
+        marker = markers[i % len(markers)]
+        color = colors[i % len(colors)]
+        styles.append((marker, color))
+    
+    return styles
+
+def plot_cross_section(
+    cross_sections: Dict[str, pd.DataFrame],
+    selected_fluorophore: str,
+    height: int = 600,
+    width: int = 800,
+    show_error_bars: bool = True
+) -> go.Figure:
+    """
+    Create a plot of two-photon cross section data for a selected fluorophore.
+    Handles multiple datasets and error bars if available.
+    
+    Args:
+        cross_sections: Dictionary of fluorophore data
+        selected_fluorophore: Name of fluorophore to plot
+        height: Plot height in pixels
+        width: Plot width in pixels
+        show_error_bars: Whether to show error bars when available
+        
+    Returns:
+        go.Figure: Plotly figure object
+    """
+    if selected_fluorophore not in cross_sections:
+        raise ValueError(f"Fluorophore {selected_fluorophore} not found in data")
+    
+    df = cross_sections[selected_fluorophore]
+    
+    # Create figure with white background and improved styling
+    fig = go.Figure()
+    
+    # Get marker styles
+    marker_styles = get_marker_styles(4)  # Get enough styles for all possible traces
+    
+    # Special case handling with consistent styling
+    if selected_fluorophore == "IntrinsicFluorophores":
+        # Define the columns and their display names
+        columns = {
+            "riboflavin": "Riboflavin",
+            "folic_acid": "Folic Acid",
+            "cholecalciferol": "Cholecalciferol",
+            "retinol": "Retinol"
+        }
+        
+        for idx, (col, display_name) in enumerate(columns.items()):
+            marker_symbol, color = marker_styles[idx]
+            
+            # Convert to numeric and handle any conversion errors
+            y_values = pd.to_numeric(df[col], errors='coerce')
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=df["wavelength"],
+                    y=y_values,
+                    name=display_name,
+                    mode="lines+markers",
+                    line=dict(color=color, width=2),
+                    marker=dict(
+                        symbol=marker_symbol,
+                        size=8,
+                        color=color
+                    ),
+                    hovertemplate=(
+                        f"{display_name}<br>" +
+                        "Wavelength: %{x} nm<br>" +
+                        "Cross Section: %{y:.2e} GM<br>" +
+                        "<extra></extra>"
+                    )
+                )
+            )
+    elif selected_fluorophore == "NADH-ProteinBound":
+        for idx, (col, name) in enumerate([
+            ("gm_mean", "Mean"),
+            ("gm_mdh", "MDH-bound"),
+            ("gm_ad", "AD-bound")
+        ]):
+            marker_symbol, color = marker_styles[idx]
+            error_y = None
+            if col == "gm_mean" and "sd" in df.columns and show_error_bars:
+                error_y = dict(
+                    type='data',
+                    array=df["sd"],
+                    visible=True,
+                    color=color,
+                    thickness=1,
+                    width=3
+                )
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=df["wavelength"],
+                    y=df[col],
+                    name=name,
+                    mode="lines+markers",
+                    line=dict(color=color, width=2),
+                    marker=dict(
+                        symbol=marker_symbol,
+                        size=8,
+                        color=color
+                    ),
+                    error_y=error_y
+                )
+            )
+    else:
+        # Default handling with consistent styling
+        marker_symbol, color = marker_styles[0]
+        error_y = None
+        if len(df.columns) == 3 and show_error_bars:
+            error_y = dict(
+                type='data',
+                array=df["std_dev"],
+                visible=True,
+                color=color,
+                thickness=1,
+                width=3
+            )
+        
+        fig.add_trace(
+            go.Scatter(
+                x=df["wavelength"],
+                y=df["cross_section"],
+                name=selected_fluorophore,
+                mode="lines+markers",
+                line=dict(color=color, width=2),
+                marker=dict(
+                    symbol=marker_symbol,
+                    size=8,
+                    color=color
+                ),
+                error_y=error_y
+            )
+        )
+    
+    # Update layout with improved log scale handling
+    fig.update_layout(
+        title=dict(
+            text=f"{selected_fluorophore} Two-Photon Cross Section",
+            x=0.5,
+            xanchor='center',
+            font=dict(size=20)
+        ),
+        xaxis=dict(
+            title="Wavelength (nm)",
+            gridcolor='rgba(128,128,128,0.2)',
+            zerolinecolor='rgba(128,128,128,0.2)',
+            showline=True,
+            linewidth=1,
+            mirror=True,
+            range=[df["wavelength"].min() * 0.99, df["wavelength"].max() * 1.01]
+        ),
+        yaxis=dict(
+            title="Cross Section (GM)",
+            type="log",
+            gridcolor='rgba(128,128,128,0.2)',
+            zerolinecolor='rgba(128,128,128,0.2)',
+            showline=True,
+            linewidth=1,
+            mirror=True,
+            # Set range to cover the data with some padding
+            range=[
+                np.floor(np.log10(df.select_dtypes(include=[np.number]).min().min())),
+                np.ceil(np.log10(df.select_dtypes(include=[np.number]).max().max()))
+            ]
+        ),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=height,
+        width=width,
+        showlegend=True,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="right",
+            x=0.99,
+            bgcolor='rgba(255,255,255,0.1)'
+        ),
+        margin=dict(l=80, r=20, t=60, b=60),
+        hovermode='x unified'
+    )
+    
+    # Enable autoscale
+    fig.update_layout(
+        xaxis_autorange=True,
+        yaxis_autorange=True
+    )
+    
+    return fig 

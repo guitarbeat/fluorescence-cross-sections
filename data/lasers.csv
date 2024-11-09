@@ -1,0 +1,5 @@
+Name,Start_nm,End_nm,Color
+Yb fiber,1050.0,1070.0,#4b4bff
+Diamond,1240.0,1260.0,#ff9d42
+Spirit-NOPA-VIS,650.0,900.0,#f942ff
+Spirit-NOPA-IR,1200.0,2500.0,#f942ff

@@ -4,49 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from src.api.fpbase_client import FPbaseAPI, FPbaseAPIError
-
-
-def create_search_filters() -> Dict[str, Any]:
-    """Create focused search filters for fluorophore exploration."""
-    filters = {}
-
-    with st.expander("Spectral Filters"):
-        col1, col2 = st.columns(2)
-
-        with col1:
-            # Emission range
-            em_min, em_max = st.slider(
-                "Emission Range (nm)",
-                min_value=350,
-                max_value=800,
-                value=(450, 550),
-                help="Filter by emission maximum wavelength",
-            )
-            filters["em_max__range"] = f"{em_min},{em_max}"
-
-            # Quantum yield
-            min_qy = st.number_input(
-                "Minimum Quantum Yield",
-                min_value=0.0,
-                max_value=1.0,
-                value=0.0,
-                help="Filter by minimum quantum yield",
-            )
-            if min_qy > 0:
-                filters["qy__gte"] = min_qy
-
-        with col2:
-            # Brightness filter
-            min_brightness = st.number_input(
-                "Minimum Brightness",
-                min_value=0.0,
-                value=0.0,
-                help="Filter by minimum brightness (QY × EC / 1000)",
-            )
-            if min_brightness > 0:
-                filters["brightness__gte"] = min_brightness
-
-    return filters
+from src.components.fluorophore_manager import FluorophoreManager
 
 
 def download_results(df: pd.DataFrame) -> None:
@@ -64,123 +22,115 @@ def download_results(df: pd.DataFrame) -> None:
 def search_proteins(
     query: str, filters: Dict[str, Any], client: FPbaseAPI
 ) -> Dict[str, Any]:
-    """
-    Search for proteins using the FPbase API with advanced filters.
-
-    Args:
-        query (str): The search query string.
-        filters (Dict[str, Any]): Additional search filters.
-        client (FPbaseAPI): An instance of the FPbase API client.
-
-    Returns:
-        Dict[str, Any]: A dictionary containing search results and status.
-    """
+    """Search for proteins using the FPbase API."""
     try:
-        # Combine name query with filters
         params = filters.copy()
         if query:
             params["name__icontains"] = query
 
         with st.spinner("🔍 Searching FPbase database..."):
-            # Get raw response first
             response = client._make_request("basic", params, timeout=10)
-
-            if response.status_code == 200:
-                # Show the raw JSON response for the first result
-                raw_data = response.json()
-                if raw_data:
-                    st.write("### Example API Response (First Result):")
-                    st.json(raw_data[0])  # Show first result in pretty format
-
-            # Continue with normal processing
-            proteins = client.search_proteins(params, timeout=10)
-
-            if not proteins:
+            
+            if response.status_code != 200:
                 return {
                     "success": False,
                     "message": "No proteins found matching your criteria.",
                 }
 
-            results_df = client.to_dataframe(proteins)
+            # Get raw data from response
+            raw_data = response.json()
+            
+            if not raw_data:
+                return {
+                    "success": False,
+                    "message": "No proteins found matching your criteria.",
+                }
 
-            # Show all results, even those without complete data
-            if results_df.empty:
-                return {"success": False, "message": "No proteins found."}
+            # Convert directly to DataFrame keeping all columns
+            results_df = pd.DataFrame(raw_data)
+            
+            # Create proper FPbase URL
+            base_url = "https://www.fpbase.org"
+            results_df["URL"] = base_url + results_df["url"].fillna("")
+            
+            # Rename some columns for clarity
+            column_renames = {
+                "name": "Name",
+                "ex_max": "Ex λ (nm)",
+                "em_max": "Em λ (nm)",
+                "qy": "Quantum Yield",
+                "ext_coeff": "Extinction Coeff",
+                "pka": "pKa",
+                "brightness": "Brightness",
+                "maturation": "Maturation",
+                "lifetime": "Lifetime",
+                "stokes": "Stokes Shift",
+                "bleach": "Photobleaching",
+            }
+            results_df = results_df.rename(columns=column_renames)
+            
+            # Add note about two-photon data
+            results_df["Two-Photon Note"] = "Two-photon cross-section data not available from FPbase. See Zipfel Lab data for GM values."
+            
+            return {
+                "success": True,
+                "message": f"Found {len(results_df)} proteins. Note: Two-photon cross-section values (GM) are not available from FPbase.",
+                "data": results_df
+            }
 
-            # Format message to indicate total proteins and those with complete data
-            total_proteins = len(results_df)
-            complete_data = len(
-                results_df.dropna(subset=["Em_Max"])
-            )  # Only check for emission data
-
-            message = (
-                f"Found {total_proteins} proteins total. "
-                f"{complete_data} have complete emission data. "
-                "Click the URLs to view protein details on FPbase."
-            )
-
-            return {"success": True, "message": message, "data": results_df}
-
-    except FPbaseAPIError as e:
+    except Exception as e:
+        st.error(f"Search error: {str(e)}")
         return {"success": False, "message": f"Search failed: {str(e)}"}
 
 
-def render_search_panel() -> None:
-    """Render the enhanced FPbase search panel."""
-    st.markdown("### FPbase Search")
+def render_search_panel(key_prefix: str = "") -> None:
+    """Render the simplified FPbase search panel."""
+    with st.expander("🔍 FPbase Database Search", expanded=True):
+        st.markdown("### Search FPbase")
+        
+        st.info("""
+            **Note about Two-Photon Data:**
+            - FPbase provides spectral shapes but not absolute cross-section values (GM units)
+            - For accurate two-photon cross-sections, refer to the Zipfel Lab data
+            - Use this search to find additional fluorophore properties (QY, emission, etc.)
+        """)
 
-    # Basic search with name
-    name_query = st.text_input(
-        "Search by name",
-        placeholder="e.g., GFP, RFP, YFP",
-        help="Enter protein name (e.g., 'GFP', 'RFP', etc.)",
-    )
+        name_query = st.text_input(
+            "Search by name",
+            placeholder="e.g., GFP, RFP, YFP",
+            help="Enter protein name (e.g., 'GFP', 'RFP', etc.)",
+            key=f"{key_prefix}name_query"
+        )
 
-    # Convert to API parameter
-    filters = {"name__icontains": name_query} if name_query else {}
+        if st.button("🔍 Search", use_container_width=True, type="primary", key=f"{key_prefix}search_button"):
+            result = search_proteins(name_query, {"name__icontains": name_query}, st.session_state.fpbase_client)
 
-    # Get spectral filters
-    filters.update(create_search_filters())
-
-    # Search button
-    if st.button("🔍 Search", use_container_width=True, type="primary"):
-        result = search_proteins(name_query, filters, st.session_state.fpbase_client)
-
-        if result["success"]:
-            st.success(result["message"])
-
-            # Display results in a tabbed interface
-            tab1, tab2 = st.tabs(["Table View", "Summary Stats"])
-
-            with tab1:
-                # Display results table
-                st.dataframe(
+            if result["success"]:
+                # Show all columns in the results table with clickable URLs
+                st.data_editor(
                     result["data"],
+                    num_rows="dynamic",
                     column_config={
-                        "Reference": st.column_config.LinkColumn("FPbase Link")
+                        "URL": st.column_config.LinkColumn(
+                            "FPbase Link",
+                            display_text="View on FPbase",  # Text to show for the link
+                            help="Click to view on FPbase website"
+                        ),
+                        "Name": st.column_config.TextColumn("Name"),
+                        "Ex λ (nm)": st.column_config.NumberColumn(format="%d"),
+                        "Em λ (nm)": st.column_config.NumberColumn(format="%d"),
+                        "Quantum Yield": st.column_config.NumberColumn(format="%.2f"),
+                        "Extinction Coeff": st.column_config.NumberColumn(format="%d"),
+                        "pKa": st.column_config.NumberColumn(format="%.1f"),
+                        "Brightness": st.column_config.NumberColumn(format="%.1f"),
+                        "Maturation": st.column_config.NumberColumn(format="%.1f"),
+                        "Lifetime": st.column_config.NumberColumn(format="%.1f"),
+                        "Stokes Shift": st.column_config.NumberColumn(format="%.1f"),
+                        "Photobleaching": st.column_config.NumberColumn(format="%.1f"),
                     },
                     use_container_width=True,
-                    height=400,
+                    hide_index=True,
+                    key=f"{key_prefix}search_editor"
                 )
-
-                # Download button
-                download_results(result["data"])
-
-            with tab2:
-                # Show focused summary statistics
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Total Proteins", len(result["data"]))
-                    if "Brightness" in result["data"].columns:
-                        st.metric(
-                            "Average Brightness",
-                            f"{result['data']['Brightness'].mean():.2f}",
-                        )
-                with col2:
-                    st.metric(
-                        "With Emission Data", result["data"]["Em_Max"].notna().sum()
-                    )
-                    if "QY" in result["data"].columns:
-                        st.metric("Average QY", f"{result['data']['QY'].mean():.2f}")
-        else:
-            st.warning(result["message"])
+            else:
+                st.warning(result["message"])
