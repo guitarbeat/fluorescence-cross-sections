@@ -1,5 +1,7 @@
 Name,Start_nm,End_nm,Color
-Yb fiber,1050.0,1070.0,#4b4bff
-Diamond,1240.0,1260.0,#ff9d42
-Spirit-NOPA-VIS,650.0,900.0,#f942ff
-Spirit-NOPA-IR,1200.0,2500.0,#f942ff
+Ti:Sapphire,800,1000,#ff4b4b
+Yb fiber,1030,1070,#4b4bff
+2C2P,1150,1200,#37c463
+Diamond,1250,1300,#ff9d42
+Er fiber,1550,1600,#42fff9
+OPO/OPA,1100,2200,#f942ff

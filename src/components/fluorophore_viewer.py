@@ -1,7 +1,6 @@
 import streamlit as st
-from typing import Dict, Tuple
+from typing import Dict
 import pandas as pd
-import numpy as np
 import requests
 from ..plots.zipfel_cross_sections import plot_cross_section
 
@@ -120,7 +119,7 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
                 )
             else:
                 st.info(f"No reference image available at:\n{image_url}")
-        except Exception as e:
+        except Exception:
             st.info(f"Could not load reference image from:\n{image_url}")
 
     # Data Table Section

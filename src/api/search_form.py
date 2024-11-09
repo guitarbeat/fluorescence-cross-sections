@@ -3,9 +3,7 @@ from typing import Any, Dict
 import pandas as pd
 import streamlit as st
 
-from src.api.fpbase_client import FPbaseAPI, FPbaseAPIError
-from src.components.fluorophore_manager import FluorophoreManager
-
+from src.api.fpbase_client import FPbaseAPI
 
 def download_results(df: pd.DataFrame) -> None:
     """Add download button for search results."""

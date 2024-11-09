@@ -7,7 +7,6 @@ import pandas as pd
 import streamlit as st
 
 from src.api.search_form import render_search_panel
-from src.components.fluorophore_manager import render_fluorophore_manager
 from src.components.fluorophore_viewer import render_fluorophore_viewer
 from src.components.laser_manager import render_laser_manager
 from src.config.tissue_config import DEFAULT_TISSUE_PARAMS, render_math_view
