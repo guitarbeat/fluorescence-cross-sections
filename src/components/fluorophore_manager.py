@@ -4,6 +4,8 @@ from typing import Any, Dict
 import pandas as pd
 import streamlit as st
 
+from src.api.google import fetch_data, send_data
+
 # Constants
 DATA_PATH = Path("data/fluorophores.csv")
 DEFAULT_COLUMNS = [
@@ -14,7 +16,17 @@ DEFAULT_COLUMNS = [
 class FluorophoreManager:
     def __init__(self):
         if "fluorophore_df" not in st.session_state:
-            st.session_state.fluorophore_df = pd.DataFrame(columns=DEFAULT_COLUMNS)
+            # Try to get data from Google Sheets first
+            sheets_data = fetch_data("fluorophores")
+            
+            if sheets_data is not None:
+                st.session_state.fluorophore_df = pd.DataFrame(sheets_data)
+            else:
+                # Fallback to CSV
+                if DATA_PATH.exists():
+                    st.session_state.fluorophore_df = pd.read_csv(DATA_PATH)
+                else:
+                    st.session_state.fluorophore_df = pd.DataFrame(columns=DEFAULT_COLUMNS)
 
     @staticmethod
     def get_column_config() -> Dict[str, Any]:
@@ -61,9 +73,14 @@ class FluorophoreManager:
             # Calculate brightness
             df["Brightness"] = (df["EC"] * df["QY"] / 1000).round(2)
             
-            # Save to file
+            # Save to Google Sheets
+            data = df.to_dict('records')
+            send_data("fluorophores", data)
+            
+            # Backup to CSV
             DATA_PATH.parent.mkdir(exist_ok=True)
             df.to_csv(DATA_PATH, index=False)
+            
             st.session_state.fluorophore_df = df
             
         except Exception as e:

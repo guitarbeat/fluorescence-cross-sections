@@ -17,6 +17,7 @@ from src.plots.tissue_view import (calculate_tissue_parameters,
                                    create_tissue_plot)
 from src.state.session_state import initialize_session_state
 from src.utils.data_loader import load_cross_section_data
+from src.api.google import fetch_data, send_data
 
 
 # Configure logging
@@ -170,8 +171,15 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                         # Remove visibility column before saving
                         save_df = edited_df.drop(columns=["Visible"])
                         st.session_state.fluorophore_df = save_df
+                        
+                        # Save to Google Sheets
+                        data = save_df.to_dict('records')
+                        send_data("fluorophores", data)
+                        
+                        # Backup to CSV
                         save_df.to_csv("data/fluorophores.csv", index=False)
-                        st.success("Changes saved to session and file!")
+                        
+                        st.success("Changes saved!")
                         st.rerun()
                     except Exception as e:
                         st.error(f"Failed to save changes: {str(e)}")
@@ -397,9 +405,15 @@ def main() -> None:
                         try:
                             # Update session state
                             st.session_state.fluorophore_df = edited_df
-                            # Save to CSV file
+                            
+                            # Save to Google Sheets
+                            data = edited_df.to_dict('records')
+                            send_data("fluorophores", data)
+                            
+                            # Backup to CSV
                             edited_df.to_csv("data/fluorophores.csv", index=False)
-                            st.success("Changes saved to session and file!")
+                            
+                            st.success("Changes saved!")
                             st.rerun()
                         except Exception as e:
                             st.error(f"Failed to save changes: {str(e)}")

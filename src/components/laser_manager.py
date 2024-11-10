@@ -6,6 +6,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from src.api.google import fetch_data, send_data
+
 
 @dataclass
 class LaserConfig:
@@ -51,9 +53,18 @@ def initialize_laser_data() -> pd.DataFrame:
 
 
 def get_laser_df() -> pd.DataFrame:
-    """Get or initialize the laser DataFrame from session state."""
+    """Get laser DataFrame from Google Sheets or fallback to CSV."""
     if "laser_df" not in st.session_state:
-        st.session_state.laser_df = initialize_laser_data()
+        # Try to get data from Google Sheets first
+        sheets_data = fetch_data("lasers")
+        
+        if sheets_data is not None:
+            # Convert Google Sheets data to DataFrame
+            st.session_state.laser_df = pd.DataFrame(sheets_data)
+        else:
+            # Fallback to CSV if Google Sheets fails
+            st.session_state.laser_df = initialize_laser_data()
+    
     return st.session_state.laser_df
 
 
@@ -85,8 +96,13 @@ def add_laser(name: str, start_nm: float, end_nm: float, color: str) -> bool:
 
 
 def save_laser_data(df: pd.DataFrame) -> None:
-    """Save laser data to CSV file."""
+    """Save laser data to both Google Sheets and CSV."""
     try:
+        # Save to Google Sheets
+        data = df.to_dict('records')
+        send_data("lasers", data)
+        
+        # Backup to CSV
         LASER_DATA_PATH.parent.mkdir(exist_ok=True)
         df.to_csv(LASER_DATA_PATH, index=False)
     except Exception as e:
