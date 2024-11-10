@@ -172,11 +172,23 @@ def render_laser_editor() -> None:
         use_container_width=True,
     )
 
+    # Save button - only save when explicitly clicked
     if st.button("💾 Save Changes", use_container_width=True, key="laser_editor_save"):
-        st.session_state.laser_df = st.session_state.edited_df
-        save_laser_data(st.session_state.laser_df)
-        st.success("Laser changes saved")
-        st.rerun()
+        try:
+            # Save to Google Sheets
+            data = st.session_state.edited_df.to_dict('records')
+            send_data("lasers", data)
+            
+            # Update session state after successful save
+            st.session_state.laser_df = st.session_state.edited_df
+            
+            # Backup to CSV
+            LASER_DATA_PATH.parent.mkdir(exist_ok=True)
+            st.session_state.edited_df.to_csv(LASER_DATA_PATH, index=False)
+            
+            st.success("Changes saved successfully!")
+        except Exception as e:
+            st.error(f"Failed to save changes: {str(e)}")
 
     # Add download button
     if not st.session_state.edited_df.empty:
