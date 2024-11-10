@@ -226,14 +226,18 @@ def render_color_picker() -> None:
 def render_laser_manager() -> None:
     """Render the laser management interface."""
     with st.container():
-        st.toggle(
+        # Initialize show_lasers in session state if it doesn't exist
+        if "show_lasers" not in st.session_state:
+            st.session_state.show_lasers = False
+            
+        # Use only session state value, no default in toggle
+        show_lasers = st.toggle(
             "Show Lasers",
-            value=st.session_state.get("show_lasers"),
             key="show_lasers",
             help="Toggle visibility of laser ranges on all plots",
         )
         
-        if st.session_state.show_lasers:
+        if show_lasers:  # Use the toggle's return value
             # Remove tabs and just show editor directly
             render_laser_editor()
             render_color_picker()
