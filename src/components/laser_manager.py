@@ -172,7 +172,7 @@ def render_laser_editor() -> None:
         use_container_width=True,
     )
 
-    # Save button - only save when explicitly clicked
+    # Keep only this save button
     if st.button("💾 Save Changes", use_container_width=True, key="laser_editor_save"):
         try:
             # Save to Google Sheets
@@ -237,12 +237,6 @@ def render_laser_manager() -> None:
             # Remove tabs and just show editor directly
             render_laser_editor()
             render_color_picker()
-
-            if st.button("💾 Save Changes", use_container_width=True, key="laser_save_button"):
-                st.session_state.laser_df = st.session_state.edited_df
-                save_laser_data(st.session_state.laser_df)
-                st.success("Laser changes saved")
-                st.rerun()
 
 
 def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:

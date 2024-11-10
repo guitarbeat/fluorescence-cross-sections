@@ -115,7 +115,7 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
                 st.image(
                     response.content,
                     caption=f"Reference plot for {selected_fluorophore}",
-                    use_column_width=True
+                    use_container_width=True
                 )
             else:
                 st.info(f"No reference image available at:\n{image_url}")
