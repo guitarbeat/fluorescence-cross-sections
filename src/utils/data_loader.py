@@ -140,7 +140,7 @@ def load_cross_section_data() -> Dict[str, pd.DataFrame]:
                 # Read data
                 df = pd.read_csv(
                     file_path,
-                    sep='\s+',
+                    sep=r'\s+',
                     skiprows=skiprows,
                     comment="-",
                     header=None,
