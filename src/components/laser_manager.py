@@ -295,21 +295,42 @@ def add_laser_overlays(fig: go.Figure) -> None:
     """Add laser overlays and annotations to the plot."""
     laser_df = get_laser_df()
     for _, laser in laser_df.iterrows():
-        # Add colored rectangle
-        fig.add_shape(
-            type="rect",
-            x0=laser["Start_nm"],
-            x1=laser["End_nm"],
-            y0=0,
-            y1=1,
-            fillcolor=laser["Color"],
-            opacity=0.3,
-            layer="above",
-            line_width=0,
-            yref="y3",
-        )
+        # Check if it's a single wavelength (start == end)
+        is_single_wavelength = laser["Start_nm"] == laser["End_nm"]
+        
+        if is_single_wavelength:
+            # Add star marker for single wavelength with smaller size
+            fig.add_trace(
+                go.Scatter(
+                    x=[laser["Start_nm"]],
+                    y=[0.5],
+                    mode="markers",
+                    marker=dict(
+                        symbol="star",
+                        size=15,  # Reduced from 20 to 15
+                        color=laser["Color"],
+                        line=dict(color=laser["Color"], width=2),
+                    ),
+                    showlegend=False,
+                    yaxis="y3",
+                )
+            )
+        else:
+            # Add colored rectangle for wavelength range
+            fig.add_shape(
+                type="rect",
+                x0=laser["Start_nm"],
+                x1=laser["End_nm"],
+                y0=0,
+                y1=1,
+                fillcolor=laser["Color"],
+                opacity=0.3,
+                layer="above",
+                line_width=0,
+                yref="y3",
+            )
 
-        # Add text above the rectangle
+        # Add text above the marker/rectangle
         fig.add_annotation(
             x=(laser["Start_nm"] + laser["End_nm"]) / 2,
             y=0.5,
