@@ -1,25 +1,65 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
+import streamlit as st
+from streamlit_theme import st_theme
 
 # Add shared configuration at module level
 SHARED_PLOT_CONFIG = {
-    "height": 600,
-    "width": 600,  # Make plots square
+    "autosize": True,  # Let Plotly handle sizing
+    "height": 800,     # Default height
+    "width": 800,      # Default width
     "margin": dict(t=50, r=50, b=50, l=50),
     "font": dict(
         family="Arial, sans-serif",
         size=14,
     ),
-    "showgrid": False,  # Remove grid lines
+    "showgrid": False,
     "zeroline": False,
 }
 
-# Theme-aware colors
-THEME_COLORS = {
-    "font": "#2E2E2E",  # Default dark color for light theme
-    "grid": "#E1E1E1",
-    "line": "#2E2E2E",
+# Default theme colors
+LIGHT_THEME = {
+    "bgcolor": "rgba(255, 255, 255, 0.9)",     # Light background
+    "bordercolor": "rgba(128, 128, 128, 0.2)",  # Subtle border for light theme
+    "font_color": "#2E2E2E"                     # Dark text for light theme
 }
+
+DARK_THEME = {
+    "bgcolor": "rgba(32, 32, 32, 0.9)",     # Dark background
+    "bordercolor": "rgba(128, 128, 128, 0.3)",  # Subtle border for dark theme
+    "font_color": "#FFFFFF"                     # White text for dark theme
+}
+
+def get_theme_colors():
+    """Get theme-aware colors based on Streamlit theme"""
+    if st.session_state.get("theme") == "dark":
+        return DARK_THEME
+    return LIGHT_THEME
+
+# Initialize with light theme by default
+FLOATING_ELEMENT_THEME = {
+    "font": dict(
+        family="Arial, sans-serif",
+        size=10,
+        color=LIGHT_THEME["font_color"]  # Default to light theme
+    ),
+    "bgcolor": LIGHT_THEME["bgcolor"],
+    "bordercolor": LIGHT_THEME["bordercolor"],
+    "borderwidth": 1,
+}
+
+def update_floating_element_theme():
+    """Update theme colors based on current theme"""
+    theme = get_theme_colors()
+    FLOATING_ELEMENT_THEME.update({
+        "font": dict(
+            family="Arial, sans-serif",
+            size=10,
+            color=theme["font_color"]
+        ),
+        "bgcolor": theme["bgcolor"],
+        "bordercolor": theme["bordercolor"],
+    })
 
 @dataclass
 class CrossSectionPlotConfig:
@@ -31,7 +71,8 @@ class CrossSectionPlotConfig:
 
     # Axis configurations
     wavelength_range: Tuple[float, float] = (700, 1600)
-    cross_section_range: Tuple[int, int] = (1, 3)  # log scale from 10 to 1000 GM
+    cross_section_range: Tuple[int, int] = (0.5, 2.5)  # log10 scale: ~3 GM to ~300 GM
+    heatmap_extension_factor: float = 3.0  # Extend heatmap further beyond visible range
 
     # Background heatmap settings
     heatmap_colorscale: List[List] = field(
@@ -42,7 +83,7 @@ class CrossSectionPlotConfig:
             [1, "rgba(180, 180, 255, 0.5)"],     # Stronger light blue
         ]
     )
-    heatmap_opacity: float = 0.6  # Increased opacity
+    heatmap_opacity: float = 0.6  # Slightly reduced opacity
 
     # Marker settings
     marker_size: int = 12
@@ -60,6 +101,15 @@ class CrossSectionPlotConfig:
     title: str = "Two-Photon Cross Sections"
     legend_bgcolor: str = "rgba(255, 255, 255, 0.8)"  # Light background with transparency
 
+    def get_extended_wavelength_range(self, current_range: Tuple[float, float]) -> Tuple[float, float]:
+        """Calculate extended wavelength range for heatmap"""
+        range_width = current_range[1] - current_range[0]
+        extension = range_width * (self.heatmap_extension_factor - 1) / 2
+        return (
+            current_range[0] - extension,
+            current_range[1] + extension
+        )
+
     def get_layout(self) -> dict:
         """Return the plotly layout configuration"""
         return {
@@ -71,37 +121,71 @@ class CrossSectionPlotConfig:
                 title="Wavelength (nm)",
                 range=self.wavelength_range,
                 showgrid=True,
-                gridcolor="rgba(128, 128, 128, 0.15)",  # Very subtle grid
+                gridcolor="rgba(128, 128, 128, 0.15)",
                 zeroline=SHARED_PLOT_CONFIG["zeroline"],
                 titlefont=self.font,
                 tickfont=self.font,
-                linecolor="rgba(128, 128, 128, 0.4)",  # Subtle axis lines
+                linecolor="rgba(128, 128, 128, 0.4)",
+                constrain="domain",  # Constrain axis to maintain aspect ratio
             ),
             "yaxis": dict(
-                title="2PA Cross Section (GM)",
+                title="Peak 2PA Cross Section (GM)",
                 type="log",
                 range=self.cross_section_range,
                 showgrid=True,
-                gridcolor="rgba(128, 128, 128, 0.15)",  # Very subtle grid
+                gridcolor="rgba(128, 128, 128, 0.15)",
                 zeroline=SHARED_PLOT_CONFIG["zeroline"],
                 titlefont=self.font,
                 tickfont=self.font,
-                linecolor="rgba(128, 128, 128, 0.4)",  # Subtle axis lines
+                linecolor="rgba(128, 128, 128, 0.4)",
+                dtick=0.5,
+                scaleanchor="x",  # Lock aspect ratio
+                scaleratio=1,     # 1:1 ratio
+                constrain="domain",  # Constrain axis to maintain aspect ratio
             ),
             "margin": self.margin,
-            "height": self.height,
-            "width": self.width,
+            "autosize": True,
             "showlegend": True,
             "legend": dict(
-                title="Reference",
-                font=self.font,
-                bgcolor="rgba(0,0,0,0)",  # Transparent background
-                x=1.02,  # Move legend slightly to the right
-                y=1,     # Align to top
-                yanchor="top"
+                title=dict(
+                    text="",
+                    font=FLOATING_ELEMENT_THEME["font"]
+                ),
+                font=FLOATING_ELEMENT_THEME["font"],
+                bgcolor=FLOATING_ELEMENT_THEME["bgcolor"],
+                bordercolor=FLOATING_ELEMENT_THEME["bordercolor"],
+                borderwidth=FLOATING_ELEMENT_THEME["borderwidth"],
+                xanchor="right",
+                x=0.98,
+                y=0.82,
+                yanchor="top",
+                orientation="v",
+                itemwidth=30,
+                itemsizing="constant",
+                entrywidth=150,
+                entrywidthmode="pixels",
+                tracegroupgap=5,
+            ),
+            "coloraxis": dict(
+                colorbar=dict(
+                    title="Normalized<br>Photon<br>Fraction",
+                    titlefont=FLOATING_ELEMENT_THEME["font"],
+                    tickfont=FLOATING_ELEMENT_THEME["font"],
+                    len=0.3,
+                    x=0.98,
+                    y=0.15,
+                    xanchor="right",
+                    yanchor="bottom",
+                    bgcolor=FLOATING_ELEMENT_THEME["bgcolor"],
+                    bordercolor=FLOATING_ELEMENT_THEME["bordercolor"],
+                    borderwidth=FLOATING_ELEMENT_THEME["borderwidth"],
+                    outlinewidth=0,
+                )
             ),
             "paper_bgcolor": "rgba(0,0,0,0)",
             "plot_bgcolor": "rgba(0,0,0,0)",
+            "width": self.width,   # Set fixed width
+            "height": self.width,  # Set height equal to width
         }
 
 

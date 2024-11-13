@@ -5,6 +5,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import streamlit as st
+from streamlit_theme import st_theme
 
 from src.api.search_form import render_search_panel
 from src.components.fluorophore_viewer import render_fluorophore_viewer
@@ -17,7 +18,7 @@ from src.plots.tissue_view import (calculate_tissue_parameters,
                                    create_tissue_plot)
 from src.state.session_state import initialize_session_state
 from src.utils.data_loader import load_cross_section_data
-from src.api.google import fetch_data, send_data
+from src.api.google import send_data
 
 
 # Configure logging
@@ -64,6 +65,9 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
         wavelength_range = global_params["wavelength_range"]
         absorption_threshold = global_params["absorption_threshold"]
 
+        # Set fixed square size
+        PLOT_SIZE = 800  # Size in pixels for both width and height
+
         if plot_type == "cross_sections":
             with st.expander("Cross-sections Overview", expanded=True):
                 if df is not None and not df.empty:
@@ -85,14 +89,24 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                     # Plot with visible fluorophores only
                     markers_dict = get_marker_settings()
                     fig = create_cross_section_plot(
-                        visible_df[["Name", "Wavelength", "Cross_Section", "Reference"]],  # Only pass required columns
+                        visible_df[["Name", "Wavelength", "Cross_Section", "Reference"]],
                         markers_dict=markers_dict,
                         normalization_wavelength=norm_wavelength,
                         depth=depth,
                         wavelength_range=wavelength_range,
                         absorption_threshold=absorption_threshold,
                     )
-                    st.plotly_chart(fig, use_container_width=True, theme="streamlit")
+                    
+                    # Let Plotly handle the sizing while maintaining aspect ratio
+                    st.plotly_chart(
+                        fig, 
+                        use_container_width=True,  # Fill container width
+                        theme="streamlit",         # Use Streamlit theme
+                        config={
+                            'displayModeBar': True,
+                            'responsive': True     # Enable responsive behavior
+                        }
+                    )
                 else:
                     st.info("No data to display - try searching for fluorophores.")
                 with st.popover("Marker Settings"):
@@ -214,6 +228,12 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                     wavelength_range=wavelength_range,
                     depth=depth
                 )
+                # Update layout to force square aspect ratio
+                fig.update_layout(
+                    width=PLOT_SIZE,
+                    height=PLOT_SIZE,  # Make height equal to width
+                    autosize=False,  # Disable autosize to maintain square shape
+                )
                 st.plotly_chart(fig, use_container_width=True, theme="streamlit")
             render_math_view()
 
@@ -223,6 +243,15 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
     except Exception as e:  # pylint: disable=broad-except
         logger.error("Unexpected error rendering %s plot: %s", plot_type, str(e))
         st.error("An unexpected error occurred. Please check the logs.")
+
+
+# Add programmatic page switching capability
+def switch_to_page(page_name: str) -> None:
+    """Switch to specified page programmatically"""
+    try:
+        st.switch_page(f"pages/{page_name}.py")
+    except Exception as e:
+        st.error(f"Failed to switch page: {str(e)}")
 
 
 def main() -> None:
@@ -238,6 +267,17 @@ def main() -> None:
 
         # Initialize session state
         initialize_session_state()
+
+        # Add query parameter handling
+        params = st.query_params
+
+        # Set initial wavelength from URL if provided
+        if "wavelength" in params:
+            try:
+                wavelength = float(params["wavelength"])
+                st.session_state.global_params["normalization_wavelength"] = wavelength
+            except ValueError:
+                st.warning("Invalid wavelength parameter in URL")
 
         # ---- SIDEBAR ----
         with st.sidebar:
@@ -368,7 +408,7 @@ def main() -> None:
             
             if "fluorophore_df" in st.session_state:
                 edited_df = st.data_editor(
-                    st.session_state.fluorophore_df,
+                    st.session_state.fluorophore_df[["Name", "Wavelength", "Cross_Section", "Reference"]],  # Only show essential columns
                     num_rows="dynamic",
                     column_config={
                         "Name": st.column_config.TextColumn(
@@ -380,7 +420,8 @@ def main() -> None:
                             "2P λ (nm)",
                             help="Two-photon excitation wavelength",
                             required=True,
-                            format="%d"
+                            format="%d",
+                            width="medium",
                         ),
                         "Cross_Section": st.column_config.NumberColumn(
                             "Cross Section (GM)",
@@ -392,7 +433,7 @@ def main() -> None:
                             help="Data source (Zipfel Lab or FPbase)"
                         ),
                     },
-                    column_order=["Name", "Wavelength", "Cross_Section", "Reference"],
+                    height=400,
                     use_container_width=True,
                     hide_index=True,
                     key="library_editor"

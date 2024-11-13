@@ -93,42 +93,47 @@ def render_search_panel(key_prefix: str = "") -> None:
             - Use this search to find additional fluorophore properties (QY, emission, etc.)
         """)
 
-        name_query = st.text_input(
-            "Search by name",
-            placeholder="e.g., GFP, RFP, YFP",
-            help="Enter protein name (e.g., 'GFP', 'RFP', etc.)",
-            key=f"{key_prefix}name_query"
-        )
+        with st.form("search_form", clear_on_submit=True):
+            name_query = st.text_input(
+                "Search by name",
+                placeholder="e.g., GFP, RFP, YFP",
+                help="Enter protein name"
+            )
+            submitted = st.form_submit_button(
+                "🔍 Search",
+                type="primary",
+                use_container_width=True
+            )
 
-        if st.button("🔍 Search", use_container_width=True, type="primary", key=f"{key_prefix}search_button"):
-            result = search_proteins(name_query, {"name__icontains": name_query}, st.session_state.fpbase_client)
+            if submitted:
+                result = search_proteins(name_query, {"name__icontains": name_query}, st.session_state.fpbase_client)
 
-            if result["success"]:
-                # Show all columns in the results table with clickable URLs
-                st.data_editor(
-                    result["data"],
-                    num_rows="dynamic",
-                    column_config={
-                        "URL": st.column_config.LinkColumn(
-                            "FPbase Link",
-                            display_text="View on FPbase",  # Text to show for the link
-                            help="Click to view on FPbase website"
-                        ),
-                        "Name": st.column_config.TextColumn("Name"),
-                        "Ex λ (nm)": st.column_config.NumberColumn(format="%d"),
-                        "Em λ (nm)": st.column_config.NumberColumn(format="%d"),
-                        "Quantum Yield": st.column_config.NumberColumn(format="%.2f"),
-                        "Extinction Coeff": st.column_config.NumberColumn(format="%d"),
-                        "pKa": st.column_config.NumberColumn(format="%.1f"),
-                        "Brightness": st.column_config.NumberColumn(format="%.1f"),
-                        "Maturation": st.column_config.NumberColumn(format="%.1f"),
-                        "Lifetime": st.column_config.NumberColumn(format="%.1f"),
-                        "Stokes Shift": st.column_config.NumberColumn(format="%.1f"),
-                        "Photobleaching": st.column_config.NumberColumn(format="%.1f"),
-                    },
-                    use_container_width=True,
-                    hide_index=True,
-                    key=f"{key_prefix}search_editor"
-                )
-            else:
-                st.warning(result["message"])
+                if result["success"]:
+                    # Show all columns in the results table with clickable URLs
+                    st.data_editor(
+                        result["data"],
+                        num_rows="dynamic",
+                        column_config={
+                            "URL": st.column_config.LinkColumn(
+                                "FPbase Link",
+                                display_text="View on FPbase",  # Text to show for the link
+                                help="Click to view on FPbase website"
+                            ),
+                            "Name": st.column_config.TextColumn("Name"),
+                            "Ex λ (nm)": st.column_config.NumberColumn(format="%d"),
+                            "Em λ (nm)": st.column_config.NumberColumn(format="%d"),
+                            "Quantum Yield": st.column_config.NumberColumn(format="%.2f"),
+                            "Extinction Coeff": st.column_config.NumberColumn(format="%d"),
+                            "pKa": st.column_config.NumberColumn(format="%.1f"),
+                            "Brightness": st.column_config.NumberColumn(format="%.1f"),
+                            "Maturation": st.column_config.NumberColumn(format="%.1f"),
+                            "Lifetime": st.column_config.NumberColumn(format="%.1f"),
+                            "Stokes Shift": st.column_config.NumberColumn(format="%.1f"),
+                            "Photobleaching": st.column_config.NumberColumn(format="%.1f"),
+                        },
+                        use_container_width=True,
+                        hide_index=True,
+                        key=f"{key_prefix}search_editor"
+                    )
+                else:
+                    st.warning(result["message"])

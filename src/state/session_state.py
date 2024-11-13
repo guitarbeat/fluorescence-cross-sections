@@ -1,6 +1,5 @@
 """Initialize and manage Streamlit session state."""
 import logging
-from pathlib import Path
 from typing import List, Dict
 
 import pandas as pd
@@ -13,7 +12,6 @@ from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
 from src.utils.data_loader import (
     load_fluorophore_data,
     load_cross_section_data,
-    load_water_absorption_data
 )
 
 logger = logging.getLogger(__name__)
@@ -33,12 +31,6 @@ DEFAULT_COLUMNS: List[str] = [
     "Wavelength",
     "Cross_Section",
     "Reference",
-    "Ex_Max",
-    "Em_Max",
-    "QY",
-    "EC",
-    "pKa",
-    "Brightness",
 ]
 
 
@@ -111,3 +103,8 @@ def initialize_session_state() -> None:
 
     # Initialize plot configuration
     session_state.setdefault("plot_config", SHARED_PLOT_CONFIG.copy())
+
+
+def get_widget_key(component: str, prefix: str = "") -> str:
+    """Generate consistent widget keys for CSS targeting"""
+    return f"st-key-{prefix}-{component}"

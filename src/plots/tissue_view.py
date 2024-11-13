@@ -58,8 +58,9 @@ def calculate_tissue_parameters(
         mua = np.interp(wavelengths, water_data["wavelength"], water_data["absorption"])
         mua = mua * water_content / 10  # Scale by water content and convert units
 
-        # Calculate scattering coefficient
-        mus_prime = a * (wavelengths / 500) ** (-b)
+        # Calculate scattering coefficient with safety checks
+        wavelength_ratio = np.maximum(wavelengths / 500, 1e-10)  # Prevent division by zero or negative values
+        mus_prime = a * np.power(wavelength_ratio, -b)  # Use safe ratio
         mus = mus_prime / (1 - g)
 
         # Calculate total attenuation
@@ -125,93 +126,138 @@ def create_tissue_plot(
     """Create tissue penetration plot with consistent styling."""
     config = TissuePlotConfig()
     
-    # Always update the wavelength range from the global settings
+    # Set wavelength range from session state but extend heatmap
     if wavelength_range:
         config.wavelength_range = wavelength_range
+
+    # Calculate extended wavelength range for heatmap
+    extension_factor = 3.0  # Extend 3x beyond visible range
+    range_width = wavelength_range[1] - wavelength_range[0]
+    extension = range_width * (extension_factor - 1) / 2
+    extended_range = (
+        wavelength_range[0] - extension,
+        wavelength_range[1] + extension
+    )
+
+    # Create extended wavelengths array for calculations
+    extended_wavelengths = np.linspace(
+        extended_range[0], 
+        extended_range[1], 
+        500  # Increased resolution
+    )
+    
+    # Calculate tissue parameters for extended range
+    extended_tissue_data = calculate_tissue_parameters(
+        wavelengths=extended_wavelengths,
+        depth=depth,
+        normalization_wavelength=normalization_wavelength
+    )
 
     # Create figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     # Normalize photon fraction at specified wavelength
-    norm_idx = np.abs(wavelengths - normalization_wavelength).argmin()
-    normalized_fraction = tissue_data["T"] / tissue_data["T"][norm_idx]
+    norm_idx = np.abs(extended_wavelengths - normalization_wavelength).argmin()
+    normalized_fraction = extended_tissue_data["T"] / extended_tissue_data["T"][norm_idx]
 
     # Add photon fraction trace using config
     fig.add_trace(
-        go.Scatter(**config.get_photon_trace(wavelengths, normalized_fraction)),
+        go.Scatter(
+            x=extended_wavelengths,
+            y=normalized_fraction,
+            name="Normalized Photon Fraction",
+            line=dict(color="blue", width=2),
+            showlegend=False,
+            hovertemplate="Wavelength: %{x:.0f} nm<br>Fraction: %{y:.2f}<extra></extra>",
+        ),
         secondary_y=False,
     )
 
-    # Calculate absorption mask
-    absorption = tissue_data["Tw"] * 100  # Convert to percentage
+    # Calculate absorption mask for extended range
+    absorption = extended_tissue_data["Tw"] * 100  # Convert to percentage
     absorption_mask = absorption >= absorption_threshold
 
     # Find indices where absorption_mask changes
     indices = np.where(np.diff(absorption_mask.astype(int)) != 0)[0] + 1
-    indices = np.concatenate(([0], indices, [len(wavelengths)]))
+    indices = np.concatenate(([0], indices, [len(extended_wavelengths)]))
 
-    # Add water absorption percentage line using config
-    for start, end in zip(indices[:-1], indices[1:]):
-        is_above_threshold = absorption_mask[start]
-        # Clip absorption values to 100%
-        clipped_absorption = np.minimum(absorption[start:end], 100)
-        fig.add_trace(
-            go.Scatter(**config.get_absorption_trace(
-                wavelengths[start:end], 
-                clipped_absorption, 
-                is_above_threshold
-            )),
-            secondary_y=True,
-        )
+    # Add water absorption percentage line as a single continuous trace
+    fig.add_trace(
+        go.Scatter(
+            x=extended_wavelengths,
+            y=np.minimum(absorption, 100),  # Clip absorption values to 100%
+            name="Water Absorption",
+            mode='lines',  # Only lines, no markers
+            line=dict(
+                color="red",
+                width=2,
+                dash="dot",  # Default to dotted line for below threshold
+            ),
+            showlegend=False,
+            hovertemplate="Wavelength: %{x:.0f} nm<br>Absorption: %{y:.1f}%<extra></extra>",
+        ),
+        secondary_y=True,
+    )
 
-    # Add shading for absorption regions using config
+    # Add solid line overlay for above-threshold regions
     for start, end in zip(indices[:-1], indices[1:]):
         if absorption_mask[start]:
+            # Add shading for absorption regions
             fig.add_shape(
                 type="rect",
-                x0=wavelengths[start],
-                x1=wavelengths[end-1],
+                x0=extended_wavelengths[start],
+                x1=extended_wavelengths[end-1],
                 y0=0,
                 y1=1,
-                **config.absorption_shape,
+                fillcolor="rgba(255, 0, 0, 0.1)",
+                line_width=0,
+                layer="below",
                 yref="paper"  # Use paper coordinates for full height
+            )
+            # Add solid line overlay
+            fig.add_trace(
+                go.Scatter(
+                    x=extended_wavelengths[start:end],
+                    y=np.minimum(absorption[start:end], 100),
+                    mode='lines',
+                    line=dict(color="red", width=2),
+                    showlegend=False,
+                    hovertemplate="Wavelength: %{x:.0f} nm<br>Absorption: %{y:.1f}%<extra></extra>",
+                ),
+                secondary_y=True,
             )
 
     # Add laser overlays
     fig = overlay_lasers(fig, plot_type="tissue")
 
-    # Update layout using config
+    # Update layout
     max_y = max(normalized_fraction) * 1.2  # Add 20% padding
-    base_layout = config.get_layout()
-    base_layout.update(
+    fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis=dict(
             title="Wavelength (nm)",
-            range=config.wavelength_range,
-            showgrid=False,
+            range=wavelength_range,  # Keep visible range as specified
+            showgrid=True,
+            gridcolor="rgba(128, 128, 128, 0.15)",
             zeroline=False,
-            titlefont=config.font,
-            tickfont=config.font,
         ),
         yaxis=dict(
             title=f"Normalized photon fraction at z={depth} mm",
             range=[0, max_y],
-            showgrid=False,
+            showgrid=True,
+            gridcolor="rgba(128, 128, 128, 0.15)",
             zeroline=False,
-            titlefont=config.font,
-            tickfont=config.font,
         ),
         yaxis2=dict(
             title="Percent photons absorbed",
             range=[0, 100],
             showgrid=False,
             zeroline=False,
-            titlefont=config.font,
-            tickfont=config.font,
         ),
+        height=600,
+        hovermode="x unified",
     )
-    fig.update_layout(base_layout)
 
     return fig
 

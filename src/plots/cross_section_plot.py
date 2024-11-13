@@ -1,3 +1,5 @@
+"""Module for creating cross-section plots."""
+import logging
 from typing import Dict, Optional, Tuple
 
 import numpy as np
@@ -5,10 +7,12 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from ..components.laser_manager import overlay_lasers
-from ..config.plot_config import CrossSectionPlotConfig
+from ..config.plot_config import CrossSectionPlotConfig, FLOATING_ELEMENT_THEME, LIGHT_THEME, DARK_THEME
 from ..config.tissue_config import DEFAULT_TISSUE_PARAMS
+from ..components.laser_manager import overlay_lasers
 from ..plots.tissue_view import calculate_tissue_parameters
+
+logger = logging.getLogger(__name__)
 
 
 def get_marker_settings() -> Dict[str, Tuple[str, str]]:
@@ -46,8 +50,7 @@ def marker_settings_ui() -> None:
 
             with col1:
                 current_marker = st.session_state.marker_settings[ref][0]
-                marker_idx = list(marker_options.values()
-                                  ).index(current_marker)
+                marker_idx = list(marker_options.values()).index(current_marker)
                 marker = st.selectbox(
                     ref,
                     options=marker_list,
@@ -76,7 +79,6 @@ def marker_settings_ui() -> None:
                 )
 
     with preview_col:
-
         st.button("Reset to Defaults", use_container_width=True,
                   on_click=lambda: reset_marker_settings(st.session_state.marker_settings.keys()))
 
@@ -87,8 +89,6 @@ def marker_settings_ui() -> None:
                 f"{ref}</div>",  # Just show first word of reference
                 unsafe_allow_html=True,
             )
-
-            # Add reset button
 
 
 def reset_marker_settings(refs):
@@ -117,10 +117,27 @@ def create_cross_section_plot(
     absorption_threshold: float = 50,
 ) -> go.Figure:
     """Create cross section plot with consistent styling."""
+    # Get current theme from session state
+    current_theme = st.session_state.get("theme", "light")
+    theme_colors = DARK_THEME if current_theme == "dark" else LIGHT_THEME
+    
+    # Update floating element theme with current theme colors
+    FLOATING_ELEMENT_THEME.update({
+        "font": dict(
+            family="Arial, sans-serif",
+            size=10,
+            color=theme_colors["font_color"]
+        ),
+        "bgcolor": theme_colors["bgcolor"],
+        "bordercolor": theme_colors["bordercolor"],
+    })
+    
     config = CrossSectionPlotConfig()
+    
+    # Set wavelength range from session state but extend heatmap
     if wavelength_range:
         config.wavelength_range = wavelength_range
-
+    
     # Get depth from session state if not provided
     if depth is None:
         depth = st.session_state.tissue_params.get(
@@ -131,9 +148,10 @@ def create_cross_section_plot(
     # Create figure
     fig = go.Figure()
 
-    # Calculate normalized photon fraction for background
+    # Calculate extended wavelength range for heatmap
+    extended_range = config.get_extended_wavelength_range(config.wavelength_range)
     wavelengths = np.linspace(
-        config.wavelength_range[0], config.wavelength_range[1], 100
+        extended_range[0], extended_range[1], 300  # Increased resolution
     )
     tissue_data = calculate_tissue_parameters(wavelengths, depth=depth)
 
@@ -142,18 +160,18 @@ def create_cross_section_plot(
     norm_factor = tissue_data["T"][norm_idx]
     photon_fraction = tissue_data["T"] / norm_factor
 
-    # Get y-axis range from data
-    min_y = df["Cross_Section"].min() * 0.8  # Add 20% padding below
-    max_y = df["Cross_Section"].max() * 1.2  # Add 20% padding above
+    # Calculate y-axis range from data
+    min_y = df["Cross_Section"].min() * 0.5  # Add 50% padding below
+    max_y = df["Cross_Section"].max() * 2.0  # Add 100% padding above
+    y_range = [np.log10(min_y), np.log10(max_y)]
 
-    # Create background heatmap with extended y range
-    y_values = np.logspace(np.log10(min_y), np.log10(max_y), 100)
+    # Create much larger y-range for heatmap
+    heatmap_y_min = min_y * 0.001  # Extend 3 orders of magnitude down
+    heatmap_y_max = max_y * 1000   # Extend 3 orders of magnitude up
+    y_values = np.logspace(np.log10(heatmap_y_min), np.log10(heatmap_y_max), 500)  # More points for smoother appearance
     Z = np.tile(photon_fraction, (len(y_values), 1))
 
-    # Update colorscale based on threshold
-    config.heatmap_colorscale[2][0] = threshold_norm
-
-    # Add heatmap
+    # Add heatmap with theme-aware colorbar
     fig.add_trace(
         go.Heatmap(
             x=wavelengths,
@@ -162,20 +180,35 @@ def create_cross_section_plot(
             colorscale=config.heatmap_colorscale,
             showscale=True,
             colorbar=dict(
-                title="Normalized<br>Photon<br>Fraction",
+                title=dict(
+                    text="Normalized<br>Photon<br>Fraction",
+                    font=FLOATING_ELEMENT_THEME["font"]
+                ),
+                tickfont=FLOATING_ELEMENT_THEME["font"],
                 tickvals=[0.01, threshold_norm, 1.0],
                 ticktext=["0.01", f"{absorption_threshold}%", "100%"],
-                len=0.5,
-                y=0.5,
-                yanchor="top",
+                len=0.3,
+                x=0.98,
+                y=0.02,
+                xanchor="right",
+                yanchor="bottom",
+                bgcolor=FLOATING_ELEMENT_THEME["bgcolor"],
+                bordercolor=FLOATING_ELEMENT_THEME["bordercolor"],
+                borderwidth=FLOATING_ELEMENT_THEME["borderwidth"],
+                outlinewidth=0,
             ),
             zmin=0.01,
             zmax=1.0,
             opacity=config.heatmap_opacity,
+            hoverinfo='skip',
+            visible=True,
+            zorder=0,
+            xaxis="x",
+            yaxis="y",
         )
     )
 
-    # Add scatter points for each reference
+    # Add scatter points for each reference with explicit axis ranges
     for ref in df["Reference"].unique():
         ref_data = df[df["Reference"] == ref]
         marker_style, color = markers_dict.get(
@@ -201,27 +234,55 @@ def create_cross_section_plot(
                     "Cross Section: %{y} GM<br>"
                     "<extra></extra>"
                 ),
+                zorder=1,  # Put data points in foreground
             )
         )
 
     # Add laser overlays
     fig = overlay_lasers(fig, plot_type="cross_section")
 
-    # Update layout with log scale and proper ranges
+    # Update layout with theme-aware legend
     base_layout = config.get_layout()
-    base_layout.update(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        yaxis=dict(
-            type="log",
-            range=[np.log10(min_y), np.log10(max_y)],
-            title="Peak 2PA Cross Section (GM)",
-        ),
-        xaxis=dict(
-            title="Wavelength (nm)",
-            range=[config.wavelength_range[0], config.wavelength_range[1]],
-        ),
-    )
+    base_layout.update({
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "legend": {
+            "font": FLOATING_ELEMENT_THEME["font"],
+            "bgcolor": FLOATING_ELEMENT_THEME["bgcolor"],
+            "bordercolor": FLOATING_ELEMENT_THEME["bordercolor"],
+            "borderwidth": FLOATING_ELEMENT_THEME["borderwidth"],
+            "xanchor": "right",
+            "x": 0.98,
+            "y": 0.82,
+            "yanchor": "top",
+            "orientation": "v",
+            "itemwidth": 30,
+            "itemsizing": "constant",
+            "entrywidth": 150,
+            "entrywidthmode": "pixels",
+            "tracegroupgap": 5,
+        },
+        "yaxis": {
+            "type": "log",
+            "range": y_range,  # Dynamic range based on data
+            "title": "Peak 2PA Cross Section (GM)",
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.15)",
+            "zeroline": False,
+            "fixedrange": False,  # Allow y-axis panning
+            "scaleanchor": "x",   # Keep aspect ratio
+            "scaleratio": 1,      # 1:1 ratio
+        },
+        "xaxis": {
+            "title": "Wavelength (nm)",
+            "range": [config.wavelength_range[0], config.wavelength_range[1]],
+            "showgrid": True,
+            "gridcolor": "rgba(128, 128, 128, 0.15)",
+            "zeroline": False,
+            "fixedrange": False,  # Allow x-axis panning
+        },
+        "dragmode": "pan",  # Set default mode to panning
+    })
     fig.update_layout(base_layout)
 
     return fig
