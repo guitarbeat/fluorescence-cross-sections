@@ -134,7 +134,7 @@ def render_add_laser_form() -> None:
             )
         color = st.color_picker("Color", "#00ff00", key="new_laser_color")
 
-        if st.form_submit_button("Add Laser", use_container_width=True):
+        if st.form_submit_button("➕ Add Laser", use_container_width=True):
             if add_laser(name, start_nm, end_nm, color):
                 st.success(f"Added laser: {name}")
                 st.rerun()
@@ -144,6 +144,10 @@ def render_add_laser_form() -> None:
 
 def render_laser_editor() -> None:
     """Render the interface for editing existing lasers."""
+    # Popover for adding a new laser
+    with st.popover("➕ Add New Laser"):
+        render_add_laser_form()
+        
     st.session_state.edited_df = st.data_editor(
         get_laser_df(),
         num_rows="dynamic",
@@ -172,39 +176,58 @@ def render_laser_editor() -> None:
         use_container_width=True,
     )
 
-    # Keep only this save button
-    if st.button("💾 Save Changes", use_container_width=True, key="laser_editor_save"):
-        try:
-            # Save to Google Sheets
-            data = st.session_state.edited_df.to_dict('records')
-            send_data("lasers", data)
-            
-            # Update session state after successful save
-            st.session_state.laser_df = st.session_state.edited_df
-            
-            # Backup to CSV
-            LASER_DATA_PATH.parent.mkdir(exist_ok=True)
-            st.session_state.edited_df.to_csv(LASER_DATA_PATH, index=False)
-            
-            st.success("Changes saved successfully!")
-        except Exception as e:
-            st.error(f"Failed to save changes: {str(e)}")
+    # Create three columns for the buttons
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button(
+            "💾 Save Changes", # Added icon
+            use_container_width=True,
+            type="primary",
+            help="Save current laser configuration to database"
+        ):
+            try:
+                # Save to Google Sheets
+                data = st.session_state.edited_df.to_dict('records')
+                send_data("lasers", data)
+                
+                # Update session state after successful save
+                st.session_state.laser_df = st.session_state.edited_df
+                
+                # Backup to CSV
+                LASER_DATA_PATH.parent.mkdir(exist_ok=True)
+                st.session_state.edited_df.to_csv(LASER_DATA_PATH, index=False)
+                
+                st.success("Changes saved successfully!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Failed to save changes: {str(e)}")
 
-    # Add download button
-    if not st.session_state.edited_df.empty:
-        csv = st.session_state.edited_df.to_csv(index=False)
-        st.download_button(
-            label="📥 Download Laser Config",
-            data=csv,
-            file_name="laser_config.csv",
-            mime="text/csv",
-            key="laser_download"
-        )
+    with col2:
+        if not st.session_state.edited_df.empty:
+            csv = st.session_state.edited_df.to_csv(index=False)
+            st.download_button(
+                label="Download Config",
+                icon="📥", # Added icon
+                data=csv,
+                file_name="laser_config.csv",
+                mime="text/csv",
+                key="laser_download",
+                use_container_width=True,
+                help="Download laser configuration as CSV file"
+            )
 
+    with col3:
+        if st.button(
+            "Change Colors",
+            icon="🎨", # Added icon
+            use_container_width=True,
+            help="Customize colors for laser visualization"
+        ):
+            st.session_state.show_color_picker = True
 
-def render_color_picker() -> None:
-    """Render the color picker interface."""
-    with st.popover("Change Colors"):
+    # Show color picker if button was clicked
+    if st.session_state.get("show_color_picker", False):
         if not st.session_state.edited_df.empty:
             selected_indices = st.multiselect(
                 "Select lasers",
@@ -218,9 +241,8 @@ def render_color_picker() -> None:
                     st.session_state.edited_df.loc[selected_indices[0], "Color"],
                 )
                 if st.button("Update Color"):
-                    st.session_state.edited_df.loc[selected_indices, "Color"] = (
-                        new_color
-                    )
+                    st.session_state.edited_df.loc[selected_indices, "Color"] = new_color
+                    st.session_state.show_color_picker = False  # Hide color picker after update
 
 
 def render_laser_manager() -> None:
@@ -238,9 +260,7 @@ def render_laser_manager() -> None:
         )
         
         if show_lasers:  # Use the toggle's return value
-            # Remove tabs and just show editor directly
             render_laser_editor()
-            render_color_picker()
 
 
 def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:

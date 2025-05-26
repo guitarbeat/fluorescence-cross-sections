@@ -1,8 +1,22 @@
 import streamlit as st
+import logging # Added
 from typing import Dict
 import pandas as pd
 import requests
 from ..plots.zipfel_cross_sections import plot_cross_section
+
+logger = logging.getLogger(__name__) # Added
+
+@st.cache_data # Added caching
+def fetch_image_content(url: str):
+    """Fetch image content from URL with caching and error handling."""
+    try:
+        response = requests.get(url, timeout=10) # Added timeout
+        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+        return response.content
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Failed to fetch image {url}: {e}")
+    return None
 
 def get_reference_image_url(fluorophore_name: str) -> str:
     """
@@ -87,90 +101,45 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        try:
-            fig = plot_cross_section(
-                cross_sections=cross_sections,
-                selected_fluorophore=selected_fluorophore,
-                height=500,
-                width=700,
-                show_error_bars=True
-            )
-            st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_plot")
-        except Exception as e:
-            st.error(f"Error plotting data for {selected_fluorophore}: {str(e)}")
+        with st.expander("📈 Cross Section Plot", expanded=True, icon="📈"):
+            try:
+                fig = plot_cross_section(
+                    cross_sections=cross_sections,
+                    selected_fluorophore=selected_fluorophore,
+                    height=500,
+                    width=700,
+                    show_error_bars=True
+                )
+                st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_plot")
+            except Exception as e:
+                st.error(f"Error plotting data for {selected_fluorophore}: {str(e)}")
 
     with col2:
         # Statistics Section
-        st.markdown("### Statistics")
-        df = cross_sections[selected_fluorophore]
-        stats = calculate_fluorophore_stats(df, selected_fluorophore)
-        st.markdown(format_stats(stats))
+        with st.expander("📊 Statistics", expanded=True, icon="📊"):
+            df = cross_sections[selected_fluorophore]
+            stats = calculate_fluorophore_stats(df, selected_fluorophore)
+            st.markdown(format_stats(stats))
         
         # Reference Image
-        st.markdown("### Reference Plot")
-        try:
-            image_url = get_reference_image_url(selected_fluorophore)
-            response = requests.get(image_url)
-            if response.status_code == 200:
-                st.image(
-                    response.content,
-                    caption=f"Reference plot for {selected_fluorophore}",
-                    use_container_width=True
-                )
-            else:
-                st.info(f"No reference image available at:\n{image_url}")
-        except Exception:
-            st.info(f"Could not load reference image from:\n{image_url}")
+        with st.expander("🔍 Reference Plot", expanded=True, icon="🔍"):
+            try:
+                image_url = get_reference_image_url(selected_fluorophore)
+                image_content = fetch_image_content(image_url) # Use cached function
+                if image_content:
+                    st.image(
+                        image_content,
+                        caption=f"Reference plot for {selected_fluorophore}",
+                        use_container_width=True
+                    )
+                else:
+                    st.info(f"Reference image not found or failed to load for {selected_fluorophore}.") # Improved message
+            except Exception as e: # Catch specific exceptions if possible
+                logger.error(f"Error displaying reference image for {selected_fluorophore}: {e}")
+                st.warning(f"Could not display reference image.")
 
     # Data Table Section
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        show_data = st.checkbox(
-            "Show Data Table", 
-            key=f"{key_prefix}_show_data_{selected_fluorophore}"
-        )
-    with col2:
-        # Add button to import to main table
-        if st.button("📥 Add to Main Table", key=f"{key_prefix}_add_{selected_fluorophore}"):
-            df = cross_sections[selected_fluorophore]
-            
-            # Determine which column contains the cross-section data
-            # It could be 'GM', 'cross_section', or the second column
-            if 'GM' in df.columns:
-                cs_column = 'GM'
-            elif 'cross_section' in df.columns:
-                cs_column = 'cross_section'
-            else:
-                cs_column = df.columns[1]  # Assume second column is cross-section data
-            
-            # Find peak wavelength and cross section
-            peak_idx = df[cs_column].idxmax()
-            wavelength = df.index[peak_idx] if df.index.name == 'wavelength' else df.iloc[peak_idx].get('wavelength', df.iloc[peak_idx].name)
-            
-            peak_data = {
-                "Name": selected_fluorophore,
-                "Wavelength": float(wavelength),  # Ensure wavelength is a float
-                "Cross_Section": float(df.iloc[peak_idx][cs_column]),  # Ensure cross-section is a float
-                "Reference": "Zipfel Lab",  # Simplified reference
-                "Em_Max": None,  # Add any additional columns that match your schema
-                "QY": None,
-                "EC": None,
-                "pKa": None
-            }
-            
-            # Add to fluorophore_df if it doesn't exist
-            if "fluorophore_df" in st.session_state:
-                new_df = pd.DataFrame([peak_data])
-                st.session_state.fluorophore_df = pd.concat(
-                    [st.session_state.fluorophore_df, new_df],
-                    ignore_index=True
-                ).drop_duplicates(subset=["Name"], keep="last")
-                st.success(f"Added {selected_fluorophore} to main table!")
-                st.rerun()
-            else:
-                st.error("Main fluorophore table not initialized")
-    
-    if show_data:
+    with st.expander("📋 Raw Data", expanded=False, icon="📋"):
         df = cross_sections[selected_fluorophore]
         st.dataframe(
             df,
@@ -179,10 +148,10 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
             key=f"{key_prefix}_dataframe"
         )
         
-        # Download button
+        # Download button for raw data
         csv = df.to_csv(index=False)
         st.download_button(
-            label="Download Data",
+            label="📥 Download Raw Data",
             data=csv,
             file_name=f"{selected_fluorophore}_cross_section.csv",
             mime="text/csv",

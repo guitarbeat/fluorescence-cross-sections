@@ -69,6 +69,7 @@ def load_fluorophore_data() -> pd.DataFrame:
         return pd.DataFrame(columns=DEFAULT_COLUMNS)
 
 
+@st.cache_data
 def load_cross_section_data() -> Dict[str, pd.DataFrame]:
     """Load all two-photon cross-section data files."""
     cross_sections: Dict[str, pd.DataFrame] = {}

@@ -8,6 +8,7 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+from src.config.plot_config import STYLE_CONFIG
 
 from ..components.laser_manager import overlay_lasers
 from ..config.plot_config import TissuePlotConfig
@@ -16,8 +17,8 @@ from ..utils.data_loader import load_water_absorption_data  # Updated import
 logger = logging.getLogger(__name__)
 
 
-def calculate_two_photon_wavelength(lambda_a: float, lambda_b: float) -> float:
-    """Calculate the effective two-photon excitation wavelength."""
+def calculate_virtual_wavelength(lambda_a: float, lambda_b: float) -> float:
+    """Calculate the effective non degenerate two-photon excitation wavelength."""
     # Round to nearest 5nm as in MATLAB code
     effective_wavelength = 2 / ((1 / lambda_a) + (1 / lambda_b))
     return round(effective_wavelength / 5) * 5
@@ -87,7 +88,7 @@ def calculate_tissue_parameters(
         # Two-photon comparison if wavelengths provided
         two_photon_data = None
         if lambda_a is not None and lambda_b is not None:
-            lambda_c = calculate_two_photon_wavelength(lambda_a, lambda_b)
+            lambda_c = calculate_virtual_wavelength(lambda_a, lambda_b)
             # Get values at specific wavelengths
             idx_a = np.abs(wavelengths - lambda_a).argmin()
             idx_b = np.abs(wavelengths - lambda_b).argmin()
@@ -233,8 +234,15 @@ def create_tissue_plot(
     # Update layout
     max_y = max(normalized_fraction) * 1.2  # Add 20% padding
     fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor=STYLE_CONFIG["plot_style"]["bgcolor"],
+        plot_bgcolor=STYLE_CONFIG["plot_style"]["bgcolor"],
+        font=STYLE_CONFIG["plot_style"]["font"],
+        margin=dict(
+            t=100,  # Increased top margin for title
+            r=50,
+            b=50,
+            l=50
+        ),
         xaxis=dict(
             title="Wavelength (nm)",
             range=wavelength_range,  # Keep visible range as specified
@@ -257,6 +265,19 @@ def create_tissue_plot(
         ),
         height=600,
         hovermode="x unified",
+        # Add interpretation text in the title
+        title=dict(
+            text=(
+                "Tissue Penetration Plot<br>" +
+                "<span style='font-size:0.9em; color:blue'>🔵 Photon Fraction: percentage reaching depth z, normalized at reference wavelength</span><br>" +
+                "<span style='font-size:0.9em; color:red'>🔴 Absorption: percentage absorbed, shaded regions >50%</span>"
+            ),
+            x=0.5,
+            y=0.95,
+            xanchor='center',
+            yanchor='top',
+            font=dict(size=14),
+        )
     )
 
     return fig

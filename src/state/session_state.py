@@ -42,30 +42,31 @@ def compile_fluorophore_data(cross_sections: Dict[str, pd.DataFrame]) -> pd.Data
     for name, df in cross_sections.items():
         stats = {}
         stats['Name'] = name
-        
+
         if name == "IntrinsicFluorophores":
             # Handle multiple fluorophores
             for col in ["riboflavin", "folic_acid", "cholecalciferol", "retinol"]:
                 peak_idx = df[col].idxmax()
                 stats[f"{col}_peak_wavelength"] = df.loc[peak_idx, "wavelength"]
                 stats[f"{col}_peak_cross_section"] = df.loc[peak_idx, col]
-        
+
         elif name == "NADH-ProteinBound":
             # Handle protein-bound forms
             for col in ["gm_mean", "gm_mdh", "gm_ad"]:
                 peak_idx = df[col].idxmax()
                 stats[f"{col}_peak_wavelength"] = df.loc[peak_idx, "wavelength"]
                 stats[f"{col}_peak_cross_section"] = df.loc[peak_idx, col]
-        
+
         else:
             # Standard single-peak fluorophores
-            cross_section_col = "cross_section" if "cross_section" in df.columns else df.columns[1]
+            cross_section_col = "cross_section" if "cross_section" in df.columns else df.columns[
+                1]
             peak_idx = df[cross_section_col].idxmax()
             stats["peak_wavelength"] = df.loc[peak_idx, "wavelength"]
             stats["peak_cross_section"] = df.loc[peak_idx, cross_section_col]
-            
+
         data.append(stats)
-    
+
     return pd.DataFrame(data)
 
 
@@ -86,7 +87,8 @@ def initialize_session_state() -> None:
 
     # Initialize other dataframes
     session_state.setdefault("fluorophore_df", load_fluorophore_data())
-    session_state.setdefault("search_results", pd.DataFrame(columns=DEFAULT_COLUMNS))
+    session_state.setdefault(
+        "search_results", pd.DataFrame(columns=DEFAULT_COLUMNS))
 
     # Initialize global parameters with plot config values
     global_params = DEFAULT_GLOBAL_PARAMS.copy()
@@ -99,7 +101,7 @@ def initialize_session_state() -> None:
 
     # Initialize laser data
     session_state.setdefault("laser_df", initialize_laser_data())
-    session_state.setdefault("show_lasers",True)
+    session_state.setdefault("show_lasers", True)
 
     # Initialize plot configuration
     session_state.setdefault("plot_config", SHARED_PLOT_CONFIG.copy())

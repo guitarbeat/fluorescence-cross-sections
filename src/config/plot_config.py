@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
 import streamlit as st
-from streamlit_theme import st_theme
 
 # Add shared configuration at module level
 SHARED_PLOT_CONFIG = {
@@ -36,15 +35,61 @@ def get_theme_colors():
         return DARK_THEME
     return LIGHT_THEME
 
+# Shared styling configuration
+STYLE_CONFIG = {
+    # Colors
+    "primary_color": "#0f4c81",      # Deep blue
+    "secondary_color": "#ff4b4b",    # Coral red
+    "accent_color": "#17becf",       # Turquoise
+    "text_color": "#666666",         # Gray for descriptions
+    "border_color": "rgba(128, 128, 128, 0.2)",
+    
+    # Text styles
+    "header_style": """
+        color: #0f4c81;
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    """,
+    "subheader_style": """
+        color: #0f4c81;
+        font-size: 20px;
+        font-weight: 500;
+        margin: 1rem 0;
+    """,
+    "description_style": """
+        color: #666666;
+        font-size: 16px;
+        margin-bottom: 1.5rem;
+    """,
+    
+    # Component styles
+    "expander_style": """
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        border-radius: 4px;
+        padding: 1rem;
+        margin: 1rem 0;
+    """,
+    "plot_style": {
+        "bgcolor": "rgba(255, 255, 255, 0)",
+        "margin": dict(t=50, r=50, b=50, l=50),
+        "font": dict(
+            family="Arial, sans-serif",
+            size=14,
+            color="#2E2E2E"
+        )
+    }
+}
+
 # Initialize with light theme by default
 FLOATING_ELEMENT_THEME = {
     "font": dict(
         family="Arial, sans-serif",
-        size=10,
-        color=LIGHT_THEME["font_color"]  # Default to light theme
+        size=12,
+        color=STYLE_CONFIG["text_color"]
     ),
-    "bgcolor": LIGHT_THEME["bgcolor"],
-    "bordercolor": LIGHT_THEME["bordercolor"],
+    "bgcolor": "rgba(255, 255, 255, 0.95)",
+    "bordercolor": STYLE_CONFIG["border_color"],
     "borderwidth": 1,
 }
 
@@ -54,7 +99,7 @@ def update_floating_element_theme():
     FLOATING_ELEMENT_THEME.update({
         "font": dict(
             family="Arial, sans-serif",
-            size=10,
+            size=12,
             color=theme["font_color"]
         ),
         "bgcolor": theme["bgcolor"],

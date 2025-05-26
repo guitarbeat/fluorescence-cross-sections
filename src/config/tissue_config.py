@@ -7,8 +7,8 @@ import streamlit as st
 from src.utils.data_loader import load_water_absorption_data
 
 # Formula display configuration
-MAIN_FORMULA_SIZE = r"\large"  # Size for the main formula
-FORMULA_SIZE = r""      # Size for other formulas
+MAIN_FORMULA_SIZE = r"\Large"  # Size for the main formula
+FORMULA_SIZE = r"\large"      # Size for other formulas
 FORMULA_SPACING = 2          # Number of blank lines after formulas
 
 # Plot configuration
@@ -168,14 +168,14 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
         # Scattering formula below the plot
         st.markdown("#### Scattering Formula")
         scattering_formula = (
-            f"{FORMULA_SIZE} \\mu_s(\\lambda) = \\frac{{a}}{{1-g}} \\cdot "
-            r"\left(\frac{\lambda}{500}\right)^{-b} "
-            f"\\quad = \\frac{{\\color{{red}}{{{params['a']:.2f}}}}}"
+            f"{FORMULA_SIZE} \\mu_s(\\lambda) &= \\frac{{a}}{{1-g}} \\cdot "
+            r"\left(\frac{\lambda}{500}\right)^{-b} \\" + "\n"  # Add line break
+            f"&= \\frac{{\\color{{red}}{{{params['a']:.2f}}}}}"
             f"{{1-\\color{{red}}{{{params['g']:.2f}}}}} \\cdot "
             r"\left(\frac{\lambda}{500}\right)^{" +
             f"\\color{{red}}{{-{params['b']:.2f}}}" + "}"
         )
-        st.latex(scattering_formula)
+        st.latex("\\begin{align*}" + scattering_formula + "\\end{align*}")
 
     with controls_col:
         st.markdown("### Parameter Controls")
@@ -201,6 +201,10 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
             st.plotly_chart(g_fig, use_container_width=True)
             st.markdown("""
                 **Impact of Anisotropy:**
+                ```math
+                \\mu_s &= \\frac{\\mu_s'}{1-g} \\\\
+                       &= \\frac{a}{1-g}
+                ```
                 - Higher values → more forward scattering
                 - Lower values → more uniform scattering
                 - Brain tissue typically ≈ 0.9
@@ -234,6 +238,10 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
             st.plotly_chart(b_fig, use_container_width=True)
             st.markdown("""
                 **Impact of Scattering Power:**
+                ```math
+                \\mu_s' &= a \\cdot \\left(\\frac{\\lambda}{500}\\right)^{-b} \\\\
+                        &= a \\cdot \\left(\\frac{\\lambda}{500}\\right)^{-1.37}
+                ```
                 - Controls wavelength dependence
                 - Higher b → stronger λ dependence
                 - Brain tissue b ≈ 1.37
@@ -265,6 +273,10 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
             st.plotly_chart(a_fig, use_container_width=True)
             st.markdown("""
                 **Impact of Scattering Scale:**
+                ```math
+                \\mu_s &= a \\cdot \\text{(wavelength term)} \\\\
+                       &= 1.1 \\text{ mm}^{-1} \\cdot \\text{(wavelength term)}
+                ```
                 - Controls overall scattering strength
                 - Higher a → more scattering
                 - Brain tissue a ≈ 1.1 mm⁻¹
@@ -308,11 +320,10 @@ def render_absorption_section(col, params) -> float:
         # Absorption formula below the plot
         st.markdown("#### Absorption Formula")
         absorption_formula = (
-            f"{FORMULA_SIZE} \\mu_a(\\lambda) = \\mu_{{a,base}} \\cdot w "
-            f"\\quad = \\mu_{{a,base}} \\cdot \\color{{red}}{{{
-                params['water_content']:.2f}}}"
+            f"{FORMULA_SIZE} \\mu_a(\\lambda) &= \\mu_a^{{\\lambda}} \\cdot w \\\\" + "\n"
+            f"                                &= \\mu_a^{{\\lambda}} \\cdot \\color{{red}}{{{params['water_content']:.2f}}}"
         )
-        st.latex(absorption_formula)
+        st.latex("\\begin{align*}" + absorption_formula + "\\end{align*}")
 
     with controls_col:
         st.markdown("### Parameter Controls")
@@ -343,6 +354,10 @@ def render_absorption_section(col, params) -> float:
             st.plotly_chart(w_fig, use_container_width=True)
             st.markdown("""
                 **Impact of Water Content:**
+                ```math
+                \\mu_a &= \\mu_a^{\\lambda} \\cdot w \\\\
+                       &= \\mu_a^{\\lambda} \\cdot 0.75
+                ```
                 - Controls absorption strength
                 - Linear relationship with absorption
                 - Brain tissue ≈ 75% water
@@ -357,6 +372,17 @@ def render_math_view():
     # Initialize tissue parameters in session state if not present
     st.session_state.setdefault("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
     params = st.session_state.tissue_params
+
+    # Add reset button at the top
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button(
+            "↺ Reset Parameters",
+            use_container_width=True,
+            help="Reset all tissue parameters to default values"
+        ):
+            st.session_state.tissue_params = DEFAULT_TISSUE_PARAMS.copy()
+            st.rerun()
 
     # Get global parameters
     wavelength_range = st.session_state.global_params.get(
@@ -406,12 +432,11 @@ def render_math_view():
         with st.expander("📐 Mathematical Model", expanded=True):
             # Main formula
             main_formula_with_depth = (
-                f"{MAIN_FORMULA_SIZE} T(\\lambda, z) = "
-                f"e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda))z}} \\quad = "
-                f"e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda)) \\cdot "
-                f"\\color{{red}}{depth:.1f}}}"
+                f"{MAIN_FORMULA_SIZE} T(\\lambda, z) &= e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda))z}} \\\\" + "\n"
+                f"&= e^{{-(\\mu_s(\\lambda) + \\mu_a(\\lambda)) \\cdot \\color{{red}}{{{depth:.1f}}}}} \\\\" + "\n"
+                "&= e^{-\\mu_{\\text{total}}(\\lambda) \\cdot z}"
             )
-            st.latex(main_formula_with_depth)
+            st.latex("\\begin{align*}" + main_formula_with_depth + "\\end{align*}")
 
             # Description of variables
             st.markdown("""
@@ -419,50 +444,29 @@ def render_math_view():
                 - T(λ,z) is the transmission at wavelength λ and depth z
                 - μₛ(λ) is the scattering coefficient
                 - μₐ(λ) is the absorption coefficient
+                - μ_total = μₛ + μₐ is the total attenuation coefficient
             """)
             add_formula_spacing()
 
-        # Results interpretation
-        with st.container():
-            st.markdown("#### Model Output Interpretation")
-            interpretation_col1, interpretation_col2 = st.columns(2)
-
-            with interpretation_col1:
-                st.markdown("""
-                    🔵 **Photon Fraction**
-                    - Shows percentage of photons reaching depth z
-                    - Normalized at reference wavelength
-                """)
-
-            with interpretation_col2:
-                st.markdown("""
-                    🔴 **Absorption**
-                    - Shows percentage of photons absorbed
-                    - Shaded regions indicate >50% absorption
-                """)
-
-        # Parameters section with tabs
-        param_tabs = st.tabs(
-            ["Scattering Properties", "Absorption Properties"])
-
-        # Initialize variables with default values
+        # Parameters sections - replacing tabs with direct sections
+        st.markdown("---")
+        
+        # Scattering Properties Section
+        st.subheader("Scattering Properties")
         g, b, a = params["g"], params["b"], params["a"]
+        scattering_result = render_scattering_section(st, params)
+        if scattering_result is not None:
+            g, b, a = scattering_result
+
+        # Absorption Properties Section
+        st.subheader("Absorption Properties")
         water_content = params["water_content"]
+        absorption_result = render_absorption_section(st, params)
+        if absorption_result is not None:
+            water_content = absorption_result
 
+        # Update session state
         try:
-            with param_tabs[0]:
-                # Scattering parameters
-                scattering_result = render_scattering_section(st, params)
-                if scattering_result is not None:
-                    g, b, a = scattering_result
-
-            with param_tabs[1]:
-                # Absorption parameters
-                absorption_result = render_absorption_section(st, params)
-                if absorption_result is not None:
-                    water_content = absorption_result
-
-            # Update session state only if we got valid results
             st.session_state.tissue_params.update({
                 "water_content": water_content,
                 "g": g,
@@ -470,6 +474,5 @@ def render_math_view():
                 "b": b,
                 "depth": depth,
             })
-
         except (ValueError, TypeError, AttributeError) as e:
             st.error(f"Error updating parameters: {str(e)}")
