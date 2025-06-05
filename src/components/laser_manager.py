@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from typing import Tuple
-from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
 from src.api.google import fetch_data, send_data
+from src.config.constants import LASER_CSV
 
 
 @dataclass
@@ -28,7 +28,7 @@ DEFAULT_LASERS = [
 ]
 
 # Add constant for laser data path
-LASER_DATA_PATH = Path("data/lasers.csv")
+LASER_DATA_PATH = LASER_CSV
 
 
 def initialize_laser_data() -> pd.DataFrame:

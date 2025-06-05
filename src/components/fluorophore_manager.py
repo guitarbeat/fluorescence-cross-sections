@@ -1,17 +1,14 @@
-from pathlib import Path
 from typing import Any, Dict
 
 import pandas as pd
 import streamlit as st
 
 from src.api.google import fetch_data, send_data
+from src.config.constants import FLUOROPHORE_CSV, FLUOROPHORE_COLUMNS
 
 # Constants
-DATA_PATH = Path("data/fluorophores.csv")
-DEFAULT_COLUMNS = [
-    "Name", "Wavelength", "Cross_Section", "Reference",  # Core plotting data
-    "Em_Max", "Ex_Max", "QY", "EC", "pKa", "Brightness"  # Additional properties
-]
+DATA_PATH = FLUOROPHORE_CSV
+DEFAULT_COLUMNS = FLUOROPHORE_COLUMNS
 
 class FluorophoreManager:
     def __init__(self):
