@@ -48,7 +48,6 @@ six==1.17.0
 smmap==5.0.2
 st-theme==1.2.3
 streamlit==1.45.0
-streamlit-scroll-navigation==1.2.1
 tenacity==9.1.2
 toml==0.10.2
 tornado==6.4.2
