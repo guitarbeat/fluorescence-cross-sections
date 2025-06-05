@@ -27,4 +27,4 @@ def styled_expander(text: str, expanded: bool = False):
     return st.expander(
         text,
         expanded=expanded
-    ) 
+    )

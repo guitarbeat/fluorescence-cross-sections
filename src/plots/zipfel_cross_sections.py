@@ -218,4 +218,4 @@ def plot_cross_section(
         yaxis_autorange=True
     )
     
-    return fig 
+    return fig
