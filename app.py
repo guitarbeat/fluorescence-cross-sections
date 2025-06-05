@@ -306,13 +306,6 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
         st.error("An unexpected error occurred. Please check the logs.")
 
 
-# Add programmatic page switching capability
-def switch_to_page(page_name: str) -> None:
-    """Switch to specified page programmatically"""
-    try:
-        st.switch_page(f"pages/{page_name}.py")
-    except Exception as e:
-        st.error(f"Failed to switch page: {str(e)}")
 
 
 def main() -> None:

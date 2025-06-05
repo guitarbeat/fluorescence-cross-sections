@@ -208,34 +208,3 @@ def validate_data(df: pd.DataFrame, required_columns: list) -> Optional[pd.DataF
     return df
 
 
-def load_tissue_properties() -> pd.DataFrame:
-    """
-    Load tissue optical properties (absorption and scattering coefficients) from mua_mus.txt.
-    
-    The data contains:
-    - Wavelength (nm)
-    - Total attenuation coefficient (mm⁻¹)
-    - Scattering coefficient (mm⁻¹) 
-    - Absorption coefficient (mm⁻¹)
-
-    Returns:
-        pd.DataFrame: DataFrame containing wavelength and optical properties
-    """
-    data_path = DATA_DIR / "mua_mus.txt"
-    try:
-        df = pd.read_csv(
-            data_path,
-            delim_whitespace=True,
-            names=["wavelength", "total_attenuation", "scattering", "absorption"]
-        )
-        return df
-    except (FileNotFoundError, pd.errors.EmptyDataError) as e:
-        st.error(f"Error loading tissue properties data: {e}")
-        # Return dummy data if file not found
-        wavelengths = np.linspace(800, 2000, 1000)
-        return pd.DataFrame({
-            "wavelength": wavelengths,
-            "total_attenuation": np.ones_like(wavelengths) * 10,
-            "scattering": np.ones_like(wavelengths) * 9,
-            "absorption": np.ones_like(wavelengths) * 1
-        })
