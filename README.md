@@ -62,3 +62,7 @@ This will start a local web server, and the application should open automaticall
 
 The application utilizes data stored locally in the `data/` directory, potentially supplemented by external sources via the `src/api/` modules.
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
