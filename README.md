@@ -32,6 +32,15 @@ This project uses Python and requires a virtual environment for managing depende
     pip install -r requirements.txt
     ```
 
+## Testing
+
+Install the dependencies listed in `requirements.txt` and run the test suite with:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
 ## Running the Application
 
 Once the setup is complete, you can run the Streamlit application:
