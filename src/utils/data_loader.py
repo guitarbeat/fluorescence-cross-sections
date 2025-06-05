@@ -13,15 +13,18 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from src.config.constants import (
+    BASIC_FLUOROPHORE_COLUMNS,
+    DATA_DIR,
+    FLUOROPHORE_CSV,
+    FLUOROPHORE_COLUMNS,
+)
+
 logger = logging.getLogger(__name__)
 
 # Constants
-DATA_DIR = Path(__file__).parent.parent.parent / "data"
 XSECTION_DIR = DATA_DIR / "2p-xsections"
-DEFAULT_COLUMNS = [
-    "Name", "Wavelength", "Cross_Section", "Reference",
-    "Ex_Max", "Em_Max", "QY", "EC", "pKa", "Brightness"
-]
+DEFAULT_COLUMNS = FLUOROPHORE_COLUMNS
 
 
 
@@ -62,7 +65,7 @@ def load_fluorophore_data() -> pd.DataFrame:
         pd.DataFrame: DataFrame containing fluorophore data
     """
     try:
-        fluorophore_df = pd.read_csv(DATA_DIR / "fluorophores.csv")
+        fluorophore_df = pd.read_csv(FLUOROPHORE_CSV)
         return fluorophore_df
     except (FileNotFoundError, pd.errors.EmptyDataError) as e:
         st.warning(f"No existing fluorophore data found: {e}")

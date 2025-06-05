@@ -9,6 +9,7 @@ from src.api.fpbase_client import FPbaseAPI
 from src.components.laser_manager import initialize_laser_data
 from src.config.plot_config import SHARED_PLOT_CONFIG
 from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+from src.config.constants import BASIC_FLUOROPHORE_COLUMNS
 from src.utils.data_loader import (
     load_fluorophore_data,
     load_cross_section_data,
@@ -26,12 +27,6 @@ DEFAULT_GLOBAL_PARAMS = {
 }
 
 # Use DEFAULT_TISSUE_PARAMS from tissue_config instead of redefining
-DEFAULT_COLUMNS: List[str] = [
-    "Name",
-    "Wavelength",
-    "Cross_Section",
-    "Reference",
-]
 
 
 def compile_fluorophore_data(cross_sections: Dict[str, pd.DataFrame]) -> pd.DataFrame:
@@ -88,7 +83,7 @@ def initialize_session_state() -> None:
     # Initialize other dataframes
     session_state.setdefault("fluorophore_df", load_fluorophore_data())
     session_state.setdefault(
-        "search_results", pd.DataFrame(columns=DEFAULT_COLUMNS))
+        "search_results", pd.DataFrame(columns=BASIC_FLUOROPHORE_COLUMNS))
 
     # Initialize global parameters with plot config values
     global_params = DEFAULT_GLOBAL_PARAMS.copy()

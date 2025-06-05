@@ -18,6 +18,7 @@ from src.plots.tissue_view import (calculate_tissue_parameters,
                                    create_tissue_plot)
 from src.state.session_state import initialize_session_state
 from src.utils.data_loader import load_cross_section_data
+from src.config.constants import FLUOROPHORE_CSV
 from src.api.google import send_data
 import streamlit_nested_layout  # noqa: F401
 # from src.utils.styling import styled_header, styled_description # Removed as standard components are used
@@ -245,7 +246,7 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                         send_data("fluorophores", data)
 
                         # Backup to CSV
-                        save_df.to_csv("data/fluorophores.csv", index=False)
+                        save_df.to_csv(FLUOROPHORE_CSV, index=False)
 
                         st.success("Changes saved!")
                         st.rerun()
