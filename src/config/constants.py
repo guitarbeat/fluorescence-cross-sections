@@ -19,6 +19,14 @@ BASIC_FLUOROPHORE_COLUMNS = [
     "Name", "Wavelength", "Cross_Section", "Reference",
 ]
 
+# * Shared configuration for tissue depth slider in Streamlit
+TISSUE_DEPTH_SLIDER_CONFIG = {
+    "min_value": 0.1,
+    "max_value": 2.0,
+    "step": 0.1,
+    "help": "Distance light travels through tissue",
+}
+
 __all__ = [
     "ROOT_DIR",
     "DATA_DIR",

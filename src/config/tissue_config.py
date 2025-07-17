@@ -19,6 +19,7 @@ import streamlit as st
 
 # Changed from relative to absolute import
 from src.utils.data_loader import load_water_absorption_data
+from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
 
 # Formula display configuration
 MAIN_FORMULA_SIZE = r"\Large"  # Size for the main formula
@@ -431,11 +432,8 @@ def render_math_view():
                 depth = params.get("depth", 1.0)
                 new_depth = st.slider(
                     "Depth (z) [mm]",
-                    min_value=0.1,
-                    max_value=2.0,
                     value=depth,
-                    step=0.1,
-                    help="Distance light travels through tissue",
+                    **TISSUE_DEPTH_SLIDER_CONFIG,
                 )
 
                 if new_depth != depth:

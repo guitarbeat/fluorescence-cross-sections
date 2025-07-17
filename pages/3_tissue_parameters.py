@@ -3,6 +3,7 @@ import streamlit as st
 from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
 from src.state.session_state import initialize_session_state
 from src.pages.common import render_footer
+from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
 
 initialize_session_state()
 
@@ -21,12 +22,9 @@ with general_tab:
         depth = st.session_state.tissue_params.get("depth", DEFAULT_TISSUE_PARAMS["depth"])
         new_depth = st.slider(
             "Tissue Depth (mm)",
-            min_value=0.1,
-            max_value=2.0,
             value=depth,
-            step=0.1,
-            help="Distance light travels through tissue",
             key="tissue_depth_main",
+            **TISSUE_DEPTH_SLIDER_CONFIG,
         )
         if new_depth != depth:
             st.session_state.tissue_params["depth"] = new_depth
