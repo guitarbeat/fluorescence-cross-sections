@@ -47,9 +47,7 @@ DARK_THEME = {
 
 def get_theme_colors():
     """Get theme-aware colors based on Streamlit theme"""
-    if st.session_state.get("theme") == "dark":
-        return DARK_THEME
-    return LIGHT_THEME
+    return DARK_THEME if st.session_state.get("theme") == "dark" else LIGHT_THEME
 
 # Shared styling configuration
 STYLE_CONFIG = {

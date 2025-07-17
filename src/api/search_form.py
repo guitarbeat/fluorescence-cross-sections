@@ -95,7 +95,7 @@ def render_search_panel(key_prefix: str = "") -> None:
     """Render the simplified FPbase search panel."""
     with st.expander("🔍 FPbase Database Search", expanded=True):
         st.markdown("### Search FPbase")
-        
+
         st.info("""
             **Note about Two-Photon Data:**
             - FPbase provides spectral shapes but not absolute cross-section values (GM units)
@@ -109,13 +109,9 @@ def render_search_panel(key_prefix: str = "") -> None:
                 placeholder="e.g., GFP, RFP, YFP",
                 help="Enter protein name"
             )
-            submitted = st.form_submit_button(
-                "🔍 Search",
-                type="primary",
-                use_container_width=True
-            )
-
-            if submitted:
+            if submitted := st.form_submit_button(
+                "🔍 Search", type="primary", use_container_width=True
+            ):
                 result = search_proteins(name_query, {"name__icontains": name_query}, st.session_state.fpbase_client)
 
                 if result["success"]:

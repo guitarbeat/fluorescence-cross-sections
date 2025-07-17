@@ -132,13 +132,12 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
             df = cross_sections[selected_fluorophore]
             stats = calculate_fluorophore_stats(df, selected_fluorophore)
             st.markdown(format_stats(stats))
-        
+
         # Reference Image
         with st.expander("🔍 Reference Plot", expanded=True, icon="🔍"):
             try:
                 image_url = get_reference_image_url(selected_fluorophore)
-                image_content = fetch_image_content(image_url) # Use cached function
-                if image_content:
+                if image_content := fetch_image_content(image_url):
                     st.image(
                         image_content,
                         caption=f"Reference plot for {selected_fluorophore}",
@@ -148,7 +147,7 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
                     st.info(f"Reference image not found or failed to load for {selected_fluorophore}.") # Improved message
             except Exception as e: # Catch specific exceptions if possible
                 logger.error(f"Error displaying reference image for {selected_fluorophore}: {e}")
-                st.warning(f"Could not display reference image.")
+                st.warning("Could not display reference image.")
 
     # Data Table Section
     with st.expander("📋 Raw Data", expanded=False, icon="📋"):
@@ -159,7 +158,7 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
             hide_index=True,
             key=f"{key_prefix}_dataframe"
         )
-        
+
         # Download button for raw data
         csv = df.to_csv(index=False)
         st.download_button(

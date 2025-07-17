@@ -74,8 +74,7 @@ def load_fluorophore_data() -> pd.DataFrame:
         pd.DataFrame: DataFrame containing fluorophore data
     """
     try:
-        fluorophore_df = pd.read_csv(FLUOROPHORE_CSV)
-        return fluorophore_df
+        return pd.read_csv(FLUOROPHORE_CSV)
     except (FileNotFoundError, pd.errors.EmptyDataError) as e:
         st.warning(f"No existing fluorophore data found: {e}")
         return pd.DataFrame(columns=DEFAULT_COLUMNS)
@@ -145,10 +144,10 @@ def load_cross_section_data() -> Dict[str, pd.DataFrame]:
                 with open(file_path) as f:
                     header = [next(f) for _ in range(5)]
                 
-                skiprows = sum(1 for line in header if 
-                             line.startswith('--') or 
-                             line.startswith('nm') or 
-                             line.strip() == '')
+                skiprows = sum(bool(line.startswith('--') or 
+                                                        line.startswith('nm') or 
+                                                        line.strip() == '')
+                           for line in header)
                 
                 # Read data
                 df = pd.read_csv(
@@ -212,8 +211,7 @@ def validate_data(df: pd.DataFrame, required_columns: list) -> Optional[pd.DataF
         st.warning("Empty DataFrame provided for validation")
         return None
 
-    missing_cols = set(required_columns) - set(df.columns)
-    if missing_cols:
+    if missing_cols := set(required_columns) - set(df.columns):
         st.error(f"Missing required columns: {missing_cols}")
         return None
 

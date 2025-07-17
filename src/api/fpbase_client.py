@@ -92,7 +92,7 @@ class FPbaseAPI:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request failed: {str(e)}")
-            raise FPbaseAPIError(f"Request failed: {str(e)}")
+            raise FPbaseAPIError(f"Request failed: {str(e)}") from e
 
     def _validate_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Validate and clean query parameters."""
@@ -171,7 +171,7 @@ class FPbaseAPI:
         except Exception as e:
             logger.error(f"Search failed: {str(e)}")
             logger.exception("Full traceback:")  # This will log the full stack trace
-            raise FPbaseAPIError(f"Search failed: {str(e)}")
+            raise FPbaseAPIError(f"Search failed: {str(e)}") from e
 
     def to_dataframe(self, proteins: List[ProteinData]) -> pd.DataFrame:
         """Convert a list of ProteinData objects to a DataFrame."""

@@ -46,9 +46,7 @@ def compile_fluorophore_data(cross_sections: Dict[str, pd.DataFrame]) -> pd.Data
     """
     data = []
     for name, df in cross_sections.items():
-        stats = {}
-        stats['Name'] = name
-
+        stats = {'Name': name}
         if name == "IntrinsicFluorophores":
             # Handle multiple fluorophores
             for col in ["riboflavin", "folic_acid", "cholecalciferol", "retinol"]:

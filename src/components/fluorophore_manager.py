@@ -28,15 +28,13 @@ class FluorophoreManager:
         if "fluorophore_df" not in st.session_state:
             # Try to get data from Google Sheets first
             sheets_data = fetch_data("fluorophores")
-            
+
             if sheets_data is not None:
                 st.session_state.fluorophore_df = pd.DataFrame(sheets_data)
+            elif DATA_PATH.exists():
+                st.session_state.fluorophore_df = pd.read_csv(DATA_PATH)
             else:
-                # Fallback to CSV
-                if DATA_PATH.exists():
-                    st.session_state.fluorophore_df = pd.read_csv(DATA_PATH)
-                else:
-                    st.session_state.fluorophore_df = pd.DataFrame(columns=DEFAULT_COLUMNS)
+                st.session_state.fluorophore_df = pd.DataFrame(columns=DEFAULT_COLUMNS)
 
     @staticmethod
     def get_column_config() -> Dict[str, Any]:
@@ -156,9 +154,9 @@ class FluorophoreManager:
 
             if st.form_submit_button("Import"):
                 selected_df = st.session_state.search_results[
-                    [selected[idx] for idx in selected.keys()]
+                    [selected[idx] for idx in selected]
                 ]
-                
+
                 if not selected_df.empty:
                     with st.status("Importing...") as status:
                         try:
@@ -167,7 +165,7 @@ class FluorophoreManager:
                                 [st.session_state.fluorophore_df, selected_df],
                                 ignore_index=True
                             ).drop_duplicates(subset=["Name"], keep="last")
-                            
+
                             self.save_data(new_df)
                             status.update(label="✅ Imported", state="complete")
                             st.rerun()

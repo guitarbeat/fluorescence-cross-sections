@@ -165,7 +165,7 @@ def render_laser_editor() -> None:
     # Popover for adding a new laser
     with st.popover("➕ Add New Laser"):
         render_add_laser_form()
-        
+
     st.session_state.edited_df = st.data_editor(
         get_laser_df(),
         num_rows="dynamic",
@@ -196,7 +196,7 @@ def render_laser_editor() -> None:
 
     # Create three columns for the buttons
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         if st.button(
             "💾 Save Changes", # Added icon
@@ -208,14 +208,14 @@ def render_laser_editor() -> None:
                 # Save to Google Sheets
                 data = st.session_state.edited_df.to_dict('records')
                 send_data("lasers", data)
-                
+
                 # Update session state after successful save
                 st.session_state.laser_df = st.session_state.edited_df
-                
+
                 # Backup to CSV
                 LASER_DATA_PATH.parent.mkdir(exist_ok=True)
                 st.session_state.edited_df.to_csv(LASER_DATA_PATH, index=False)
-                
+
                 st.success("Changes saved successfully!")
                 st.rerun()
             except Exception as e:
@@ -245,22 +245,21 @@ def render_laser_editor() -> None:
             st.session_state.show_color_picker = True
 
     # Show color picker if button was clicked
-    if st.session_state.get("show_color_picker", False):
-        if not st.session_state.edited_df.empty:
-            selected_indices = st.multiselect(
-                "Select lasers",
-                options=st.session_state.edited_df.index,
-                format_func=lambda x: st.session_state.edited_df.loc[x, "Name"],
+    if st.session_state.get("show_color_picker", False) and not st.session_state.edited_df.empty:
+        if selected_indices := st.multiselect(
+            "Select lasers",
+            options=st.session_state.edited_df.index,
+            format_func=lambda x: st.session_state.edited_df.loc[
+                x, "Name"
+            ],
+        ):
+            new_color = st.color_picker(
+                "Pick new color",
+                st.session_state.edited_df.loc[selected_indices[0], "Color"],
             )
-
-            if selected_indices:
-                new_color = st.color_picker(
-                    "Pick new color",
-                    st.session_state.edited_df.loc[selected_indices[0], "Color"],
-                )
-                if st.button("Update Color"):
-                    st.session_state.edited_df.loc[selected_indices, "Color"] = new_color
-                    st.session_state.show_color_picker = False  # Hide color picker after update
+            if st.button("Update Color"):
+                st.session_state.edited_df.loc[selected_indices, "Color"] = new_color
+                st.session_state.show_color_picker = False  # Hide color picker after update
 
 
 def render_laser_manager() -> None:
@@ -269,15 +268,12 @@ def render_laser_manager() -> None:
         # Initialize show_lasers in session state if it doesn't exist
         if "show_lasers" not in st.session_state:
             st.session_state.show_lasers = False
-            
-        # Use only session state value, no default in toggle
-        show_lasers = st.toggle(
+
+        if show_lasers := st.toggle(
             "Show Lasers",
             key="show_lasers",
             help="Toggle visibility of laser ranges on all plots",
-        )
-        
-        if show_lasers:  # Use the toggle's return value
+        ):
             render_laser_editor()
 
 

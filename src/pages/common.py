@@ -58,7 +58,10 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
         if plot_type == "cross_sections":
             plot_container = st.container(border=True)
             with plot_container:
-                if df is not None and not df.empty:
+                if df is None or df.empty:
+                    st.info("No data to display - try searching for fluorophores.")
+
+                else:
                     if "fluorophore_visibility" not in st.session_state:
                         st.session_state.fluorophore_visibility = {
                             row["Name"]: True for _, row in df.iterrows()
@@ -87,9 +90,6 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                         theme="streamlit",
                         config={"displayModeBar": True, "responsive": True},
                     )
-                else:
-                    st.info("No data to display - try searching for fluorophores.")
-
                 with st.popover("Marker Settings"):
                     marker_settings_ui()
 
@@ -103,15 +103,11 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
 
                 df_for_editor = st.session_state.fluorophore_df.copy()
 
-                if show_all:
-                    st.session_state.fluorophore_visibility = {
-                        name: True for name in df_for_editor["Name"]
-                    }
-                else:
-                    st.session_state.fluorophore_visibility = {
-                        name: False for name in df_for_editor["Name"]
-                    }
-
+                st.session_state.fluorophore_visibility = (
+                    {name: True for name in df_for_editor["Name"]}
+                    if show_all
+                    else {name: False for name in df_for_editor["Name"]}
+                )
                 df_for_editor["Visible"] = df_for_editor["Name"].map(
                     st.session_state.fluorophore_visibility
                 ).fillna(True)

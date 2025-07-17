@@ -34,14 +34,11 @@ def get_marker_styles(num_traces: int) -> List[Tuple[str, str]]:
         '#e377c2',  # Pink
         '#7f7f7f',  # Gray
     ]
-    
-    styles = []
-    for i in range(num_traces):
-        marker = markers[i % len(markers)]
-        color = colors[i % len(colors)]
-        styles.append((marker, color))
-    
-    return styles
+
+    return [
+        (markers[i % len(markers)], colors[i % len(colors)])
+        for i in range(num_traces)
+    ]
 
 def plot_cross_section(
     cross_sections: Dict[str, pd.DataFrame],
@@ -66,15 +63,15 @@ def plot_cross_section(
     """
     if selected_fluorophore not in cross_sections:
         raise ValueError(f"Fluorophore {selected_fluorophore} not found in data")
-    
+
     df = cross_sections[selected_fluorophore]
-    
+
     # Create figure with white background and improved styling
     fig = go.Figure()
-    
+
     # Get marker styles
     marker_styles = get_marker_styles(4)  # Get enough styles for all possible traces
-    
+
     # Special case handling with consistent styling
     if selected_fluorophore == "IntrinsicFluorophores":
         # Define the columns and their display names
@@ -84,13 +81,13 @@ def plot_cross_section(
             "cholecalciferol": "Cholecalciferol",
             "retinol": "Retinol"
         }
-        
+
         for idx, (col, display_name) in enumerate(columns.items()):
             marker_symbol, color = marker_styles[idx]
-            
+
             # Convert to numeric and handle any conversion errors
             y_values = pd.to_numeric(df[col], errors='coerce')
-            
+
             fig.add_trace(
                 go.Scatter(
                     x=df["wavelength"],
@@ -128,7 +125,7 @@ def plot_cross_section(
                     thickness=1,
                     width=3
                 )
-            
+
             fig.add_trace(
                 go.Scatter(
                     x=df["wavelength"],
@@ -147,17 +144,18 @@ def plot_cross_section(
     else:
         # Default handling with consistent styling
         marker_symbol, color = marker_styles[0]
-        error_y = None
-        if len(df.columns) == 3 and show_error_bars:
-            error_y = dict(
+        error_y = (
+            dict(
                 type='data',
                 array=df["std_dev"],
                 visible=True,
                 color=color,
                 thickness=1,
-                width=3
+                width=3,
             )
-        
+            if len(df.columns) == 3 and show_error_bars
+            else None
+        )
         fig.add_trace(
             go.Scatter(
                 x=df["wavelength"],
@@ -173,7 +171,7 @@ def plot_cross_section(
                 error_y=error_y
             )
         )
-    
+
     # Update layout with improved log scale handling
     fig.update_layout(
         title=dict(
@@ -220,11 +218,11 @@ def plot_cross_section(
         margin=dict(l=80, r=20, t=60, b=60),
         hovermode='x unified'
     )
-    
+
     # Enable autoscale
     fig.update_layout(
         xaxis_autorange=True,
         yaxis_autorange=True
     )
-    
+
     return fig
