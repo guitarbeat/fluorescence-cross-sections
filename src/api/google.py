@@ -7,9 +7,10 @@
         - send_data(sheet_name, data) (line 37)
     --- END AUTO-GENERATED DOCSTRING ---
 """
+import logging  # Added
+
 import requests
 import streamlit as st
-import logging # Added
 
 logger = logging.getLogger(__name__) # Added
 

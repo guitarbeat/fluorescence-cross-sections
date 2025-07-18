@@ -1,7 +1,7 @@
 import streamlit as st
 
-from src.state.session_state import initialize_session_state
 from src.pages.common import render_footer
+from src.state.session_state import initialize_session_state
 
 initialize_session_state()
 

@@ -16,6 +16,7 @@
 """
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
+
 import streamlit as st
 
 # Add shared configuration at module level
@@ -119,6 +120,49 @@ def update_floating_element_theme():
         "bgcolor": theme["bgcolor"],
         "bordercolor": theme["bordercolor"],
     })
+
+def get_common_colorbar_config(title: str = "Normalized<br>Photon<br>Fraction", 
+                              x: float = 0.98, 
+                              y: float = 0.15,
+                              len: float = 0.3,
+                              tickvals: list = None,
+                              ticktext: list = None) -> dict:
+    """Get common colorbar configuration to eliminate duplicate code.
+    
+    Args:
+        title: Colorbar title text
+        x: X position of colorbar
+        y: Y position of colorbar  
+        len: Length of colorbar
+        tickvals: Custom tick values for colorbar
+        ticktext: Custom tick text labels for colorbar
+        
+    Returns:
+        Dictionary with colorbar configuration
+    """
+    config = dict(
+        title=title,
+        titlefont=FLOATING_ELEMENT_THEME["font"],
+        tickfont=FLOATING_ELEMENT_THEME["font"],
+        len=len,
+        x=x,
+        y=y,
+        xanchor="right",
+        yanchor="bottom",
+        bgcolor=FLOATING_ELEMENT_THEME["bgcolor"],
+        bordercolor=FLOATING_ELEMENT_THEME["bordercolor"],
+        borderwidth=FLOATING_ELEMENT_THEME["borderwidth"],
+        outlinewidth=0,
+    )
+    
+    # Add custom tick configuration if provided
+    if tickvals is not None:
+        config["tickvals"] = tickvals
+    if ticktext is not None:
+        config["ticktext"] = ticktext
+        
+    return config
+
 
 @dataclass
 class CrossSectionPlotConfig:
@@ -226,20 +270,7 @@ class CrossSectionPlotConfig:
                 tracegroupgap=5,
             ),
             "coloraxis": dict(
-                colorbar=dict(
-                    title="Normalized<br>Photon<br>Fraction",
-                    titlefont=FLOATING_ELEMENT_THEME["font"],
-                    tickfont=FLOATING_ELEMENT_THEME["font"],
-                    len=0.3,
-                    x=0.98,
-                    y=0.15,
-                    xanchor="right",
-                    yanchor="bottom",
-                    bgcolor=FLOATING_ELEMENT_THEME["bgcolor"],
-                    bordercolor=FLOATING_ELEMENT_THEME["bordercolor"],
-                    borderwidth=FLOATING_ELEMENT_THEME["borderwidth"],
-                    outlinewidth=0,
-                )
+                colorbar=get_common_colorbar_config()
             ),
             "paper_bgcolor": "rgba(0,0,0,0)",
             "plot_bgcolor": "rgba(0,0,0,0)",

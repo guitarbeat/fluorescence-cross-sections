@@ -17,8 +17,8 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
 from src.config.plot_config import STYLE_CONFIG
+from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
 
 from ..components.laser_manager import overlay_lasers
 from ..config.plot_config import TissuePlotConfig

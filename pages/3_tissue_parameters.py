@@ -1,9 +1,9 @@
 import streamlit as st
 
-from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
-from src.state.session_state import initialize_session_state
-from src.pages.common import render_footer
 from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
+from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+from src.pages.common import render_footer
+from src.state.session_state import initialize_session_state
 
 initialize_session_state()
 

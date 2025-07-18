@@ -7,10 +7,12 @@
         - plot_cross_section(cross_sections: Dict[str, pd.DataFrame], selected_fluorophore: str, height: int = 600, width: int = 800, show_error_bars: bool = True) -> go.Figure (line 46)
     --- END AUTO-GENERATED DOCSTRING ---
 """
-import plotly.graph_objects as go
-import pandas as pd
+from typing import Dict, List, Tuple
+
 import numpy as np
-from typing import Dict, Optional, List, Tuple
+import pandas as pd
+import plotly.graph_objects as go
+
 
 def get_marker_styles(num_traces: int) -> List[Tuple[str, str]]:
     """

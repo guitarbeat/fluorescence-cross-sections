@@ -19,9 +19,15 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from ..config.plot_config import CrossSectionPlotConfig, FLOATING_ELEMENT_THEME, LIGHT_THEME, DARK_THEME
-from ..config.tissue_config import DEFAULT_TISSUE_PARAMS
 from ..components.laser_manager import overlay_lasers
+from ..config.plot_config import (
+    DARK_THEME,
+    FLOATING_ELEMENT_THEME,
+    LIGHT_THEME,
+    CrossSectionPlotConfig,
+    get_common_colorbar_config,
+)
+from ..config.tissue_config import DEFAULT_TISSUE_PARAMS
 from ..plots.tissue_view import calculate_tissue_parameters
 
 logger = logging.getLogger(__name__)
@@ -191,23 +197,13 @@ def create_cross_section_plot(
             z=Z,
             colorscale=config.heatmap_colorscale,
             showscale=True,
-            colorbar=dict(
-                title=dict(
-                    text="Normalized<br>Photon<br>Fraction",
-                    font=FLOATING_ELEMENT_THEME["font"]
-                ),
-                tickfont=FLOATING_ELEMENT_THEME["font"],
-                tickvals=[0.01, threshold_norm, 1.0],
-                ticktext=["0.01", f"{absorption_threshold}%", "100%"],
-                len=0.3,
+            colorbar=get_common_colorbar_config(
+                title="Normalized<br>Photon<br>Fraction",
                 x=0.98,
                 y=0.02,
-                xanchor="right",
-                yanchor="bottom",
-                bgcolor=FLOATING_ELEMENT_THEME["bgcolor"],
-                bordercolor=FLOATING_ELEMENT_THEME["bordercolor"],
-                borderwidth=FLOATING_ELEMENT_THEME["borderwidth"],
-                outlinewidth=0,
+                len=0.3,
+                tickvals=[0.01, threshold_norm, 1.0],
+                ticktext=["0.01", f"{absorption_threshold}%", "100%"]
             ),
             zmin=0.01,
             zmax=1.0,

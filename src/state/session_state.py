@@ -11,20 +11,17 @@
 Initialize and manage Streamlit session state.
 """
 import logging
-from typing import List, Dict
+from typing import Dict
 
 import pandas as pd
 import streamlit as st
 
 from src.api.fpbase_client import FPbaseAPI
 from src.components.laser_manager import initialize_laser_data
+from src.config.constants import BASIC_FLUOROPHORE_COLUMNS
 from src.config.plot_config import SHARED_PLOT_CONFIG
 from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
-from src.config.constants import BASIC_FLUOROPHORE_COLUMNS
-from src.utils.data_loader import (
-    load_fluorophore_data,
-    load_cross_section_data,
-)
+from src.utils.data_loader import load_cross_section_data, load_fluorophore_data
 
 logger = logging.getLogger(__name__)
 

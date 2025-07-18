@@ -17,7 +17,7 @@ import pandas as pd
 import streamlit as st
 
 from src.api.google import fetch_data, send_data
-from src.config.constants import FLUOROPHORE_CSV, FLUOROPHORE_COLUMNS
+from src.config.constants import FLUOROPHORE_COLUMNS, FLUOROPHORE_CSV
 
 # Constants
 DATA_PATH = FLUOROPHORE_CSV

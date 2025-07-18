@@ -1,8 +1,8 @@
 import streamlit as st
 
 from src.components.laser_manager import render_laser_manager
-from src.state.session_state import initialize_session_state
 from src.pages.common import render_footer
+from src.state.session_state import initialize_session_state
 
 initialize_session_state()
 

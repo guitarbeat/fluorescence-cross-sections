@@ -17,9 +17,10 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
+from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
+
 # Changed from relative to absolute import
 from src.utils.data_loader import load_water_absorption_data
-from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
 
 # Formula display configuration
 MAIN_FORMULA_SIZE = r"\Large"  # Size for the main formula

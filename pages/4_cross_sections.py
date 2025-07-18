@@ -1,6 +1,6 @@
 import streamlit as st
 
-from src.pages.common import render_plot_container, render_footer
+from src.pages.common import render_footer, render_plot_container
 from src.state.session_state import initialize_session_state
 
 initialize_session_state()

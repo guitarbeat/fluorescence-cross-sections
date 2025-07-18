@@ -10,11 +10,13 @@
         - render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefix: str = '') -> None (line 97)
     --- END AUTO-GENERATED DOCSTRING ---
 """
-import streamlit as st
-import logging # Added
+import logging  # Added
 from typing import Dict
+
 import pandas as pd
 import requests
+import streamlit as st
+
 from ..plots.zipfel_cross_sections import plot_cross_section
 
 logger = logging.getLogger(__name__) # Added
