@@ -203,7 +203,8 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
             help="Controls directional scattering: g=0 (isotropic) to g=1 (forward only)",
         )
 
-        with st.expander("📊 Anisotropy Impact"):
+        # Anisotropy impact in popover
+        with st.popover("📊 Anisotropy Impact", help="Click to see how anisotropy affects scattering"):
             g_values = np.linspace(0.1, 0.99, 100)
             mus_g = params['a'] / (1 - g_values)
 
@@ -215,12 +216,13 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
                 line_color='blue'
             )
             st.plotly_chart(g_fig, use_container_width=True)
+            st.markdown("**Impact of Anisotropy:**")
+            g_impact_formula = (
+                f"{FORMULA_SIZE} \\mu_s &= \\frac{{\\mu_s'}}{{1-g}} \\\\" + "\n"
+                f"&= \\frac{{a}}{{1-\\color{{red}}{{{g:.2f}}}}}"
+            )
+            st.latex("\\begin{align*}" + g_impact_formula + "\\end{align*}")
             st.markdown("""
-                **Impact of Anisotropy:**
-                ```math
-                \\mu_s &= \\frac{\\mu_s'}{1-g} \\\\
-                       &= \\frac{a}{1-g}
-                ```
                 - Higher values → more forward scattering
                 - Lower values → more uniform scattering
                 - Brain tissue typically ≈ 0.9
@@ -238,7 +240,8 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
             help="Wavelength dependence (≈1.37 for brain tissue)",
         )
 
-        with st.expander("📈 Wavelength Dependence Impact"):
+        # Scattering power impact in popover
+        with st.popover("📈 Wavelength Dependence Impact", help="Click to see how scattering power affects wavelength dependence"):
             b_values = np.linspace(0.5, 2.0, 100)
             ref_wavelength = PLOT_CONFIG["reference_wavelength"]
             mus_b = params['a'] * (ref_wavelength /
@@ -252,12 +255,13 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
                 line_color='blue'
             )
             st.plotly_chart(b_fig, use_container_width=True)
+            st.markdown("**Impact of Scattering Power:**")
+            b_impact_formula = (
+                f"{FORMULA_SIZE} \\mu_s' &= a \\cdot \\left(\\frac{{\\lambda}}{{500}}\\right)^{{-b}} \\\\" + "\n"
+                f"&= a \\cdot \\left(\\frac{{\\lambda}}{{500}}\\right)^{{-\\color{{red}}{{{b:.2f}}}}}"
+            )
+            st.latex("\\begin{align*}" + b_impact_formula + "\\end{align*}")
             st.markdown("""
-                **Impact of Scattering Power:**
-                ```math
-                \\mu_s' &= a \\cdot \\left(\\frac{\\lambda}{500}\\right)^{-b} \\\\
-                        &= a \\cdot \\left(\\frac{\\lambda}{500}\\right)^{-1.37}
-                ```
                 - Controls wavelength dependence
                 - Higher b → stronger λ dependence
                 - Brain tissue b ≈ 1.37
@@ -273,7 +277,8 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
             help="Scattering amplitude [mm⁻¹]",
         )
 
-        with st.expander("📉 Scattering Amplitude Impact"):
+        # Scattering scale impact in popover
+        with st.popover("📉 Scattering Amplitude Impact", help="Click to see how scattering scale affects overall scattering"):
             a_values = np.linspace(0.5, 2.0, 100)
             mus_a = a_values * \
                 (PLOT_CONFIG["reference_wavelength"] /
@@ -287,12 +292,13 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
                 line_color='blue'
             )
             st.plotly_chart(a_fig, use_container_width=True)
+            st.markdown("**Impact of Scattering Scale:**")
+            a_impact_formula = (
+                f"{FORMULA_SIZE} \\mu_s &= a \\cdot \\text{{(wavelength term)}} \\\\" + "\n"
+                f"&= \\color{{red}}{{{a:.2f}}} \\text{{ mm}}^{{-1}} \\cdot \\text{{(wavelength term)}}"
+            )
+            st.latex("\\begin{align*}" + a_impact_formula + "\\end{align*}")
             st.markdown("""
-                **Impact of Scattering Scale:**
-                ```math
-                \\mu_s &= a \\cdot \\text{(wavelength term)} \\\\
-                       &= 1.1 \\text{ mm}^{-1} \\cdot \\text{(wavelength term)}
-                ```
                 - Controls overall scattering strength
                 - Higher a → more scattering
                 - Brain tissue a ≈ 1.1 mm⁻¹
@@ -352,7 +358,8 @@ def render_absorption_section(col, params) -> float:
             help="Fraction of tissue that is water (≈75% for brain)",
         )
 
-        with st.expander("💧 Water Content Impact"):
+        # Water content impact in popover
+        with st.popover("💧 Water Content Impact", help="Click to see how water content affects absorption"):
             w_values = np.linspace(0, 1, 100)
             water_data = load_water_absorption_data()
             ref_wavelength = PLOT_CONFIG["reference_wavelength"]
@@ -368,12 +375,15 @@ def render_absorption_section(col, params) -> float:
                 line_color='red'
             )
             st.plotly_chart(w_fig, use_container_width=True)
+            
+            st.markdown("**Impact of Water Content:**")
+            water_impact_formula = (
+                f"{FORMULA_SIZE} \\mu_a &= \\mu_a^{{\\lambda}} \\cdot w \\\\" + "\n"
+                f"&= \\mu_a^{{\\lambda}} \\cdot \\color{{red}}{{{water_content:.2f}}}"
+            )
+            st.latex("\\begin{align*}" + water_impact_formula + "\\end{align*}")
+            
             st.markdown("""
-                **Impact of Water Content:**
-                ```math
-                \\mu_a &= \\mu_a^{\\lambda} \\cdot w \\\\
-                       &= \\mu_a^{\\lambda} \\cdot 0.75
-                ```
                 - Controls absorption strength
                 - Linear relationship with absorption
                 - Brain tissue ≈ 75% water

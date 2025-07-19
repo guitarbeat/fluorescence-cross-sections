@@ -162,14 +162,7 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                     except Exception as e:  # pylint: disable=broad-except
                         st.error(f"Failed to save changes: {str(e)}")
 
-                csv = edited_df.drop(columns=["Visible"]).to_csv(index=False)
-                st.download_button(
-                    label="Download Table",
-                    data=csv,
-                    file_name="fluorophore_table.csv",
-                    mime="text/csv",
-                    key="overview_download",
-                )
+                # Removed redundant download button - CSV export available in data editor
             else:
                 st.info(
                     "No data in fluorophore table yet. Add fluorophores from the Fluorophore Library tab."
