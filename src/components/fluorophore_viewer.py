@@ -115,44 +115,44 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        with st.expander("📈 Cross Section Plot", expanded=True, icon="📈"):
-            try:
-                fig = plot_cross_section(
-                    cross_sections=cross_sections,
-                    selected_fluorophore=selected_fluorophore,
-                    height=500,
-                    width=700,
-                    show_error_bars=True
-                )
-                st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_plot")
-            except Exception as e:
-                st.error(f"Error plotting data for {selected_fluorophore}: {str(e)}")
+        st.write("**Cross Section Plot**")
+        try:
+            fig = plot_cross_section(
+                cross_sections=cross_sections,
+                selected_fluorophore=selected_fluorophore,
+                height=500,
+                width=700,
+                show_error_bars=True
+            )
+            st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_plot")
+        except Exception as e:
+            st.error(f"Error plotting data for {selected_fluorophore}: {str(e)}")
 
     with col2:
         # Statistics Section
-        with st.expander("📊 Statistics", expanded=True, icon="📊"):
-            df = cross_sections[selected_fluorophore]
-            stats = calculate_fluorophore_stats(df, selected_fluorophore)
-            st.markdown(format_stats(stats))
+        st.write("**Statistics**")
+        df = cross_sections[selected_fluorophore]
+        stats = calculate_fluorophore_stats(df, selected_fluorophore)
+        st.markdown(format_stats(stats))
 
         # Reference Image
-        with st.expander("🔍 Reference Plot", expanded=True, icon="🔍"):
-            try:
-                image_url = get_reference_image_url(selected_fluorophore)
-                if image_content := fetch_image_content(image_url):
-                    st.image(
-                        image_content,
-                        caption=f"Reference plot for {selected_fluorophore}",
-                        use_container_width=True
-                    )
-                else:
-                    st.info(f"Reference image not found or failed to load for {selected_fluorophore}.") # Improved message
-            except Exception as e: # Catch specific exceptions if possible
-                logger.error(f"Error displaying reference image for {selected_fluorophore}: {e}")
-                st.warning("Could not display reference image.")
+        st.write("**Reference Plot**")
+        try:
+            image_url = get_reference_image_url(selected_fluorophore)
+            if image_content := fetch_image_content(image_url):
+                st.image(
+                    image_content,
+                    caption=f"Reference plot for {selected_fluorophore}",
+                    use_container_width=True
+                )
+            else:
+                st.info(f"Reference image not found or failed to load for {selected_fluorophore}.") # Improved message
+        except Exception as e: # Catch specific exceptions if possible
+            logger.error(f"Error displaying reference image for {selected_fluorophore}: {e}")
+            st.warning("Could not display reference image.")
 
     # Data Table Section
-    with st.expander("📋 Raw Data", expanded=False, icon="📋"):
+    with st.expander("Raw Data", expanded=False):
         df = cross_sections[selected_fluorophore]
         st.dataframe(
             df,
@@ -162,11 +162,11 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
         )
 
         # Download button for raw data
-        csv = df.to_csv(index=False)
+        csv_data = df.to_csv(index=False)
         st.download_button(
-            label="📥 Download Raw Data",
-            data=csv,
-            file_name=f"{selected_fluorophore}_cross_section.csv",
+            label="Download Raw Data",
+            data=csv_data,
+            file_name=f"{selected_fluorophore}_data.csv",
             mime="text/csv",
-            key=f"{key_prefix}_download"
+            key=f"{key_prefix}_download_{selected_fluorophore}",
         )

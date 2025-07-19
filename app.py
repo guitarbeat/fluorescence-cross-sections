@@ -12,119 +12,120 @@ st.set_page_config(
 
 initialize_session_state()
 
-# * Sidebar navigation
-st.sidebar.title("Navigation")
+# * Main content - Everything on one page to minimize clicks
+st.header("Deep Tissue Imaging Optimizer")
 
-# * Get current page from URL parameters or default to home
-page = st.query_params.get("page", "home")
+# * Essential Configuration - Always visible, no clicks needed
+col1, col2 = st.columns(2)
 
-# Configuration section
-st.sidebar.header("Configuration")
-if st.sidebar.button("🎯 Laser Configuration"):
-    st.query_params["page"] = "laser_config"
-    st.rerun()
-if st.sidebar.button("📏 Wavelength Settings"):
-    st.query_params["page"] = "wavelength_settings"
-    st.rerun()
-if st.sidebar.button("🧬 Tissue Parameters"):
-    st.query_params["page"] = "tissue_parameters"
-    st.rerun()
-
-# Analysis section
-st.sidebar.header("Analysis")
-if st.sidebar.button("📈 Cross-sections"):
-    st.query_params["page"] = "cross_sections"
-    st.rerun()
-if st.sidebar.button("🩻 Tissue Penetration"):
-    st.query_params["page"] = "tissue_penetration"
-    st.rerun()
-
-# Library section
-st.sidebar.header("Library")
-if st.sidebar.button("📚 Fluorophore Discovery"):
-    st.query_params["page"] = "fluorophore_library"
-    st.rerun()
-
-# * Main content area based on selected page
-if page == "home":
-    st.title("Deep Tissue Imaging Optimizer")
-    st.write("Welcome to the Deep Tissue Imaging Optimizer!")
+with col1:
+    st.subheader("Wavelength Settings")
+    wavelength_range = st.slider(
+        "Analysis Range (nm)",
+        min_value=700,
+        max_value=2400,
+        value=st.session_state.global_params["wavelength_range"],
+        step=10,
+    )
+    st.session_state.global_params["wavelength_range"] = wavelength_range
     
-    st.header("Getting Started")
-    st.write("""
-    This application helps optimize deep tissue imaging by analyzing:
-    - Laser configurations for optimal penetration
-    - Wavelength settings for specific fluorophores
-    - Tissue parameters and their effects
-    - Cross-sections and absorption characteristics
-    - Tissue penetration depth calculations
-    - Fluorophore discovery and selection
-    """)
-    
-    st.info("Use the sidebar navigation to explore different sections of the application.")
+    norm_wavelength = st.number_input(
+        "Normalization λ (nm)",
+        min_value=800,
+        max_value=2400,
+        value=st.session_state.global_params["normalization_wavelength"],
+        step=10,
+    )
+    st.session_state.global_params["normalization_wavelength"] = norm_wavelength
 
-elif page == "laser_config":
-    st.header("🎯 Laser Configuration")
-    st.write("Configure and manage laser settings for visualization")
-    # * Import and render laser manager component
+with col2:
+    st.subheader("Tissue Parameters")
+    from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
+    from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+    
+    depth = st.session_state.tissue_params.get("depth", DEFAULT_TISSUE_PARAMS["depth"])
+    new_depth = st.slider(
+        "Tissue Depth (mm)",
+        value=depth,
+        key="tissue_depth_main",
+        **TISSUE_DEPTH_SLIDER_CONFIG,
+    )
+    if new_depth != depth:
+        st.session_state.tissue_params["depth"] = new_depth
+    
+    water_content = st.select_slider(
+        "Water Content",
+        options=[i / 100 for i in range(0, 105, 5)],
+        value=st.session_state.tissue_params.get("water_content", DEFAULT_TISSUE_PARAMS["water_content"]),
+    )
+    st.session_state.tissue_params["water_content"] = water_content
+
+# * Collapsible sections for detailed views
+with st.expander("Laser Configuration", expanded=False):
     try:
         from src.components.laser_manager import render_laser_manager
         render_laser_manager()
     except Exception as e:
         st.error(f"Error loading laser configuration: {e}")
-        st.info("Please check the component implementation.")
 
-elif page == "wavelength_settings":
-    st.header("📏 Wavelength Settings")
-    st.write("Configure wavelength settings for optimal imaging")
-    # * Import and render wavelength settings
+with st.expander("Cross-sections Analysis", expanded=False):
     try:
-        # * Add wavelength settings content here
-        st.info("Wavelength settings functionality coming soon...")
-    except Exception as e:
-        st.error(f"Error loading wavelength settings: {e}")
-
-elif page == "tissue_parameters":
-    st.header("🧬 Tissue Parameters")
-    st.write("Configure tissue parameters for accurate modeling")
-    # * Import and render tissue parameters
-    try:
-        # * Add tissue parameters content here
-        st.info("Tissue parameters functionality coming soon...")
-    except Exception as e:
-        st.error(f"Error loading tissue parameters: {e}")
-
-elif page == "cross_sections":
-    st.header("📈 Cross-sections")
-    st.write("Analyze cross-sections and absorption characteristics")
-    # * Import and render cross-sections
-    try:
-        # * Add cross-sections content here
-        st.info("Cross-sections functionality coming soon...")
+        from src.pages.common import render_plot_container
+        render_plot_container("cross_sections", st.session_state.fluorophore_df)
     except Exception as e:
         st.error(f"Error loading cross-sections: {e}")
 
-elif page == "tissue_penetration":
-    st.header("🩻 Tissue Penetration")
-    st.write("Calculate and visualize tissue penetration depth")
-    # * Import and render tissue penetration
+with st.expander("Tissue Penetration Analysis", expanded=False):
     try:
-        # * Add tissue penetration content here
-        st.info("Tissue penetration functionality coming soon...")
+        from src.pages.common import render_plot_container
+        render_plot_container("tissue_penetration")
     except Exception as e:
         st.error(f"Error loading tissue penetration: {e}")
+        st.info("Please check the tissue penetration component implementation.")
 
-elif page == "fluorophore_library":
-    st.header("📚 Fluorophore Discovery")
-    st.write("Discover and analyze fluorophores for imaging")
-    # * Import and render fluorophore library
-    try:
-        # * Add fluorophore library content here
-        st.info("Fluorophore library functionality coming soon...")
-    except Exception as e:
-        st.error(f"Error loading fluorophore library: {e}")
+# * Mathematical Tissue Analysis - Detailed controls and plots
+st.subheader("Tissue Penetration Mathematical Model")
+st.write("Detailed mathematical analysis of tissue penetration with interactive controls")
 
-else:
-    st.error(f"Unknown page: {page}")
-    st.query_params["page"] = "home"
-    st.rerun()
+try:
+    from src.config.tissue_config import render_math_view
+    render_math_view()
+except Exception as e:
+    st.error(f"Error loading mathematical tissue analysis: {e}")
+    st.info("Please check the tissue configuration component implementation.")
+
+# * Fluorophore Discovery - Using tabs instead of expander to avoid nesting
+st.subheader("Fluorophore Discovery")
+st.write("Browse, search, and manage your fluorophore database")
+
+try:
+    from src.api.search_form import render_search_panel
+    from src.components.fluorophore_viewer import render_fluorophore_viewer
+    from src.utils.data_loader import load_cross_section_data
+    
+    lib_tab1, lib_tab2 = st.tabs([
+        "Cross Section Data",
+        "FPbase Search",
+    ])
+
+    with lib_tab1:
+        st.info(
+            """Browse the complete library of two-photon cross section data.\nSelect a fluorophore to view its detailed data and add it to your main table."""
+        )
+        cross_sections = load_cross_section_data()
+        render_fluorophore_viewer(cross_sections, key_prefix="main")
+
+    with lib_tab2:
+        st.info(
+            """Search the FPbase database for additional fluorophores.\nFound proteins can be added to your main fluorophore table."""
+        )
+        render_search_panel(key_prefix="lib_")
+except Exception as e:
+    st.error(f"Error loading fluorophore library: {e}")
+
+# * Add footer
+try:
+    from src.pages.common import render_footer
+    render_footer()
+except Exception as e:
+    st.error(f"Error loading footer: {e}")

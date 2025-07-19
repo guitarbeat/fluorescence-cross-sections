@@ -152,7 +152,7 @@ def render_add_laser_form() -> None:
             )
         color = st.color_picker("Color", "#00ff00", key="new_laser_color")
 
-        if st.form_submit_button("➕ Add Laser", use_container_width=True):
+        if st.form_submit_button("Add Laser", use_container_width=True):
             if add_laser(name, start_nm, end_nm, color):
                 st.success(f"Added laser: {name}")
                 st.rerun()
@@ -163,7 +163,7 @@ def render_add_laser_form() -> None:
 def render_laser_editor() -> None:
     """Render the interface for editing existing lasers."""
     # Popover for adding a new laser
-    with st.popover("➕ Add New Laser"):
+    with st.popover("Add New Laser"):
         render_add_laser_form()
 
     st.session_state.edited_df = st.data_editor(
@@ -198,68 +198,29 @@ def render_laser_editor() -> None:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button(
-            "💾 Save Changes", # Added icon
-            use_container_width=True,
-            type="primary",
-            help="Save current laser configuration to database"
-        ):
+        if st.button("Save Changes", type="primary", use_container_width=True):
             try:
-                # Save to Google Sheets
-                data = st.session_state.edited_df.to_dict('records')
-                send_data("lasers", data)
-
-                # Update session state after successful save
                 st.session_state.laser_df = st.session_state.edited_df
-
-                # Backup to CSV
-                LASER_DATA_PATH.parent.mkdir(exist_ok=True)
-                st.session_state.edited_df.to_csv(LASER_DATA_PATH, index=False)
-
-                st.success("Changes saved successfully!")
+                save_laser_data(st.session_state.laser_df)
+                st.success("Laser configuration saved!")
                 st.rerun()
             except Exception as e:
                 st.error(f"Failed to save changes: {str(e)}")
 
     with col2:
-        if not st.session_state.edited_df.empty:
-            csv = st.session_state.edited_df.to_csv(index=False)
-            st.download_button(
-                label="Download Config",
-                icon="📥", # Added icon
-                data=csv,
-                file_name="laser_config.csv",
-                mime="text/csv",
-                key="laser_download",
-                use_container_width=True,
-                help="Download laser configuration as CSV file"
-            )
+        csv = st.session_state.edited_df.to_csv(index=False)
+        st.download_button(
+            label="Download Config",
+            data=csv,
+            file_name="laser_config.csv",
+            mime="text/csv",
+            use_container_width=True,
+            icon="📥", # Added icon
+        )
 
     with col3:
-        if st.button(
-            "Change Colors",
-            icon="🎨", # Added icon
-            use_container_width=True,
-            help="Customize colors for laser visualization"
-        ):
-            st.session_state.show_color_picker = True
-
-    # Show color picker if button was clicked
-    if st.session_state.get("show_color_picker", False) and not st.session_state.edited_df.empty:
-        if selected_indices := st.multiselect(
-            "Select lasers",
-            options=st.session_state.edited_df.index,
-            format_func=lambda x: st.session_state.edited_df.loc[
-                x, "Name"
-            ],
-        ):
-            new_color = st.color_picker(
-                "Pick new color",
-                st.session_state.edited_df.loc[selected_indices[0], "Color"],
-            )
-            if st.button("Update Color"):
-                st.session_state.edited_df.loc[selected_indices, "Color"] = new_color
-                st.session_state.show_color_picker = False  # Hide color picker after update
+        if st.button("Change Colors", use_container_width=True):
+            st.info("Color picker functionality coming soon...")
 
 
 def render_laser_manager() -> None:

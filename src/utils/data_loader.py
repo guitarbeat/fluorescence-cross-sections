@@ -42,7 +42,7 @@ def load_water_absorption_data() -> pd.DataFrame:
     try:
         df = pd.read_csv(
             data_path,
-            delim_whitespace=True,
+            sep='\s+',
             skiprows=6,
             names=["wavelength", "absorption"],
             encoding="latin1",

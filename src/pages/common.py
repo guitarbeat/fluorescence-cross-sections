@@ -150,7 +150,7 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                     row["Name"]: row["Visible"] for _, row in edited_df.iterrows()
                 }
 
-                if st.button("Save Changes", icon="💾", type="primary", key="overview_save"):
+                if st.button("Save Changes", type="primary", key="overview_save"):
                     try:
                         save_df = edited_df.drop(columns=["Visible"])
                         st.session_state.fluorophore_df = save_df
@@ -165,7 +165,6 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                 csv = edited_df.drop(columns=["Visible"]).to_csv(index=False)
                 st.download_button(
                     label="Download Table",
-                    icon="📥",
                     data=csv,
                     file_name="fluorophore_table.csv",
                     mime="text/csv",
@@ -196,7 +195,6 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                 )
                 fig.update_layout(width=PLOT_SIZE, height=PLOT_SIZE, autosize=False)
                 st.plotly_chart(fig, use_container_width=True, theme="streamlit")
-            render_math_view()
 
     except (ValueError, KeyError) as e:
         logger.error("Error rendering %s plot: %s", plot_type, str(e))

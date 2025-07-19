@@ -142,7 +142,6 @@ def get_common_colorbar_config(title: str = "Normalized<br>Photon<br>Fraction",
     """
     config = dict(
         title=title,
-        titlefont=FLOATING_ELEMENT_THEME["font"],
         tickfont=FLOATING_ELEMENT_THEME["font"],
         len=len,
         x=x,

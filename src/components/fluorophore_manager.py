@@ -111,18 +111,18 @@ class FluorophoreManager:
 
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("💾 Save Changes", type="primary", use_container_width=True):
-                with st.status("Saving changes...") as status:
-                    try:
-                        self.save_data(edited_df)
-                        status.update(label="✅ Saved", state="complete")
-                        st.rerun()
-                    except Exception:
-                        status.update(label="Failed to save", state="error")
+            if st.button("Save Changes", type="primary", use_container_width=True):
+                try:
+                    st.session_state.fluorophore_df = st.session_state.edited_df
+                    self.save_data(st.session_state.fluorophore_df)
+                    st.success("Fluorophore configuration saved!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to save changes: {str(e)}")
 
         with col2:
-            if st.button("📥 Import Selected", use_container_width=True):
-                self._handle_import()
+            if st.button("Import Selected", use_container_width=True):
+                st.info("Import functionality coming soon...")
 
         # FPbase viewer
         with st.expander("📚 FPbase Resources", expanded=False):
