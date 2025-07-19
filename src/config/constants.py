@@ -1,3 +1,5 @@
+"""Constants and configuration values for the Deep Tissue Imaging Optimizer."""
+
 from pathlib import Path
 
 # Project directories
@@ -19,12 +21,12 @@ BASIC_FLUOROPHORE_COLUMNS = [
     "Name", "Wavelength", "Cross_Section", "Reference",
 ]
 
-# * Shared configuration for tissue depth slider in Streamlit
+# Tissue depth slider configuration
 TISSUE_DEPTH_SLIDER_CONFIG = {
     "min_value": 0.1,
-    "max_value": 2.0,
+    "max_value": 10.0,
     "step": 0.1,
-    "help": "Distance light travels through tissue",
+    "help": "Depth of tissue penetration in millimeters"
 }
 
 __all__ = [
