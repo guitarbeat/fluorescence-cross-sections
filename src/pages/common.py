@@ -90,7 +90,7 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
                         theme="streamlit",
                         config={"displayModeBar": True, "responsive": True},
                     )
-                with st.popover("Marker Settings"):
+                with st.popover("⚙️ Settings", help="Customize marker styles and colors"):
                     marker_settings_ui()
 
             st.markdown("### Fluorophore Data")

@@ -82,7 +82,7 @@ def marker_settings_ui() -> None:
                 )
 
             with col2:
-                st.markdown(f"<small>{ref}</small>", unsafe_allow_html=True)
+                st.markdown(f"<small style='font-size: 0.8em; color: #666;'>{ref}</small>", unsafe_allow_html=True)
 
             with col3:
                 color = st.color_picker(
@@ -103,8 +103,7 @@ def marker_settings_ui() -> None:
         # Show compact preview with just reference names in their colors
         for ref, (_, color) in st.session_state.marker_settings.items():
             st.markdown(
-                f"<div style='text-align: left; color: {color};'>"
-                f"{ref}</div>",  # Just show first word of reference
+                f"<div style='text-align: left; color: {color}; font-size: 0.8em;'>{ref}</div>",
                 unsafe_allow_html=True,
             )
 
