@@ -66,7 +66,8 @@ def main():
             value=current_water,
             help="Tissue water content percentage"
         )
-        st.session_state.tissue_params["water_content"] = water_content
+        # Store as float for consistency with mathematical model
+        st.session_state.tissue_params["water_content"] = water_content / 100
     
     # Laser configuration in sidebar
     with st.sidebar:

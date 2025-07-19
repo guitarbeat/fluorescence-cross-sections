@@ -351,10 +351,15 @@ def render_absorption_section(col, params) -> float:
         st.markdown("### Parameter Controls")
 
         # Water content control
+        # Ensure water_content is a float for the slider
+        current_water_content = params["water_content"]
+        if isinstance(current_water_content, int):
+            current_water_content = current_water_content / 100
+        
         water_content = st.select_slider(
             "Water Content",
             options=[i / 100 for i in range(0, 105, 5)],
-            value=params["water_content"],
+            value=current_water_content,
             key="water_content_math",
             help="Fraction of tissue that is water (≈75% for brain)",
         )
