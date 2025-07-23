@@ -157,6 +157,11 @@ def _render_tissue_penetration_plot() -> None:
     st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 
+def render_fluorophore_data_editor() -> None:
+    """Public wrapper for the fluorophore data editor."""
+    _render_fluorophore_data_editor()
+
+
 def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> None:
     """Render plot containers with consistent error handling."""
     try:
@@ -169,7 +174,6 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
         with plot_container:
             if plot_type == "cross_sections":
                 _render_cross_sections_plot(df)
-                _render_fluorophore_data_editor()
 
             elif plot_type == "tissue_penetration":
                 _render_tissue_penetration_plot()

@@ -108,10 +108,11 @@ The sidebar provides quick access to system status and actions, making it easy t
 ## 🔧 Technical Notes
 
 ### Fixed Issues:
-- ✅ **Nested Expander Error**: Replaced expander with checkbox-based collapsible section
+- ✅ **Nested Expander Error**: Mathematical model uses checkbox toggle instead of expander to avoid nesting conflicts
 - ✅ **Professional Styling**: Added custom CSS for modern appearance
 - ✅ **Responsive Layout**: Optimized for wide screens with flexible components
 - ✅ **Error Handling**: Consistent error handling throughout all sections
+- ✅ **Embedding Ready**: Removed sidebar and condensed layout for easy integration
 
 ### Key Components:
 - `dashboard_utils.py`: Reusable dashboard components and styling
