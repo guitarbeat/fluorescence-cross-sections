@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src.config.constants import DATA_DIR, FLUOROPHORE_COLUMNS, FLUOROPHORE_CSV
+from src.config import DATA_DIR, FLUOROPHORE_COLUMNS, FLUOROPHORE_CSV
 
 logger = logging.getLogger(__name__)
 

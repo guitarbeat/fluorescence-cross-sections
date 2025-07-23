@@ -1,7 +1,7 @@
 """Entry point for the Deep Tissue Imaging Optimizer."""
 import streamlit as st
 
-from src.state.session_state import initialize_session_state
+from src.core import initialize_session_state
 
 
 def main():
@@ -43,7 +43,7 @@ def main():
         st.session_state.global_params["normalization_wavelength"] = norm_wavelength
     
     with col3:
-        from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+        from src.config import DEFAULT_TISSUE_PARAMS
         depth = st.slider(
             "📏 Tissue Depth",
             min_value=0.1,
@@ -81,7 +81,7 @@ def main():
     with col1:
         st.subheader("📊 Cross-Sections Analysis")
         try:
-            from src.pages.common import render_plot_container
+            from src.components.common import render_plot_container
             render_plot_container("cross_sections", st.session_state.fluorophore_df)
         except Exception as e:
             st.error(f"Error loading cross-section analysis: {e}")
@@ -89,7 +89,7 @@ def main():
     with col2:
         st.subheader("🩸 Tissue Penetration Analysis")
         try:
-            from src.pages.common import render_plot_container
+            from src.components.common import render_plot_container
             render_plot_container("tissue_penetration")
         except Exception as e:
             st.error(f"Error loading tissue penetration analysis: {e}")
@@ -97,7 +97,7 @@ def main():
     # Mathematical model section
     st.subheader("🧮 Mathematical Tissue Model")
     try:
-        from src.config.tissue_config import render_math_view
+        from src.components.tissue_config import render_math_view
         render_math_view()
     except Exception as e:
         st.error(f"Error loading mathematical model: {e}")

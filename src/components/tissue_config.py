@@ -17,7 +17,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.config.constants import TISSUE_DEPTH_SLIDER_CONFIG
+from src.config import PARAMETER_CONFIGS
 
 # Changed from relative to absolute import
 from src.utils.data_loader import load_water_absorption_data
@@ -450,7 +450,7 @@ def render_math_view():
                 new_depth = st.slider(
                     "Depth (z) [mm]",
                     value=depth,
-                    **TISSUE_DEPTH_SLIDER_CONFIG,
+                    **PARAMETER_CONFIGS["tissue_depth"],
                 )
 
                 if new_depth != depth:

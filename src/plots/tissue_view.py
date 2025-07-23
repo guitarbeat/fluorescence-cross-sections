@@ -16,8 +16,7 @@ import numpy.typing as npt
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.config.plot_config import STYLE_CONFIG
-from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+from src.config import STYLE_CONFIG, DEFAULT_TISSUE_PARAMS
 
 from ..components.laser_manager import overlay_lasers
 from ..utils.data_loader import load_water_absorption_data  # Updated import

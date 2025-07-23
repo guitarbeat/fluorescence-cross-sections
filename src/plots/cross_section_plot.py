@@ -20,14 +20,14 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ..components.laser_manager import overlay_lasers
-from ..config.plot_config import (
+from src.config import (
     DARK_THEME,
-    FLOATING_ELEMENT_THEME,
     LIGHT_THEME,
     CrossSectionPlotConfig,
+    DEFAULT_TISSUE_PARAMS,
+    FLOATING_ELEMENT_THEME,
     get_common_colorbar_config,
 )
-from ..config.tissue_config import DEFAULT_TISSUE_PARAMS
 from ..plots.tissue_view import calculate_tissue_parameters
 
 logger = logging.getLogger(__name__)

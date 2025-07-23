@@ -14,7 +14,7 @@ from src.components.ui_components import (
     render_data_editor,
     render_save_button,
 )
-from src.config.ui_config import (
+from src.config import (
     UI_TEXTS,
     FLUOROPHORE_COLUMN_CONFIG,
     FLUOROPHORE_COLUMN_ORDER,
@@ -22,25 +22,15 @@ from src.config.ui_config import (
 )
 from src.plots.cross_section_plot import create_cross_section_plot, get_marker_settings, marker_settings_ui
 from src.plots.tissue_view import calculate_tissue_parameters, create_tissue_plot
-from src.services.fluorophore_service import (
+from src.core import (
     FluorophoreService,
     PlotDataService,
+    get_cached_tissue_data,
 )
 
 logger = logging.getLogger(__name__)
 
-@st.cache_data(ttl=300)
-def get_cached_tissue_data(
-    wavelengths: np.ndarray,
-    depth: float,
-    norm_wavelength: float,
-) -> dict:
-    """Cache tissue calculations to improve performance."""
-    return calculate_tissue_parameters(
-        wavelengths=wavelengths,
-        depth=depth,
-        normalization_wavelength=norm_wavelength,
-    )
+# get_cached_tissue_data moved to src.core
 
 
 def _render_cross_sections_plot(df: pd.DataFrame) -> None:
@@ -171,7 +161,7 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
     """Render plot containers with consistent error handling."""
     try:
         if "tissue_params" not in st.session_state:
-            from src.config.tissue_config import DEFAULT_TISSUE_PARAMS
+            from src.config import DEFAULT_TISSUE_PARAMS
             st.session_state.tissue_params = DEFAULT_TISSUE_PARAMS.copy()
 
         plot_container = st.container(border=True)
