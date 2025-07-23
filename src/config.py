@@ -62,6 +62,26 @@ STYLE_CONFIG = {
     "border_color": "rgba(128, 128, 128, 0.2)",
 }
 
+# Dashboard styling
+DASHBOARD_STYLE = {
+    "gradient_colors": {
+        "blue": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "pink": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        "cyan": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        "green": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        "purple": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+        "orange": "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+    },
+    "card_style": {
+        "padding": "1.5rem",
+        "border_radius": "10px",
+        "text_align": "center",
+        "color": "white",
+        "box_shadow": "0 4px 6px rgba(0, 0, 0, 0.1)",
+    },
+    "section_spacing": "2rem",
+}
+
 # Floating element theme
 FLOATING_ELEMENT_THEME = {
     "font": dict(
