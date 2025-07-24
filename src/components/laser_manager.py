@@ -101,7 +101,8 @@ def add_laser(name: str, start_nm: float, end_nm: float, color: str) -> bool:
         )
 
         laser_df = get_laser_df()
-        st.session_state.laser_df = pd.concat([laser_df, new_laser], ignore_index=True)
+        st.session_state.laser_df = pd.concat(
+            [laser_df, new_laser], ignore_index=True)
 
         # Save to CSV
         save_laser_data(st.session_state.laser_df)
@@ -129,7 +130,8 @@ def save_laser_data(df: pd.DataFrame) -> None:
 def render_add_laser_form() -> None:
     """Render the form for adding a new laser."""
     # Get global wavelength range
-    wavelength_range = st.session_state.get("global_params", {}).get("wavelength_range", (700, 2400))
+    wavelength_range = st.session_state.get(
+        "global_params", {}).get("wavelength_range", (700, 2400))
     min_wavelength, max_wavelength = wavelength_range
 
     with st.form("add_laser_form"):
@@ -145,7 +147,8 @@ def render_add_laser_form() -> None:
         with col2:
             end_nm = st.number_input(
                 "End (nm)",
-                value=min(max_wavelength, start_nm + 200),  # Reasonable default span
+                # Reasonable default span
+                value=min(max_wavelength, start_nm + 200),
                 min_value=min_wavelength,
                 max_value=max_wavelength
             )
@@ -214,7 +217,7 @@ def render_laser_editor() -> None:
             file_name="laser_config.csv",
             mime="text/csv",
             use_container_width=True,
-            icon="📥", # Added icon
+            icon="📥",  # Added icon
         )
 
     with col3:
@@ -227,7 +230,7 @@ def render_laser_manager() -> None:
     with st.container():
         # Initialize show_lasers in session state if it doesn't exist
         if "show_lasers" not in st.session_state:
-            st.session_state.show_lasers = False
+            st.session_state.show_lasers = True
 
         if st.toggle(
             "Show Lasers",
@@ -335,12 +338,15 @@ def add_laser_overlays(fig: go.Figure) -> None:
         )
 
 
-def overlay_lasers(fig: go.Figure, plot_type: str = "tissue") -> go.Figure:
+def overlay_lasers(fig: go.Figure, plot_type: str = 'tissue') -> go.Figure:
     """Add laser overlays to a plot with consistent positioning."""
     if not st.session_state.get("show_lasers"):
         return fig
 
-    # Add empty trace for laser axis
+    # Configure layout first to define axes
+    configure_plot_layout(fig, plot_type)
+
+    # Add empty trace for laser axis after configuration
     fig.add_trace(
         go.Scatter(
             x=[None],
@@ -350,7 +356,6 @@ def overlay_lasers(fig: go.Figure, plot_type: str = "tissue") -> go.Figure:
         )
     )
 
-    configure_plot_layout(fig, plot_type)
     add_laser_overlays(fig)
 
     return fig

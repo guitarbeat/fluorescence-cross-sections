@@ -1,7 +1,7 @@
 """Core functionality consolidating services, state management, and common operations."""
 
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -10,17 +10,19 @@ import streamlit as st
 from src.api.fpbase_client import FPbaseAPI
 from src.components.laser_manager import initialize_laser_data
 from src.config import (
-    BASIC_FLUOROPHORE_COLUMNS, 
-    DEFAULT_GLOBAL_PARAMS, 
+    BASIC_FLUOROPHORE_COLUMNS,
+    DEFAULT_GLOBAL_PARAMS,
     DEFAULT_TISSUE_PARAMS,
     FLUOROPHORE_CSV,
     SHARED_PLOT_CONFIG
 )
-from src.utils.data_loader import load_cross_section_data, load_fluorophore_data
+from src.utils.data_loader import load_cross_section_data, load_fluorophore_data, compile_fluorophore_data
 
 logger = logging.getLogger(__name__)
 
 # Session State Management
+
+
 def initialize_session_state() -> None:
     """Initialize or reset session state variables."""
     session_state = st.session_state
@@ -38,7 +40,8 @@ def initialize_session_state() -> None:
 
     # Initialize dataframes
     session_state.setdefault("fluorophore_df", load_fluorophore_data())
-    session_state.setdefault("search_results", pd.DataFrame(columns=BASIC_FLUOROPHORE_COLUMNS))
+    session_state.setdefault("search_results", pd.DataFrame(
+        columns=BASIC_FLUOROPHORE_COLUMNS))
 
     # Initialize parameters
     session_state.setdefault("global_params", DEFAULT_GLOBAL_PARAMS.copy())
@@ -51,30 +54,9 @@ def initialize_session_state() -> None:
     # Initialize plot configuration
     session_state.setdefault("plot_config", SHARED_PLOT_CONFIG.copy())
 
-def compile_fluorophore_data(cross_sections: Dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """Compile peak wavelengths and statistics into a single DataFrame."""
-    data = []
-    for name, df in cross_sections.items():
-        stats = {'Name': name}
-        if name == "IntrinsicFluorophores":
-            for col in ["riboflavin", "folic_acid", "cholecalciferol", "retinol"]:
-                peak_idx = df[col].idxmax()
-                stats[f"{col}_peak_wavelength"] = df.loc[peak_idx, "wavelength"]
-                stats[f"{col}_peak_cross_section"] = df.loc[peak_idx, col]
-        elif name == "NADH-ProteinBound":
-            for col in ["gm_mean", "gm_mdh", "gm_ad"]:
-                peak_idx = df[col].idxmax()
-                stats[f"{col}_peak_wavelength"] = df.loc[peak_idx, "wavelength"]
-                stats[f"{col}_peak_cross_section"] = df.loc[peak_idx, col]
-        else:
-            cross_section_col = "cross_section" if "cross_section" in df.columns else df.columns[1]
-            peak_idx = df[cross_section_col].idxmax()
-            stats["peak_wavelength"] = df.loc[peak_idx, "wavelength"]
-            stats["peak_cross_section"] = df.loc[peak_idx, cross_section_col]
-        data.append(stats)
-    return pd.DataFrame(data)
-
 # Fluorophore Service
+
+
 class FluorophoreService:
     """Service class for fluorophore data operations."""
 
@@ -103,7 +85,8 @@ class FluorophoreService:
         """Prepare DataFrame for data editor with visibility column."""
         df_with_visibility = df.copy()
         visibility = FluorophoreService.get_fluorophore_visibility(df)
-        df_with_visibility["Visible"] = df_with_visibility["Name"].map(visibility).fillna(True)
+        df_with_visibility["Visible"] = df_with_visibility["Name"].map(
+            visibility).fillna(True)
         return df_with_visibility
 
     @staticmethod
@@ -133,6 +116,8 @@ class FluorophoreService:
             return False
 
 # Plot Data Service
+
+
 class PlotDataService:
     """Service class for plot data preparation."""
 
@@ -155,6 +140,8 @@ class PlotDataService:
         }
 
 # Cached data functions
+
+
 @st.cache_data(ttl=300)
 def get_cached_tissue_data(wavelengths: np.ndarray, depth: float, norm_wavelength: float) -> dict:
     """Cache tissue calculations to improve performance."""

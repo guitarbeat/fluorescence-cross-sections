@@ -1,8 +1,6 @@
 """Google API integration for search functionality."""
 
 import logging
-import requests
-import streamlit as st
 
 logger = logging.getLogger(__name__)
 

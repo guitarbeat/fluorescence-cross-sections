@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Copy/Paste Detector Report</title><link href="styles/tailwind.css" rel="stylesheet"><link href="styles/prism.css" rel="stylesheet"></head><body class="bg-gray-100"><header class="bg-white shadow py-4"><div class="container mx-auto px-4"><h1 class="text-3xl font-semibold text-gray-800">jscpd - copy/paste report</h1></div></header><main class="container mx-auto my-8 p-4 bg-white shadow rounded"><section class="mb-8" id="dashboard"><h2 class="text-2xl font-semibold text-gray-700 mb-4">Dashboard</h2><div class="grid grid-cols-4 gap-4"><div class="bg-blue-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-blue-800 mb-2">Total Files</h3><span class="text-4xl font-bold text-blue-800">18</span></div><div class="bg-green-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-green-800 mb-2">Total Lines of Code</h3><span class="text-4xl font-bold text-green-800">4185</span></div><div class="bg-yellow-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-yellow-800 mb-2">Number of Clones</h3><span class="text-4xl font-bold text-yellow-800">16</span></div><div class="bg-red-200 p-4 rounded text-center"><h3 class="text-lg font-semibold text-red-800 mb-2">Duplicated Lines</h3><span class="text-4xl font-bold text-red-800">219 (5.23%)</span></div></div></section><section class="mb-8" id="formats"><h2 class="text-2xl font-semibold text-gray-700 mb-4">Formats with Duplications</h2><table class="w-full table-auto"><thead><tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal"><th class="py-3 px-6 text-left">Format</th><th class="py-3 px-6 text-left">Files</th><th class="py-3 px-6 text-left">Lines</th><th class="py-3 px-6 text-left">Clones</th><th class="py-3 px-6 text-left">Duplicated Lines</th><th class="py-3 px-6 text-left">Duplicated Tokens</th></tr></thead><tbody><tr class="bg-white border-b border-gray-200 text-gray-800 text-sm"><td class="py-3 px-6"><a class="text-blue-600 hover:underline" href="#python-clones">python</a></td><td class="py-3 px-6">18</td><td class="py-3 px-6">4185</td><td class="py-3 px-6">16</td><td class="py-3 px-6">219</td><td class="py-3 px-6">1459</td></tr></tbody></table></section><section class="mb-8" id="txt-clones"><a name="python-clones"></a><h2 class="text-2xl font-semibold text-gray-700 mb-4">python</h2><div class="divide-y divide-gray-200 border-b-2"><div class="py-4"><p class="text-gray-600">src/plots/zipfel_cross_sections.py (Line 117:21 - Line 126:19), src/plots/zipfel_cross_sections.py (Line 55:13 - Line 99:31)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn0" onclick="toggleCodeBlock('cloneGroup0', 'expandBtn0', 'collapseBtn0')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn0" onclick="toggleCodeBlock('cloneGroup0', 'expandBtn0', 'collapseBtn0')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup0"><code class="language-python text-sm text-gray-800">,
+            mode=&quot;lines+markers&quot;,
+            line=dict(color=color, width=2),
+            marker=dict(symbol=marker_symbol, size=8, color=color),
+            error_y=error_y
+        )
+    )
+
+
+def plot_cross_section</code></pre></div><div class="py-4"><p class="text-gray-600">src/plots/zipfel_cross_sections.py (Line 189:6 - Line 195:48), src/plots/zipfel_cross_sections.py (Line 179:18 - Line 185:6)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn1" onclick="toggleCodeBlock('cloneGroup1', 'expandBtn1', 'collapseBtn1')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn1" onclick="toggleCodeBlock('cloneGroup1', 'expandBtn1', 'collapseBtn1')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup1"><code class="language-python text-sm text-gray-800">,
+            gridcolor='rgba(128,128,128,0.2)',
+            zerolinecolor='rgba(128,128,128,0.2)',
+            showline=True,
+            linewidth=1,
+            mirror=True,
+            # Set range to cover the data with some padding</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/tissue_config.py (Line 418:13 - Line 442:20), src/components/tissue_config.py (Line 253:9 - Line 277:16)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn2" onclick="toggleCodeBlock('cloneGroup2', 'expandBtn2', 'collapseBtn2')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn2" onclick="toggleCodeBlock('cloneGroup2', 'expandBtn2', 'collapseBtn2')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup2"><code class="language-python text-sm text-gray-800">g = render_parameter_control_with_popover(
+                label=&quot;Anisotropy (g)&quot;,
+                param_type=&quot;slider&quot;,
+                value=params[&quot;g&quot;],
+                min_value=0.0,
+                max_value=1.0,
+                step=0.05,
+                help_text=&quot;Controls directional scattering: g=0 (isotropic) to g=1 (forward only)&quot;,
+                popover_title=&quot;📊 Anisotropy Impact&quot;,
+                popover_help=&quot;Click to see how anisotropy affects scattering&quot;,
+                popover_values=np.linspace(0.1, 0.99, 100),
+                popover_coefficients=params['a'] /
+                (1 - np.linspace(0.1, 0.99, 100)),
+                popover_param_name=&quot;Anisotropy&quot;,
+                popover_current_value=params[&quot;g&quot;],
+                popover_line_color='blue',
+                popover_formula=r&quot;\begin{align*}\mu_s &amp;= \frac{\mu_s'}{1-g} \\ &amp;= \frac{a}{1-\color{red}{&quot; +
+                f&quot;{params['g']:.2f}&quot; + &quot;}}\end{align*}&quot;,
+                popover_markdown=&quot;&quot;&quot;
+                    - Higher values → more forward scattering
+                    - Lower values → more uniform scattering
+                    - Brain tissue typically ≈ 0.9
+
+                    *g represents the average cosine of the scattering angle*
+                &quot;&quot;&quot;</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/tissue_config.py (Line 447:13 - Line 458:15), src/components/tissue_config.py (Line 282:9 - Line 293:12)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn3" onclick="toggleCodeBlock('cloneGroup3', 'expandBtn3', 'collapseBtn3')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn3" onclick="toggleCodeBlock('cloneGroup3', 'expandBtn3', 'collapseBtn3')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup3"><code class="language-python text-sm text-gray-800">b = render_parameter_control_with_popover(
+                label=&quot;Scattering Power (b)&quot;,
+                param_type=&quot;number_input&quot;,
+                value=params[&quot;b&quot;],
+                min_value=0.5,
+                max_value=2.0,
+                step=0.05,
+                help_text=&quot;Wavelength dependence (≈1.37 for brain tissue)&quot;,
+                popover_title=&quot;📈 Wavelength Dependence Impact&quot;,
+                popover_help=&quot;Click to see how scattering power affects wavelength dependence&quot;,
+                popover_values=np.linspace(0.5, 2.0, 100),
+                popover_coefficients=params['a'] * (ref_wavelength</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/tissue_config.py (Line 458:2 - Line 469:20), src/components/tissue_config.py (Line 293:2 - Line 304:16)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn4" onclick="toggleCodeBlock('cloneGroup4', 'expandBtn4', 'collapseBtn4')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn4" onclick="toggleCodeBlock('cloneGroup4', 'expandBtn4', 'collapseBtn4')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup4"><code class="language-python text-sm text-gray-800">/
+                                                    500) ** (-np.linspace(0.5, 2.0, 100)) / (1 - params['g']),
+                popover_param_name=&quot;Scattering Power (b)&quot;,
+                popover_current_value=params[&quot;b&quot;],
+                popover_line_color='blue',
+                popover_formula=r&quot;\begin{align*}\mu_s' &amp;= a \cdot \left(\frac{\lambda}{500}\right)^{-b} \\ &amp;= a \cdot \left(\frac{\lambda}{500}\right)^{-\color{red}{&quot; +
+                f&quot;{params['b']:.2f}&quot; + &quot;}}\end{align*}&quot;,
+                popover_markdown=&quot;&quot;&quot;
+                    - Controls wavelength dependence
+                    - Higher b → stronger λ dependence
+                    - Brain tissue b ≈ 1.37
+                &quot;&quot;&quot;</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/tissue_config.py (Line 474:13 - Line 486:15), src/components/tissue_config.py (Line 309:9 - Line 321:12)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn5" onclick="toggleCodeBlock('cloneGroup5', 'expandBtn5', 'collapseBtn5')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn5" onclick="toggleCodeBlock('cloneGroup5', 'expandBtn5', 'collapseBtn5')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup5"><code class="language-python text-sm text-gray-800">a = render_parameter_control_with_popover(
+                label=&quot;Scattering Scale (a)&quot;,
+                param_type=&quot;number_input&quot;,
+                value=params[&quot;a&quot;],
+                min_value=0.5,
+                max_value=2.0,
+                step=0.1,
+                help_text=&quot;Scattering amplitude [mm⁻¹]&quot;,
+                popover_title=&quot;📉 Scattering Amplitude Impact&quot;,
+                popover_help=&quot;Click to see how scattering scale affects overall scattering&quot;,
+                popover_values=np.linspace(0.5, 2.0, 100),
+                popover_coefficients=np.linspace(0.5, 2.0, 100) *
+                (ref_wavelength</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/tissue_config.py (Line 486:2 - Line 498:20), src/components/tissue_config.py (Line 321:2 - Line 333:16)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn6" onclick="toggleCodeBlock('cloneGroup6', 'expandBtn6', 'collapseBtn6')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn6" onclick="toggleCodeBlock('cloneGroup6', 'expandBtn6', 'collapseBtn6')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup6"><code class="language-python text-sm text-gray-800">/
+                 500) ** (-params['b']) / (1 - params['g']),
+                popover_param_name=&quot;Scattering Scale (a)&quot;,
+                popover_current_value=params[&quot;a&quot;],
+                popover_line_color='blue',
+                popover_formula=r&quot;\begin{align*}\mu_s &amp;= a \cdot \text{(wavelength term)} \\ &amp;= \color{red}{&quot; +
+                f&quot;{params['a']:.2f}&quot; +
+                &quot;}\text{ mm}^{-1} \cdot \text{(wavelength term)}\end{align*}&quot;,
+                popover_markdown=&quot;&quot;&quot;
+                    - Controls overall scattering strength
+                    - Higher a → more scattering
+                    - Brain tissue a ≈ 1.1 mm⁻¹
+                &quot;&quot;&quot;</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/laser_manager.py (Line 272:4 - Line 283:6), src/components/laser_manager.py (Line 260:5 - Line 271:7)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn7" onclick="toggleCodeBlock('cloneGroup7', 'expandBtn7', 'collapseBtn7')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn7" onclick="toggleCodeBlock('cloneGroup7', 'expandBtn7', 'collapseBtn7')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup7"><code class="language-python text-sm text-gray-800">],
+            showticklabels=False,
+            showgrid=False,
+            zeroline=False,
+            range=[0, 1],
+            fixedrange=True,
+            anchor=&quot;x&quot;,
+            showline=False,
+            visible=False,
+            autorange=False,  # Disable autoranging
+        ),
+        xaxis</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/dashboard_utils.py (Line 107:13 - Line 114:21), src/components/dashboard_utils.py (Line 52:13 - Line 59:22)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn8" onclick="toggleCodeBlock('cloneGroup8', 'expandBtn8', 'collapseBtn8')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn8" onclick="toggleCodeBlock('cloneGroup8', 'expandBtn8', 'collapseBtn8')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup8"><code class="language-python text-sm text-gray-800">st.rerun()
+
+    with col2:
+        if st.button(&quot;Cancel&quot;, use_container_width=True):
+            st.rerun()
+
+
+@st.dialog(&quot;Edit Water Content&quot;</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/dashboard_utils.py (Line 133:5 - Line 138:16), src/components/dashboard_utils.py (Line 46:5 - Line 51:8)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn9" onclick="toggleCodeBlock('cloneGroup9', 'expandBtn9', 'collapseBtn9')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn9" onclick="toggleCodeBlock('cloneGroup9', 'expandBtn9', 'collapseBtn9')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup9"><code class="language-python text-sm text-gray-800">)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button(&quot;Apply&quot;, type=&quot;primary&quot;, use_container_width=True):
+            st.session_state.tissue_params[&quot;water_content&quot;</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/dashboard_utils.py (Line 139:13 - Line 146:22), src/components/dashboard_utils.py (Line 52:13 - Line 59:22)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn10" onclick="toggleCodeBlock('cloneGroup10', 'expandBtn10', 'collapseBtn10')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn10" onclick="toggleCodeBlock('cloneGroup10', 'expandBtn10', 'collapseBtn10')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup10"><code class="language-python text-sm text-gray-800">st.rerun()
+
+    with col2:
+        if st.button(&quot;Cancel&quot;, use_container_width=True):
+            st.rerun()
+
+
+@st.dialog(&quot;Laser Configuration&quot;</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/dashboard_utils.py (Line 242:35 - Line 250:4), src/components/dashboard_utils.py (Line 155:41 - Line 163:4)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn11" onclick="toggleCodeBlock('cloneGroup11', 'expandBtn11', 'collapseBtn11')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn11" onclick="toggleCodeBlock('cloneGroup11', 'expandBtn11', 'collapseBtn11')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup11"><code class="language-python text-sm text-gray-800">)
+
+    # Close button
+    st.divider()
+    if st.button(&quot;Close&quot;, use_container_width=True):
+        st.rerun()
+
+
+def</code></pre></div><div class="py-4"><p class="text-gray-600">src/components/common.py (Line 60:5 - Line 68:4), src/components/ui_components.py (Line 37:5 - Line 44:3)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn12" onclick="toggleCodeBlock('cloneGroup12', 'expandBtn12', 'collapseBtn12')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn12" onclick="toggleCodeBlock('cloneGroup12', 'expandBtn12', 'collapseBtn12')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup12"><code class="language-python text-sm text-gray-800">st.plotly_chart(
+        fig,
+        use_container_width=True,
+        theme=&quot;streamlit&quot;,
+        config={&quot;displayModeBar&quot;: True, &quot;responsive&quot;: True},
+    )
+
+
+def</code></pre></div><div class="py-4"><p class="text-gray-600">src/core.py (Line 3:1 - Line 10:4), src/utils/data_loader.py (Line 17:1 - Line 24:7)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn13" onclick="toggleCodeBlock('cloneGroup13', 'expandBtn13', 'collapseBtn13')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn13" onclick="toggleCodeBlock('cloneGroup13', 'expandBtn13', 'collapseBtn13')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup13"><code class="language-python text-sm text-gray-800">import logging
+from typing import Dict
+
+import numpy as np
+import pandas as pd
+import streamlit as st
+
+from src.api</code></pre></div><div class="py-4"><p class="text-gray-600">src/config.py (Line 270:20 - Line 277:6), src/config.py (Line 258:17 - Line 265:10)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn14" onclick="toggleCodeBlock('cloneGroup14', 'expandBtn14', 'collapseBtn14')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn14" onclick="toggleCodeBlock('cloneGroup14', 'expandBtn14', 'collapseBtn14')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup14"><code class="language-python text-sm text-gray-800">,
+                showgrid=True,
+                gridcolor=&quot;rgba(128, 128, 128, 0.15)&quot;,
+                zeroline=SHARED_PLOT_CONFIG[&quot;zeroline&quot;],
+                titlefont=self.font,
+                tickfont=self.font,
+                linecolor=&quot;rgba(128, 128, 128, 0.4)&quot;,
+                dtick</code></pre></div><div class="py-4"><p class="text-gray-600">app.py (Line 31:1 - Line 105:2), tissue_imaging_page.py (Line 17:1 - Line 91:2)</p><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2" id="expandBtn15" onclick="toggleCodeBlock('cloneGroup15', 'expandBtn15', 'collapseBtn15')">Show code</button><button class="bg-gray-500 text-white px-1 py-0.5 text-xs rounded focus:outline-none ml-2 hidden" id="collapseBtn15" onclick="toggleCodeBlock('cloneGroup15', 'expandBtn15', 'collapseBtn15')">Hide code</button><pre class="bg-gray-100 border border-gray-200 p-4 rounded mt-2 hidden" id="cloneGroup15"><code class="language-python text-sm text-gray-800">def render_tissue_imaging_page():
+    &quot;&quot;&quot;Render the complete tissue imaging optimizer page.&quot;&quot;&quot;
+
+    # Add styling
+    add_dashboard_css()
+
+    # Initialize data
+    initialize_session_state()
+
+    # Header
+    st.markdown(&quot;&quot;&quot;
+    &lt;div style='text-align: center; padding: 0.5rem 0; margin-bottom: 1rem;'&gt;
+        &lt;h2 style='color: #0f4c81; margin: 0; font-size: 2rem;'&gt;
+            🔬 Deep Tissue Imaging Optimizer
+        &lt;/h2&gt;
+        &lt;p style='color: #666; font-size: 1rem; margin: 0.25rem 0;'&gt;
+            Advanced fluorescence analysis for tissue imaging
+        &lt;/p&gt;
+    &lt;/div&gt;
+    &quot;&quot;&quot;, unsafe_allow_html=True)
+
+    # Metrics cards
+    current_depth = st.session_state.tissue_params.get(
+        &quot;depth&quot;, DEFAULT_TISSUE_PARAMS[&quot;depth&quot;])
+    current_wavelength = st.session_state.global_params[&quot;normalization_wavelength&quot;]
+    current_water = st.session_state.tissue_params.get(
+        &quot;water_content&quot;, DEFAULT_TISSUE_PARAMS[&quot;water_content&quot;])
+    num_fluorophores = len(
+        st.session_state.fluorophore_df) if &quot;fluorophore_df&quot; in st.session_state else 0
+
+    metrics = {
+        &quot;depth&quot;: {&quot;title&quot;: &quot;Depth&quot;, &quot;value&quot;: f&quot;{current_depth:.1f}mm&quot;},
+        &quot;wavelength&quot;: {&quot;title&quot;: &quot;Wavelength&quot;, &quot;value&quot;: f&quot;{current_wavelength}nm&quot;},
+        &quot;water&quot;: {&quot;title&quot;: &quot;Water&quot;, &quot;value&quot;: f&quot;{current_water*100:.0f}%&quot;},
+        &quot;fluorophores&quot;: {&quot;title&quot;: &quot;Fluorophores&quot;, &quot;value&quot;: str(num_fluorophores)},
+        &quot;laser&quot;: {&quot;title&quot;: &quot;Laser&quot;, &quot;value&quot;: &quot;Config&quot;}
+    }
+    render_dashboard_metrics(metrics)
+
+    # Analysis plots
+    st.markdown(&quot;#### 📊 Analysis&quot;)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown(&quot;**Cross-Sections**&quot;)
+        try:
+            from src.components.common import render_plot_container
+            render_plot_container(
+                &quot;cross_sections&quot;, st.session_state.fluorophore_df)
+        except Exception as e:
+            st.error(f&quot;Error: {e}&quot;)
+
+    with col2:
+        st.markdown(&quot;**Tissue Penetration**&quot;)
+        try:
+            from src.components.common import render_plot_container
+            render_plot_container(&quot;tissue_penetration&quot;)
+        except Exception as e:
+            st.error(f&quot;Error: {e}&quot;)
+
+    try:
+        from src.components.tissue_config import render_math_view
+        render_math_view()
+    except Exception as e:
+        st.error(f&quot;Error: {e}&quot;)
+
+
+# For standalone usage
+if __name__ == &quot;__main__&quot;:
+    st.set_page_config(
+        page_title=&quot;Deep Tissue Imaging Optimizer&quot;,
+        page_icon=&quot;🔬&quot;,
+        layout=&quot;wide&quot;
+    )
+    render_tissue_imaging_page()</code></pre></div><!-- Add more clone groups for .txt format as needed         // Add more clone groups for .txt format as needed--></div></section><!-- Add more sections for other formats and clone groups as needed--></main><footer class="bg-white shadow mt-8 py-4"><div class="container mx-auto px-4 text-center"><p class="text-sm text-gray-600">This report is generated by jscpd, an open-source copy/paste detector.</p><p class="text-sm text-gray-600">jscpd is licensed under the MIT License.</p><a class="text-blue-500 text-sm" href="https://github.com/kucherenko/jscpd" target="_blank" rel="noopener noreferrer">View jscpd on GitHub</a></div></footer><script src="js/prism.js"></script><script>function toggleCodeBlock(codeBlockId, expandBtnId, collapseBtnId) {
+  const codeBlock = document.getElementById(codeBlockId);
+  const expandBtn = document.getElementById(expandBtnId);
+  const collapseBtn = document.getElementById(collapseBtnId);
+
+  codeBlock.classList.toggle('hidden');
+  expandBtn.classList.toggle('hidden');
+  collapseBtn.classList.toggle('hidden');
+}</script></body></html>

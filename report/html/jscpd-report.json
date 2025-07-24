@@ -1,0 +1,830 @@
+{
+  "statistics": {
+    "detectionDate": "2025-07-24T23:42:53.221Z",
+    "formats": {
+      "python": {
+        "sources": {
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/utils/data_loader.py": {
+            "lines": 266,
+            "tokens": 2002,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 7,
+            "duplicatedTokens": 42,
+            "percentage": 2.63,
+            "percentageTokens": 2.1,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/plots/zipfel_cross_sections.py": {
+            "lines": 224,
+            "tokens": 1500,
+            "sources": 1,
+            "clones": 4,
+            "duplicatedLines": 30,
+            "duplicatedTokens": 186,
+            "percentage": 13.39,
+            "percentageTokens": 12.4,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/plots/tissue_view.py": {
+            "lines": 269,
+            "tokens": 2289,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/plots/cross_section_plot.py": {
+            "lines": 294,
+            "tokens": 2129,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/components/ui_components.py": {
+            "lines": 170,
+            "tokens": 839,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 8,
+            "duplicatedTokens": 43,
+            "percentage": 4.71,
+            "percentageTokens": 5.13,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/components/tissue_config.py": {
+            "lines": 608,
+            "tokens": 3824,
+            "sources": 1,
+            "clones": 10,
+            "duplicatedLines": 140,
+            "duplicatedTokens": 994,
+            "percentage": 23.03,
+            "percentageTokens": 25.99,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/components/laser_manager.py": {
+            "lines": 360,
+            "tokens": 2409,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 22,
+            "duplicatedTokens": 138,
+            "percentage": 6.11,
+            "percentageTokens": 5.73,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/components/fluorophore_viewer.py": {
+            "lines": 198,
+            "tokens": 1424,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/components/dashboard_utils.py": {
+            "lines": 524,
+            "tokens": 2335,
+            "sources": 1,
+            "clones": 8,
+            "duplicatedLines": 54,
+            "duplicatedTokens": 348,
+            "percentage": 10.31,
+            "percentageTokens": 14.9,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/components/common.py": {
+            "lines": 199,
+            "tokens": 1342,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 8,
+            "duplicatedTokens": 43,
+            "percentage": 4.02,
+            "percentageTokens": 3.2,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/api/search_form.py": {
+            "lines": 136,
+            "tokens": 907,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/api/google.py": {
+            "lines": 6,
+            "tokens": 20,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/api/fpbase_types.py": {
+            "lines": 90,
+            "tokens": 619,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/api/fpbase_client.py": {
+            "lines": 172,
+            "tokens": 1187,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/core.py": {
+            "lines": 152,
+            "tokens": 1143,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 7,
+            "duplicatedTokens": 42,
+            "percentage": 4.61,
+            "percentageTokens": 3.67,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/src/config.py": {
+            "lines": 319,
+            "tokens": 2375,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 92,
+            "percentage": 4.39,
+            "percentageTokens": 3.87,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/tissue_imaging_page.py": {
+            "lines": 90,
+            "tokens": 543,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 74,
+            "duplicatedTokens": 495,
+            "percentage": 82.22,
+            "percentageTokens": 91.16,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "/Users/aaron/Desktop/Side-Quests/combine_streamlit_sites/fluorescence-cross-sections/app.py": {
+            "lines": 108,
+            "tokens": 616,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 74,
+            "duplicatedTokens": 495,
+            "percentage": 68.52,
+            "percentageTokens": 80.36,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 4185,
+          "tokens": 27503,
+          "sources": 18,
+          "clones": 16,
+          "duplicatedLines": 219,
+          "duplicatedTokens": 1459,
+          "percentage": 5.23,
+          "percentageTokens": 5.3,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 4185,
+      "tokens": 27503,
+      "sources": 18,
+      "clones": 16,
+      "duplicatedLines": 219,
+      "duplicatedTokens": 1459,
+      "percentage": 5.23,
+      "percentageTokens": 5.3,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "python",
+      "lines": 10,
+      "fragment": ",\n            mode=\"lines+markers\",\n            line=dict(color=color, width=2),\n            marker=dict(symbol=marker_symbol, size=8, color=color),\n            error_y=error_y\n        )\n    )\n\n\ndef plot_cross_section",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/plots/zipfel_cross_sections.py",
+        "start": 117,
+        "end": 126,
+        "startLoc": {
+          "line": 117,
+          "column": 21,
+          "position": 834
+        },
+        "endLoc": {
+          "line": 126,
+          "column": 19,
+          "position": 894
+        }
+      },
+      "secondFile": {
+        "name": "src/plots/zipfel_cross_sections.py",
+        "start": 55,
+        "end": 99,
+        "startLoc": {
+          "line": 55,
+          "column": 13,
+          "position": 349
+        },
+        "endLoc": {
+          "line": 99,
+          "column": 31,
+          "position": 690
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 7,
+      "fragment": ",\n            gridcolor='rgba(128,128,128,0.2)',\n            zerolinecolor='rgba(128,128,128,0.2)',\n            showline=True,\n            linewidth=1,\n            mirror=True,\n            # Set range to cover the data with some padding",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/plots/zipfel_cross_sections.py",
+        "start": 189,
+        "end": 195,
+        "startLoc": {
+          "line": 189,
+          "column": 6,
+          "position": 1253
+        },
+        "endLoc": {
+          "line": 195,
+          "column": 48,
+          "position": 1286
+        }
+      },
+      "secondFile": {
+        "name": "src/plots/zipfel_cross_sections.py",
+        "start": 179,
+        "end": 185,
+        "startLoc": {
+          "line": 179,
+          "column": 18,
+          "position": 1169
+        },
+        "endLoc": {
+          "line": 185,
+          "column": 6,
+          "position": 1202
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 25,
+      "fragment": "g = render_parameter_control_with_popover(\n                label=\"Anisotropy (g)\",\n                param_type=\"slider\",\n                value=params[\"g\"],\n                min_value=0.0,\n                max_value=1.0,\n                step=0.05,\n                help_text=\"Controls directional scattering: g=0 (isotropic) to g=1 (forward only)\",\n                popover_title=\"📊 Anisotropy Impact\",\n                popover_help=\"Click to see how anisotropy affects scattering\",\n                popover_values=np.linspace(0.1, 0.99, 100),\n                popover_coefficients=params['a'] /\n                (1 - np.linspace(0.1, 0.99, 100)),\n                popover_param_name=\"Anisotropy\",\n                popover_current_value=params[\"g\"],\n                popover_line_color='blue',\n                popover_formula=r\"\\begin{align*}\\mu_s &= \\frac{\\mu_s'}{1-g} \\\\ &= \\frac{a}{1-\\color{red}{\" +\n                f\"{params['g']:.2f}\" + \"}}\\end{align*}\",\n                popover_markdown=\"\"\"\n                    - Higher values → more forward scattering\n                    - Lower values → more uniform scattering\n                    - Brain tissue typically ≈ 0.9\n\n                    *g represents the average cosine of the scattering angle*\n                \"\"\"",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 418,
+        "end": 442,
+        "startLoc": {
+          "line": 418,
+          "column": 13,
+          "position": 2592
+        },
+        "endLoc": {
+          "line": 442,
+          "column": 20,
+          "position": 2745
+        }
+      },
+      "secondFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 253,
+        "end": 277,
+        "startLoc": {
+          "line": 253,
+          "column": 9,
+          "position": 1525
+        },
+        "endLoc": {
+          "line": 277,
+          "column": 16,
+          "position": 1678
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 12,
+      "fragment": "b = render_parameter_control_with_popover(\n                label=\"Scattering Power (b)\",\n                param_type=\"number_input\",\n                value=params[\"b\"],\n                min_value=0.5,\n                max_value=2.0,\n                step=0.05,\n                help_text=\"Wavelength dependence (≈1.37 for brain tissue)\",\n                popover_title=\"📈 Wavelength Dependence Impact\",\n                popover_help=\"Click to see how scattering power affects wavelength dependence\",\n                popover_values=np.linspace(0.5, 2.0, 100),\n                popover_coefficients=params['a'] * (ref_wavelength",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 447,
+        "end": 458,
+        "startLoc": {
+          "line": 447,
+          "column": 13,
+          "position": 2764
+        },
+        "endLoc": {
+          "line": 458,
+          "column": 15,
+          "position": 2856
+        }
+      },
+      "secondFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 282,
+        "end": 293,
+        "startLoc": {
+          "line": 282,
+          "column": 9,
+          "position": 1694
+        },
+        "endLoc": {
+          "line": 293,
+          "column": 12,
+          "position": 1786
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 12,
+      "fragment": "/\n                                                    500) ** (-np.linspace(0.5, 2.0, 100)) / (1 - params['g']),\n                popover_param_name=\"Scattering Power (b)\",\n                popover_current_value=params[\"b\"],\n                popover_line_color='blue',\n                popover_formula=r\"\\begin{align*}\\mu_s' &= a \\cdot \\left(\\frac{\\lambda}{500}\\right)^{-b} \\\\ &= a \\cdot \\left(\\frac{\\lambda}{500}\\right)^{-\\color{red}{\" +\n                f\"{params['b']:.2f}\" + \"}}\\end{align*}\",\n                popover_markdown=\"\"\"\n                    - Controls wavelength dependence\n                    - Higher b → stronger λ dependence\n                    - Brain tissue b ≈ 1.37\n                \"\"\"",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 458,
+        "end": 469,
+        "startLoc": {
+          "line": 458,
+          "column": 2,
+          "position": 2858
+        },
+        "endLoc": {
+          "line": 469,
+          "column": 20,
+          "position": 2937
+        }
+      },
+      "secondFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 293,
+        "end": 304,
+        "startLoc": {
+          "line": 293,
+          "column": 2,
+          "position": 1791
+        },
+        "endLoc": {
+          "line": 304,
+          "column": 16,
+          "position": 1870
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 13,
+      "fragment": "a = render_parameter_control_with_popover(\n                label=\"Scattering Scale (a)\",\n                param_type=\"number_input\",\n                value=params[\"a\"],\n                min_value=0.5,\n                max_value=2.0,\n                step=0.1,\n                help_text=\"Scattering amplitude [mm⁻¹]\",\n                popover_title=\"📉 Scattering Amplitude Impact\",\n                popover_help=\"Click to see how scattering scale affects overall scattering\",\n                popover_values=np.linspace(0.5, 2.0, 100),\n                popover_coefficients=np.linspace(0.5, 2.0, 100) *\n                (ref_wavelength",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 474,
+        "end": 486,
+        "startLoc": {
+          "line": 474,
+          "column": 13,
+          "position": 2956
+        },
+        "endLoc": {
+          "line": 486,
+          "column": 15,
+          "position": 3057
+        }
+      },
+      "secondFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 309,
+        "end": 321,
+        "startLoc": {
+          "line": 309,
+          "column": 9,
+          "position": 1886
+        },
+        "endLoc": {
+          "line": 321,
+          "column": 12,
+          "position": 1987
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 13,
+      "fragment": "/\n                 500) ** (-params['b']) / (1 - params['g']),\n                popover_param_name=\"Scattering Scale (a)\",\n                popover_current_value=params[\"a\"],\n                popover_line_color='blue',\n                popover_formula=r\"\\begin{align*}\\mu_s &= a \\cdot \\text{(wavelength term)} \\\\ &= \\color{red}{\" +\n                f\"{params['a']:.2f}\" +\n                \"}\\text{ mm}^{-1} \\cdot \\text{(wavelength term)}\\end{align*}\",\n                popover_markdown=\"\"\"\n                    - Controls overall scattering strength\n                    - Higher a → more scattering\n                    - Brain tissue a ≈ 1.1 mm⁻¹\n                \"\"\"",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 486,
+        "end": 498,
+        "startLoc": {
+          "line": 486,
+          "column": 2,
+          "position": 3059
+        },
+        "endLoc": {
+          "line": 498,
+          "column": 20,
+          "position": 3131
+        }
+      },
+      "secondFile": {
+        "name": "src/components/tissue_config.py",
+        "start": 321,
+        "end": 333,
+        "startLoc": {
+          "line": 321,
+          "column": 2,
+          "position": 1992
+        },
+        "endLoc": {
+          "line": 333,
+          "column": 16,
+          "position": 2064
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 12,
+      "fragment": "],\n            showticklabels=False,\n            showgrid=False,\n            zeroline=False,\n            range=[0, 1],\n            fixedrange=True,\n            anchor=\"x\",\n            showline=False,\n            visible=False,\n            autorange=False,  # Disable autoranging\n        ),\n        xaxis",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/laser_manager.py",
+        "start": 272,
+        "end": 283,
+        "startLoc": {
+          "line": 272,
+          "column": 4,
+          "position": 1829
+        },
+        "endLoc": {
+          "line": 283,
+          "column": 6,
+          "position": 1898
+        }
+      },
+      "secondFile": {
+        "name": "src/components/laser_manager.py",
+        "start": 260,
+        "end": 271,
+        "startLoc": {
+          "line": 260,
+          "column": 5,
+          "position": 1747
+        },
+        "endLoc": {
+          "line": 271,
+          "column": 7,
+          "position": 1816
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 8,
+      "fragment": "st.rerun()\n\n    with col2:\n        if st.button(\"Cancel\", use_container_width=True):\n            st.rerun()\n\n\n@st.dialog(\"Edit Water Content\"",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 107,
+        "end": 114,
+        "startLoc": {
+          "line": 107,
+          "column": 13,
+          "position": 651
+        },
+        "endLoc": {
+          "line": 114,
+          "column": 21,
+          "position": 693
+        }
+      },
+      "secondFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 52,
+        "end": 59,
+        "startLoc": {
+          "line": 52,
+          "column": 13,
+          "position": 271
+        },
+        "endLoc": {
+          "line": 59,
+          "column": 22,
+          "position": 313
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 6,
+      "fragment": ")\n\n    col1, col2 = st.columns(2)\n    with col1:\n        if st.button(\"Apply\", type=\"primary\", use_container_width=True):\n            st.session_state.tissue_params[\"water_content\"",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 133,
+        "end": 138,
+        "startLoc": {
+          "line": 133,
+          "column": 5,
+          "position": 841
+        },
+        "endLoc": {
+          "line": 138,
+          "column": 16,
+          "position": 893
+        }
+      },
+      "secondFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 46,
+        "end": 51,
+        "startLoc": {
+          "line": 46,
+          "column": 5,
+          "position": 211
+        },
+        "endLoc": {
+          "line": 51,
+          "column": 8,
+          "position": 263
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 8,
+      "fragment": "st.rerun()\n\n    with col2:\n        if st.button(\"Cancel\", use_container_width=True):\n            st.rerun()\n\n\n@st.dialog(\"Laser Configuration\"",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 139,
+        "end": 146,
+        "startLoc": {
+          "line": 139,
+          "column": 13,
+          "position": 905
+        },
+        "endLoc": {
+          "line": 146,
+          "column": 22,
+          "position": 947
+        }
+      },
+      "secondFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 52,
+        "end": 59,
+        "startLoc": {
+          "line": 52,
+          "column": 13,
+          "position": 271
+        },
+        "endLoc": {
+          "line": 59,
+          "column": 22,
+          "position": 313
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 9,
+      "fragment": ")\n\n    # Close button\n    st.divider()\n    if st.button(\"Close\", use_container_width=True):\n        st.rerun()\n\n\ndef",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 242,
+        "end": 250,
+        "startLoc": {
+          "line": 242,
+          "column": 35,
+          "position": 1643
+        },
+        "endLoc": {
+          "line": 250,
+          "column": 4,
+          "position": 1681
+        }
+      },
+      "secondFile": {
+        "name": "src/components/dashboard_utils.py",
+        "start": 155,
+        "end": 163,
+        "startLoc": {
+          "line": 155,
+          "column": 41,
+          "position": 1013
+        },
+        "endLoc": {
+          "line": 163,
+          "column": 4,
+          "position": 1051
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 9,
+      "fragment": "st.plotly_chart(\n        fig,\n        use_container_width=True,\n        theme=\"streamlit\",\n        config={\"displayModeBar\": True, \"responsive\": True},\n    )\n\n\ndef",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/components/common.py",
+        "start": 60,
+        "end": 68,
+        "startLoc": {
+          "line": 60,
+          "column": 5,
+          "position": 348
+        },
+        "endLoc": {
+          "line": 68,
+          "column": 4,
+          "position": 391
+        }
+      },
+      "secondFile": {
+        "name": "src/components/ui_components.py",
+        "start": 37,
+        "end": 44,
+        "startLoc": {
+          "line": 37,
+          "column": 5,
+          "position": 178
+        },
+        "endLoc": {
+          "line": 44,
+          "column": 3,
+          "position": 221
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 8,
+      "fragment": "import logging\nfrom typing import Dict\n\nimport numpy as np\nimport pandas as pd\nimport streamlit as st\n\nfrom src.api",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/core.py",
+        "start": 3,
+        "end": 10,
+        "startLoc": {
+          "line": 3,
+          "column": 1,
+          "position": 3
+        },
+        "endLoc": {
+          "line": 10,
+          "column": 4,
+          "position": 45
+        }
+      },
+      "secondFile": {
+        "name": "src/utils/data_loader.py",
+        "start": 17,
+        "end": 24,
+        "startLoc": {
+          "line": 17,
+          "column": 1,
+          "position": 2
+        },
+        "endLoc": {
+          "line": 24,
+          "column": 7,
+          "position": 44
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 8,
+      "fragment": ",\n                showgrid=True,\n                gridcolor=\"rgba(128, 128, 128, 0.15)\",\n                zeroline=SHARED_PLOT_CONFIG[\"zeroline\"],\n                titlefont=self.font,\n                tickfont=self.font,\n                linecolor=\"rgba(128, 128, 128, 0.4)\",\n                dtick",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src/config.py",
+        "start": 270,
+        "end": 277,
+        "startLoc": {
+          "line": 270,
+          "column": 20,
+          "position": 1995
+        },
+        "endLoc": {
+          "line": 277,
+          "column": 6,
+          "position": 2041
+        }
+      },
+      "secondFile": {
+        "name": "src/config.py",
+        "start": 258,
+        "end": 265,
+        "startLoc": {
+          "line": 258,
+          "column": 17,
+          "position": 1915
+        },
+        "endLoc": {
+          "line": 265,
+          "column": 10,
+          "position": 1961
+        }
+      }
+    },
+    {
+      "format": "python",
+      "lines": 75,
+      "fragment": "def render_tissue_imaging_page():\n    \"\"\"Render the complete tissue imaging optimizer page.\"\"\"\n\n    # Add styling\n    add_dashboard_css()\n\n    # Initialize data\n    initialize_session_state()\n\n    # Header\n    st.markdown(\"\"\"\n    <div style='text-align: center; padding: 0.5rem 0; margin-bottom: 1rem;'>\n        <h2 style='color: #0f4c81; margin: 0; font-size: 2rem;'>\n            🔬 Deep Tissue Imaging Optimizer\n        </h2>\n        <p style='color: #666; font-size: 1rem; margin: 0.25rem 0;'>\n            Advanced fluorescence analysis for tissue imaging\n        </p>\n    </div>\n    \"\"\", unsafe_allow_html=True)\n\n    # Metrics cards\n    current_depth = st.session_state.tissue_params.get(\n        \"depth\", DEFAULT_TISSUE_PARAMS[\"depth\"])\n    current_wavelength = st.session_state.global_params[\"normalization_wavelength\"]\n    current_water = st.session_state.tissue_params.get(\n        \"water_content\", DEFAULT_TISSUE_PARAMS[\"water_content\"])\n    num_fluorophores = len(\n        st.session_state.fluorophore_df) if \"fluorophore_df\" in st.session_state else 0\n\n    metrics = {\n        \"depth\": {\"title\": \"Depth\", \"value\": f\"{current_depth:.1f}mm\"},\n        \"wavelength\": {\"title\": \"Wavelength\", \"value\": f\"{current_wavelength}nm\"},\n        \"water\": {\"title\": \"Water\", \"value\": f\"{current_water*100:.0f}%\"},\n        \"fluorophores\": {\"title\": \"Fluorophores\", \"value\": str(num_fluorophores)},\n        \"laser\": {\"title\": \"Laser\", \"value\": \"Config\"}\n    }\n    render_dashboard_metrics(metrics)\n\n    # Analysis plots\n    st.markdown(\"#### 📊 Analysis\")\n    col1, col2 = st.columns(2)\n\n    with col1:\n        st.markdown(\"**Cross-Sections**\")\n        try:\n            from src.components.common import render_plot_container\n            render_plot_container(\n                \"cross_sections\", st.session_state.fluorophore_df)\n        except Exception as e:\n            st.error(f\"Error: {e}\")\n\n    with col2:\n        st.markdown(\"**Tissue Penetration**\")\n        try:\n            from src.components.common import render_plot_container\n            render_plot_container(\"tissue_penetration\")\n        except Exception as e:\n            st.error(f\"Error: {e}\")\n\n    try:\n        from src.components.tissue_config import render_math_view\n        render_math_view()\n    except Exception as e:\n        st.error(f\"Error: {e}\")\n\n\n# For standalone usage\nif __name__ == \"__main__\":\n    st.set_page_config(\n        page_title=\"Deep Tissue Imaging Optimizer\",\n        page_icon=\"🔬\",\n        layout=\"wide\"\n    )\n    render_tissue_imaging_page()",
+      "tokens": 0,
+      "firstFile": {
+        "name": "app.py",
+        "start": 31,
+        "end": 105,
+        "startLoc": {
+          "line": 31,
+          "column": 1,
+          "position": 105
+        },
+        "endLoc": {
+          "line": 105,
+          "column": 2,
+          "position": 600
+        }
+      },
+      "secondFile": {
+        "name": "tissue_imaging_page.py",
+        "start": 17,
+        "end": 91,
+        "startLoc": {
+          "line": 17,
+          "column": 1,
+          "position": 48
+        },
+        "endLoc": {
+          "line": 91,
+          "column": 2,
+          "position": 543
+        }
+      }
+    }
+  ],
+  "filename": "/usr/local/lib/node_modules/jscpd/node_modules/@jscpd/html-reporter/dist/templates/main.pug"
+}

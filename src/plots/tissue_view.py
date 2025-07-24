@@ -16,7 +16,7 @@ import numpy.typing as npt
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.config import STYLE_CONFIG, DEFAULT_TISSUE_PARAMS
+from src.config import DEFAULT_TISSUE_PARAMS
 
 from ..components.laser_manager import overlay_lasers
 from ..utils.data_loader import load_water_absorption_data  # Updated import
@@ -51,24 +51,29 @@ def calculate_tissue_parameters(
     params = st.session_state.tissue_params
     g = g if g is not None else params.get("g", DEFAULT_TISSUE_PARAMS["g"])
     a = a if a is not None else params.get("a", DEFAULT_TISSUE_PARAMS["a"])
-    water_content = water_content if water_content is not None else params.get("water_content", DEFAULT_TISSUE_PARAMS["water_content"])
+    water_content = water_content if water_content is not None else params.get(
+        "water_content", DEFAULT_TISSUE_PARAMS["water_content"])
     b = b if b is not None else params.get("b", DEFAULT_TISSUE_PARAMS["b"])
-    depth = depth if depth is not None else params.get("depth", DEFAULT_TISSUE_PARAMS["depth"])
+    depth = depth if depth is not None else params.get(
+        "depth", DEFAULT_TISSUE_PARAMS["depth"])
 
     # Get normalization wavelength from global params if not provided
     if normalization_wavelength is None:
-        normalization_wavelength = st.session_state.global_params.get("normalization_wavelength", 1300)
+        normalization_wavelength = st.session_state.global_params.get(
+            "normalization_wavelength", 1300)
 
     try:
         # Load water absorption data
         water_data = load_water_absorption_data()
 
         # Interpolate water absorption to match wavelengths
-        mua = np.interp(wavelengths, water_data["wavelength"], water_data["absorption"])
+        mua = np.interp(
+            wavelengths, water_data["wavelength"], water_data["absorption"])
         mua = mua * water_content / 10  # Scale by water content and convert units
 
         # Calculate scattering coefficient with safety checks
-        wavelength_ratio = np.maximum(wavelengths / 500, 1e-10)  # Prevent division by zero or negative values
+        # Prevent division by zero or negative values
+        wavelength_ratio = np.maximum(wavelengths / 500, 1e-10)
         mus_prime = a * np.power(wavelength_ratio, -b)  # Use safe ratio
         mus = mus_prime / (1 - g)
 
@@ -133,7 +138,7 @@ def create_tissue_plot(
     depth: float = 1.0,
 ) -> go.Figure:
     """Create tissue penetration plot with consistent styling."""
-    
+
     # Create figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
@@ -168,7 +173,8 @@ def create_tissue_plot(
         fig.add_trace(
             go.Scatter(
                 x=wavelengths,
-                y=np.minimum(absorption, 100),  # Clip absorption values to 100%
+                # Clip absorption values to 100%
+                y=np.minimum(absorption, 100),
                 name="Water Absorption",
                 mode='lines',
                 line=dict(
@@ -211,10 +217,7 @@ def create_tissue_plot(
                 )
 
     # Add laser overlays if available
-    try:
-        fig = overlay_lasers(fig, plot_type="tissue")
-    except Exception:
-        pass  # Skip laser overlays if not available
+    fig = overlay_lasers(fig, plot_type="tissue")
 
     # Update layout
     max_y = 1.2  # Default max y value

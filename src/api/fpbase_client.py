@@ -15,7 +15,6 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
 import requests
 from backoff import expo, on_exception
 from requests.adapters import HTTPAdapter

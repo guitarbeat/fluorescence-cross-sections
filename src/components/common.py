@@ -1,16 +1,13 @@
 """Common functionality for Streamlit pages."""
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 
 from src.components.ui_components import (
-    render_error_boundary,
-    render_plot_with_settings,
     render_data_editor,
     render_save_button,
 )
@@ -18,10 +15,9 @@ from src.config import (
     UI_TEXTS,
     FLUOROPHORE_COLUMN_CONFIG,
     FLUOROPHORE_COLUMN_ORDER,
-    PLOT_CONFIG,
 )
-from src.plots.cross_section_plot import create_cross_section_plot, get_marker_settings, marker_settings_ui
-from src.plots.tissue_view import calculate_tissue_parameters, create_tissue_plot
+from src.plots.cross_section_plot import create_cross_section_plot, get_marker_settings
+from src.plots.tissue_view import create_tissue_plot
 from src.core import (
     FluorophoreService,
     PlotDataService,
@@ -33,7 +29,7 @@ logger = logging.getLogger(__name__)
 # get_cached_tissue_data moved to src.core
 
 
-def _render_cross_sections_plot(df: pd.DataFrame) -> None:
+def _render_cross_sections_plot(df: pd.DataFrame, height: int = 600) -> None:
     """Render the cross-sections plot with settings."""
     if df is None or df.empty:
         st.info("No fluorophore data available")
@@ -58,6 +54,7 @@ def _render_cross_sections_plot(df: pd.DataFrame) -> None:
         wavelength_range=params["wavelength_range"],
         absorption_threshold=params["absorption_threshold"],
     )
+    fig.update_layout(height=height)
 
     # Simple plot rendering without settings to avoid column nesting
     st.plotly_chart(
@@ -133,11 +130,12 @@ def _render_fluorophore_data_editor() -> None:
     )
 
 
-def _render_tissue_penetration_plot() -> None:
+def _render_tissue_penetration_plot(height: int = 600) -> None:
     """Render the tissue penetration plot."""
     params = PlotDataService.get_plot_parameters()
 
-    wavelengths = np.linspace(params["wavelength_range"][0], params["wavelength_range"][1], 1000)
+    wavelengths = np.linspace(
+        params["wavelength_range"][0], params["wavelength_range"][1], 1000)
     tissue_data = get_cached_tissue_data(
         wavelengths=wavelengths,
         depth=params["depth"],
@@ -153,6 +151,7 @@ def _render_tissue_penetration_plot() -> None:
         wavelength_range=params["wavelength_range"],
         depth=params["depth"],
     )
+    fig.update_layout(height=height)
 
     st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
@@ -162,7 +161,7 @@ def render_fluorophore_data_editor() -> None:
     _render_fluorophore_data_editor()
 
 
-def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> None:
+def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None, height: int = 600) -> None:
     """Render plot containers with consistent error handling."""
     try:
         if "tissue_params" not in st.session_state:
@@ -173,16 +172,17 @@ def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None) -> 
 
         with plot_container:
             if plot_type == "cross_sections":
-                _render_cross_sections_plot(df)
+                _render_cross_sections_plot(df, height=height)
 
             elif plot_type == "tissue_penetration":
-                _render_tissue_penetration_plot()
+                _render_tissue_penetration_plot(height=height)
 
     except (ValueError, KeyError) as e:
         logger.error("Error rendering %s plot: %s", plot_type, str(e))
         st.error(f"Error creating {plot_type} plot: {str(e)}")
     except Exception as e:  # pylint: disable=broad-except
-        logger.error("Unexpected error rendering %s plot: %s", plot_type, str(e))
+        logger.error("Unexpected error rendering %s plot: %s",
+                     plot_type, str(e))
         st.error("An unexpected error occurred. Please check the logs.")
 
 

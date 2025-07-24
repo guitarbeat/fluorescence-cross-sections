@@ -42,6 +42,87 @@ def get_marker_styles(num_traces: int) -> List[Tuple[str, str]]:
         for i in range(num_traces)
     ]
 
+
+def _add_intrinsic_fluorophore_traces(fig, df, marker_styles, show_error_bars):
+    for idx, col in enumerate([c for c in df.columns if c != "wavelength"]):
+        marker_symbol, color = marker_styles[idx % len(marker_styles)]
+        display_name = col.replace('_', ' ').title()
+        y_values = pd.to_numeric(df[col], errors='coerce')
+        fig.add_trace(
+            go.Scatter(
+                x=df["wavelength"],
+                y=y_values,
+                name=display_name,
+                mode="lines+markers",
+                line=dict(color=color, width=2),
+                marker=dict(symbol=marker_symbol, size=8, color=color),
+                hovertemplate=(
+                    f"{display_name}<br>" +
+                    "Wavelength: %{x} nm<br>" +
+                    "Cross Section: %{y:.2e} GM<br>" +
+                    "<extra></extra>"
+                )
+            )
+        )
+
+
+def _add_nadh_proteinbound_traces(fig, df, marker_styles, show_error_bars):
+    for idx, (col, name) in enumerate([
+        ("gm_mean", "Mean"),
+        ("gm_mdh", "MDH-bound"),
+        ("gm_ad", "AD-bound")
+    ]):
+        marker_symbol, color = marker_styles[idx % len(marker_styles)]
+        error_y = None
+        if col == "gm_mean" and "sd" in df.columns and show_error_bars:
+            error_y = dict(
+                type='data',
+                array=df["sd"],
+                visible=True,
+                color=color,
+                thickness=1,
+                width=3
+            )
+        fig.add_trace(
+            go.Scatter(
+                x=df["wavelength"],
+                y=df[col],
+                name=name,
+                mode="lines+markers",
+                line=dict(color=color, width=2),
+                marker=dict(symbol=marker_symbol, size=8, color=color),
+                error_y=error_y
+            )
+        )
+
+
+def _add_default_fluorophore_trace(fig, df, marker_styles, selected_fluorophore, show_error_bars):
+    marker_symbol, color = marker_styles[0]
+    error_y = (
+        dict(
+            type='data',
+            array=df["std_dev"],
+            visible=True,
+            color=color,
+            thickness=1,
+            width=3,
+        )
+        if len(df.columns) == 3 and show_error_bars
+        else None
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=df["wavelength"],
+            y=df["cross_section"],
+            name=selected_fluorophore,
+            mode="lines+markers",
+            line=dict(color=color, width=2),
+            marker=dict(symbol=marker_symbol, size=8, color=color),
+            error_y=error_y
+        )
+    )
+
+
 def plot_cross_section(
     cross_sections: Dict[str, pd.DataFrame],
     selected_fluorophore: str,
@@ -64,7 +145,8 @@ def plot_cross_section(
         go.Figure: Plotly figure object
     """
     if selected_fluorophore not in cross_sections:
-        raise ValueError(f"Fluorophore {selected_fluorophore} not found in data")
+        raise ValueError(
+            f"Fluorophore {selected_fluorophore} not found in data")
 
     df = cross_sections[selected_fluorophore]
 
@@ -72,107 +154,18 @@ def plot_cross_section(
     fig = go.Figure()
 
     # Get marker styles
-    marker_styles = get_marker_styles(4)  # Get enough styles for all possible traces
+    # Get enough styles for all possible traces
+    marker_styles = get_marker_styles(4)
 
     # Special case handling with consistent styling
     if selected_fluorophore == "IntrinsicFluorophores":
-        # Define the columns and their display names
-        columns = {
-            "riboflavin": "Riboflavin",
-            "folic_acid": "Folic Acid",
-            "cholecalciferol": "Cholecalciferol",
-            "retinol": "Retinol"
-        }
-
-        for idx, (col, display_name) in enumerate(columns.items()):
-            marker_symbol, color = marker_styles[idx]
-
-            # Convert to numeric and handle any conversion errors
-            y_values = pd.to_numeric(df[col], errors='coerce')
-
-            fig.add_trace(
-                go.Scatter(
-                    x=df["wavelength"],
-                    y=y_values,
-                    name=display_name,
-                    mode="lines+markers",
-                    line=dict(color=color, width=2),
-                    marker=dict(
-                        symbol=marker_symbol,
-                        size=8,
-                        color=color
-                    ),
-                    hovertemplate=(
-                        f"{display_name}<br>" +
-                        "Wavelength: %{x} nm<br>" +
-                        "Cross Section: %{y:.2e} GM<br>" +
-                        "<extra></extra>"
-                    )
-                )
-            )
+        _add_intrinsic_fluorophore_traces(
+            fig, df, marker_styles, show_error_bars)
     elif selected_fluorophore == "NADH-ProteinBound":
-        for idx, (col, name) in enumerate([
-            ("gm_mean", "Mean"),
-            ("gm_mdh", "MDH-bound"),
-            ("gm_ad", "AD-bound")
-        ]):
-            marker_symbol, color = marker_styles[idx]
-            error_y = None
-            if col == "gm_mean" and "sd" in df.columns and show_error_bars:
-                error_y = dict(
-                    type='data',
-                    array=df["sd"],
-                    visible=True,
-                    color=color,
-                    thickness=1,
-                    width=3
-                )
-
-            fig.add_trace(
-                go.Scatter(
-                    x=df["wavelength"],
-                    y=df[col],
-                    name=name,
-                    mode="lines+markers",
-                    line=dict(color=color, width=2),
-                    marker=dict(
-                        symbol=marker_symbol,
-                        size=8,
-                        color=color
-                    ),
-                    error_y=error_y
-                )
-            )
+        _add_nadh_proteinbound_traces(fig, df, marker_styles, show_error_bars)
     else:
-        # Default handling with consistent styling
-        marker_symbol, color = marker_styles[0]
-        error_y = (
-            dict(
-                type='data',
-                array=df["std_dev"],
-                visible=True,
-                color=color,
-                thickness=1,
-                width=3,
-            )
-            if len(df.columns) == 3 and show_error_bars
-            else None
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=df["wavelength"],
-                y=df["cross_section"],
-                name=selected_fluorophore,
-                mode="lines+markers",
-                line=dict(color=color, width=2),
-                marker=dict(
-                    symbol=marker_symbol,
-                    size=8,
-                    color=color
-                ),
-                error_y=error_y
-            )
-        )
+        _add_default_fluorophore_trace(
+            fig, df, marker_styles, selected_fluorophore, show_error_bars)
 
     # Update layout with improved log scale handling
     fig.update_layout(
@@ -201,8 +194,10 @@ def plot_cross_section(
             mirror=True,
             # Set range to cover the data with some padding
             range=[
-                np.floor(np.log10(df.select_dtypes(include=[np.number]).min().min())),
-                np.ceil(np.log10(df.select_dtypes(include=[np.number]).max().max()))
+                np.floor(np.log10(df.select_dtypes(
+                    include=[np.number]).min().min())),
+                np.ceil(np.log10(df.select_dtypes(
+                    include=[np.number]).max().max()))
             ]
         ),
         plot_bgcolor='rgba(0,0,0,0)',

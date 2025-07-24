@@ -15,7 +15,7 @@ Data loading utilities for handling various data sources including:
 - Two-photon cross-section data
 """
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 # Constants
 XSECTION_DIR = DATA_DIR / "2p-xsections"
 DEFAULT_COLUMNS = FLUOROPHORE_COLUMNS
-
 
 
 def load_water_absorption_data() -> pd.DataFrame:
@@ -59,7 +58,6 @@ def load_water_absorption_data() -> pd.DataFrame:
         })
 
 
-
 def load_fluorophore_data() -> pd.DataFrame:
     """
     Load existing fluorophores from CSV or create empty DataFrame.
@@ -72,6 +70,32 @@ def load_fluorophore_data() -> pd.DataFrame:
     except (FileNotFoundError, pd.errors.EmptyDataError) as e:
         st.warning(f"No existing fluorophore data found: {e}")
         return pd.DataFrame(columns=DEFAULT_COLUMNS)
+
+
+def _clean_and_validate_cross_section_df(df: pd.DataFrame, file_path, logger) -> pd.DataFrame:
+    """Assigns column names, cleans, converts, validates, and sorts the DataFrame for cross-section data."""
+    # Assign column names based on number of columns
+    if len(df.columns) >= 2:
+        if len(df.columns) == 3:
+            df.columns = ["wavelength", "cross_section", "std_dev"]
+        else:
+            df.columns = ["wavelength", "cross_section"]
+    else:
+        logger.error(
+            f"Could not parse {file_path.name} - insufficient columns after header detection")
+        return None
+
+    # Clean and validate data
+    df = df.drop_duplicates()
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    df = df.dropna(how='all', subset=df.columns[1:])
+    df = df.sort_values('wavelength')
+    if df.empty or df['wavelength'].isna().all():
+        logger.warning(f"No valid data found in {file_path}")
+        return None
+    logger.debug(f"First few rows of {file_path.name}:\n{df.head()}")
+    return df
 
 
 @st.cache_data
@@ -137,29 +161,30 @@ def load_cross_section_data() -> Dict[str, pd.DataFrame]:
                 # Read the file to determine header structure
                 with open(file_path, 'r') as f:
                     lines = f.readlines()
-                
+
                 # Find where the data starts (after header lines)
                 data_start = 0
                 for i, line in enumerate(lines):
                     line = line.strip()
                     # Skip empty lines, comment lines, and header lines
-                    if (line and 
-                        not line.startswith('#') and 
-                        not line.startswith('--') and 
+                    if (line and
+                        not line.startswith('#') and
+                        not line.startswith('--') and
                         not line.startswith('nm') and
                         not 'GM' in line and
                         not 'mean' in line and
                         not 'sd' in line and
                         not '@' in line and
-                        not 'n=' in line):
+                            not 'n=' in line):
                         # Check if this line looks like data (starts with a number)
                         parts = line.split()
                         if parts and parts[0].replace('.', '').replace('-', '').replace('e', '').replace('E', '').isdigit():
                             data_start = i
                             break
-                
+
                 # Read data with tab separator, skipping header lines
-                logger.debug(f"Reading {file_path.name} with skiprows={data_start}")
+                logger.debug(
+                    f"Reading {file_path.name} with skiprows={data_start}")
                 df = pd.read_csv(
                     file_path,
                     sep='\t',
@@ -167,15 +192,11 @@ def load_cross_section_data() -> Dict[str, pd.DataFrame]:
                     comment='#',
                     skiprows=data_start
                 )
-                
+
                 # Check if we got the expected columns
-                if len(df.columns) >= 2:
-                    # Success - assign column names
-                    if len(df.columns) == 3:
-                        df.columns = ["wavelength", "cross_section", "std_dev"]
-                    else:
-                        df.columns = ["wavelength", "cross_section"]
-                else:
+                cleaned_df = _clean_and_validate_cross_section_df(
+                    df, file_path, logger)
+                if cleaned_df is None:
                     # Try with whitespace separator
                     df = pd.read_csv(
                         file_path,
@@ -184,47 +205,31 @@ def load_cross_section_data() -> Dict[str, pd.DataFrame]:
                         comment='#',
                         skiprows=data_start
                     )
-                    
-                    if len(df.columns) >= 2:
-                        if len(df.columns) == 3:
-                            df.columns = ["wavelength", "cross_section", "std_dev"]
-                        else:
-                            df.columns = ["wavelength", "cross_section"]
-                    else:
-                        logger.error(f"Could not parse {file_path.name} - insufficient columns after header detection")
+                    cleaned_df = _clean_and_validate_cross_section_df(
+                        df, file_path, logger)
+                    if cleaned_df is None:
                         continue
-
-            # Clean and validate data
-            df = df.drop_duplicates()
-
-            # Convert all numeric columns to float, handling scientific notation
-            for col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
-
-            # Drop any rows where all numeric columns are NaN
-            df = df.dropna(how='all', subset=df.columns[1:])  # Keep row if any numeric data exists
-            df = df.sort_values('wavelength')
-
-            # Additional validation
-            if df.empty or df['wavelength'].isna().all():
-                logger.warning(f"No valid data found in {file_path}")
-                continue
+                df = cleaned_df
 
             # Log the first few rows for debugging
-            logger.debug(f"First few rows of {fluorophore_name}:\n{df.head()}")
+            # logger.debug(f"First few rows of {fluorophore_name}:\n{df.head()}") # This line is now handled by _clean_and_validate_cross_section_df
 
             cross_sections[fluorophore_name] = df
 
         except Exception as e:
-            st.error(f"Error loading cross-section data for {file_path.name}: {e}")
-            logger.error(f"Failed to load {file_path}: {str(e)}", exc_info=True)
+            st.error(
+                f"Error loading cross-section data for {file_path.name}: {e}")
+            logger.error(
+                f"Failed to load {file_path}: {str(e)}", exc_info=True)
             # Add more detailed error information
             try:
                 with open(file_path, 'r') as f:
                     first_lines = [f.readline().strip() for _ in range(10)]
-                logger.error(f"First 10 lines of {file_path.name}: {first_lines}")
+                logger.error(
+                    f"First 10 lines of {file_path.name}: {first_lines}")
             except Exception as read_error:
-                logger.error(f"Could not read file contents for debugging: {read_error}")
+                logger.error(
+                    f"Could not read file contents for debugging: {read_error}")
 
     if not cross_sections:
         st.warning("No cross-section data files were loaded successfully")
@@ -232,5 +237,31 @@ def load_cross_section_data() -> Dict[str, pd.DataFrame]:
     return cross_sections
 
 
-
-
+def compile_fluorophore_data(cross_sections: Dict[str, pd.DataFrame]) -> pd.DataFrame:
+    """Compile peak wavelengths and statistics into a single DataFrame.
+    Args:
+        cross_sections: Dict mapping fluorophore names to their cross-section DataFrames.
+    Returns:
+        pd.DataFrame: DataFrame with peak wavelength and cross-section statistics for each fluorophore.
+    """
+    data = []
+    for name, df in cross_sections.items():
+        stats = {'Name': name}
+        if name == "IntrinsicFluorophores":
+            for col in ["riboflavin", "folic_acid", "cholecalciferol", "retinol"]:
+                peak_idx = df[col].idxmax()
+                stats[f"{col}_peak_wavelength"] = df.loc[peak_idx, "wavelength"]
+                stats[f"{col}_peak_cross_section"] = df.loc[peak_idx, col]
+        elif name == "NADH-ProteinBound":
+            for col in ["gm_mean", "gm_mdh", "gm_ad"]:
+                peak_idx = df[col].idxmax()
+                stats[f"{col}_peak_wavelength"] = df.loc[peak_idx, "wavelength"]
+                stats[f"{col}_peak_cross_section"] = df.loc[peak_idx, col]
+        else:
+            cross_section_col = "cross_section" if "cross_section" in df.columns else df.columns[
+                1]
+            peak_idx = df[cross_section_col].idxmax()
+            stats["peak_wavelength"] = df.loc[peak_idx, "wavelength"]
+            stats["peak_cross_section"] = df.loc[peak_idx, cross_section_col]
+        data.append(stats)
+    return pd.DataFrame(data)
