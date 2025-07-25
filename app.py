@@ -51,16 +51,15 @@ def main():
 
     with col1:
         try:
-            from src.components.common import render_plot_container
-            render_plot_container(
-                "cross_sections", st.session_state.fluorophore_df)
+            from src.components.common import _render_cross_sections_plot
+            _render_cross_sections_plot(st.session_state.fluorophore_df)
         except Exception as e:
             st.error(f"Error: {e}")
 
     with col2:
         try:
-            from src.components.common import render_plot_container
-            render_plot_container("tissue_penetration")
+            from src.components.common import _render_tissue_penetration_plot
+            _render_tissue_penetration_plot()
             from src.components.tissue_config import render_scattering_popover, render_absorption_popover, render_transmission_popover
             params = st.session_state.tissue_params
             a = params.get("a", DEFAULT_TISSUE_PARAMS["a"])

@@ -41,6 +41,56 @@ def get_marker_settings() -> Dict[str, Tuple[str, str]]:
     return st.session_state.marker_settings
 
 
+def marker_settings_ui_simple() -> None:
+    """Render simplified UI for customizing marker settings (no columns)."""
+    if not st.session_state.get("marker_settings"):
+        return
+
+    # Define marker options
+    marker_options = {
+        "● Circle": "circle",
+        "■ Square": "square",
+        "◆ Diamond": "diamond",
+        "▲ Triangle": "triangle-up",
+        "▼ Down Triangle": "triangle-down",
+        "★ Star": "star",
+        "⬡ Hexagon": "hexagon",
+    }
+    marker_list = list(marker_options.keys())
+
+    # Create controls for each reference without columns
+    for ref in st.session_state.marker_settings.keys():
+        st.write(f"**{ref}**")
+
+        current_marker = st.session_state.marker_settings[ref][0]
+        marker_idx = list(marker_options.values()).index(current_marker)
+        marker = st.selectbox(
+            "Marker",
+            options=marker_list,
+            index=marker_idx,
+            key=f"marker_{ref}",
+        )
+        st.session_state.marker_settings[ref] = (
+            marker_options[marker],
+            st.session_state.marker_settings[ref][1],
+        )
+
+        color = st.color_picker(
+            "Color",
+            value=st.session_state.marker_settings[ref][1],
+            key=f"color_{ref}",
+        )
+        st.session_state.marker_settings[ref] = (
+            st.session_state.marker_settings[ref][0],
+            color,
+        )
+
+        st.divider()
+
+    if st.button("Reset to Defaults", use_container_width=True):
+        reset_marker_settings(st.session_state.marker_settings.keys())
+
+
 def marker_settings_ui() -> None:
     """Render UI for customizing marker settings."""
     if not st.session_state.get("marker_settings"):
@@ -68,7 +118,8 @@ def marker_settings_ui() -> None:
 
             with col1:
                 current_marker = st.session_state.marker_settings[ref][0]
-                marker_idx = list(marker_options.values()).index(current_marker)
+                marker_idx = list(marker_options.values()
+                                  ).index(current_marker)
                 marker = st.selectbox(
                     ref,
                     options=marker_list,
@@ -82,7 +133,8 @@ def marker_settings_ui() -> None:
                 )
 
             with col2:
-                st.markdown(f"<small style='font-size: 0.8em; color: #666;'>{ref}</small>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<small style='font-size: 0.8em; color: #666;'>{ref}</small>", unsafe_allow_html=True)
 
             with col3:
                 color = st.color_picker(
@@ -166,7 +218,8 @@ def create_cross_section_plot(
     fig = go.Figure()
 
     # Calculate extended wavelength range for heatmap
-    extended_range = config.get_extended_wavelength_range(config.wavelength_range)
+    extended_range = config.get_extended_wavelength_range(
+        config.wavelength_range)
     wavelengths = np.linspace(
         extended_range[0], extended_range[1], 300  # Increased resolution
     )
@@ -185,7 +238,8 @@ def create_cross_section_plot(
     # Create much larger y-range for heatmap
     heatmap_y_min = min_y * 0.001  # Extend 3 orders of magnitude down
     heatmap_y_max = max_y * 1000   # Extend 3 orders of magnitude up
-    y_values = np.logspace(np.log10(heatmap_y_min), np.log10(heatmap_y_max), 500)  # More points for smoother appearance
+    y_values = np.logspace(np.log10(heatmap_y_min), np.log10(
+        heatmap_y_max), 500)  # More points for smoother appearance
     Z = np.tile(photon_fraction, (len(y_values), 1))
 
     # Add heatmap with theme-aware colorbar

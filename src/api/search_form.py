@@ -104,7 +104,8 @@ def render_search_panel(key_prefix: str = "") -> None:
             if st.form_submit_button(
                 "🔍 Search", type="primary", use_container_width=True
             ):
-                result = search_proteins(name_query, {"name__icontains": name_query}, st.session_state.fpbase_client)
+                result = search_proteins(
+                    name_query, {"name__icontains": name_query}, st.session_state.fpbase_client)
 
                 if result["success"]:
                     # Show all columns in the results table with clickable URLs

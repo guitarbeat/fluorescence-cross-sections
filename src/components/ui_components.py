@@ -5,13 +5,6 @@ import streamlit as st
 from src.components.plot_utils import render_simple_plotly_chart
 
 
-def render_section_header(title: str, description: Optional[str] = None) -> None:
-    """Render a consistent section header with optional description."""
-    st.subheader(title)
-    if description:
-        st.write(description)
-
-
 # Removed unused function render_parameter_control
 
 
@@ -121,47 +114,3 @@ def render_error_boundary(
         st.error(f"{error_message}: {e}")
         if fallback_message:
             st.info(fallback_message)
-
-
-def render_tabs_with_content(
-    tab_configs: List[Tuple[str, callable, Optional[str]]]
-) -> None:
-    """
-    Render tabs with content using consistent error handling.
-
-    Args:
-        tab_configs: List of (tab_name, content_function, info_message) tuples
-    """
-    tab_names = [config[0] for config in tab_configs]
-    tabs = st.tabs(tab_names)
-
-    for i, (tab_name, content_function, info_message) in enumerate(tab_configs):
-        with tabs[i]:
-            if info_message:
-                st.info(info_message)
-            render_error_boundary(
-                content_function,
-                f"Error loading {tab_name.lower()}"
-            )
-
-
-def render_expandable_section(
-    title: str,
-    content_function: callable,
-    expanded: bool = False,
-    error_message: Optional[str] = None,
-    fallback_message: Optional[str] = None
-) -> None:
-    """
-    Render an expandable section with consistent error handling.
-
-    Args:
-        title: Title for the expandable section
-        content_function: Function to render the content
-        expanded: Whether the section should be expanded by default
-        error_message: Custom error message
-        fallback_message: Optional fallback message to show after error
-    """
-    with st.expander(title, expanded=expanded):
-        error_msg = error_message or f"Error loading {title.lower()}"
-        render_error_boundary(content_function, error_msg, fallback_message)

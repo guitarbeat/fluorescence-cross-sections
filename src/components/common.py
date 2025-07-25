@@ -10,20 +10,20 @@ import streamlit as st
 from src.components.ui_components import (
     render_data_editor,
     render_save_button,
+    render_plot_with_settings,
 )
 from src.config import (
     UI_TEXTS,
     FLUOROPHORE_COLUMN_CONFIG,
     FLUOROPHORE_COLUMN_ORDER,
 )
-from src.plots.cross_section_plot import create_cross_section_plot, get_marker_settings
+from src.plots.cross_section_plot import create_cross_section_plot, get_marker_settings, marker_settings_ui_simple
 from src.plots.tissue_view import create_tissue_plot
 from src.core import (
     FluorophoreService,
     PlotDataService,
     get_cached_tissue_data,
 )
-from src.components.plot_utils import render_simple_plotly_chart
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +57,16 @@ def _render_cross_sections_plot(df: pd.DataFrame, height: int = 600) -> None:
     )
     fig.update_layout(height=height)
 
-    # Simple plot rendering without settings to avoid column nesting
-    render_simple_plotly_chart(fig)
+    # Plot rendering with marker settings
+    render_plot_with_settings(
+        fig=fig,
+        settings_component=marker_settings_ui_simple,
+        settings_title="Marker Settings",
+        settings_help="Customize marker styles and colors"
+    )
 
 
-def _render_fluorophore_data_editor() -> None:
+def render_fluorophore_data_editor() -> None:
     """Render the fluorophore data editor section."""
     if "fluorophore_df" not in st.session_state:
         st.info(UI_TEXTS["messages"]["no_fluorophore_data"])
@@ -149,48 +154,7 @@ def _render_tissue_penetration_plot(height: int = 600) -> None:
     )
     fig.update_layout(height=height)
 
-    render_simple_plotly_chart(fig)
-
-
-def render_fluorophore_data_editor() -> None:
-    """Public wrapper for the fluorophore data editor."""
-    _render_fluorophore_data_editor()
-
-
-def render_plot_container(plot_type: str, df: Optional[pd.DataFrame] = None, height: int = 600) -> None:
-    """Render plot containers with consistent error handling."""
-    try:
-        if "tissue_params" not in st.session_state:
-            from src.config import DEFAULT_TISSUE_PARAMS
-            st.session_state.tissue_params = DEFAULT_TISSUE_PARAMS.copy()
-
-        plot_container = st.container(border=True)
-
-        with plot_container:
-            if plot_type == "cross_sections":
-                _render_cross_sections_plot(df, height=height)
-
-            elif plot_type == "tissue_penetration":
-                _render_tissue_penetration_plot(height=height)
-
-    except (ValueError, KeyError) as e:
-        logger.error("Error rendering %s plot: %s", plot_type, str(e))
-        st.error(f"Error creating {plot_type} plot: {str(e)}")
-    except Exception as e:  # pylint: disable=broad-except
-        logger.error("Unexpected error rendering %s plot: %s",
-                     plot_type, str(e))
-        st.error("An unexpected error occurred. Please check the logs.")
-
-
-def render_footer() -> None:
-    """Render a simple application footer."""
-    st.markdown("---")
-    st.markdown(
-        """
-        <div style='text-align: center; color: gray; font-size: 0.8em; padding: 20px 0;'>
-            Developed by Aaron Woods<br>
-            Data from <a href="https://www.fpbase.org">FPbase</a>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    # No specific settings for tissue plot
+    render_plot_with_settings(
+        fig=fig,
     )

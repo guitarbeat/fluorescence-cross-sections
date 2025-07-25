@@ -5,27 +5,6 @@ import pandas as pd
 from typing import Dict, Any, Optional
 
 
-def create_metric_card(title: str, value: str, gradient: str, subtitle: Optional[str] = None) -> str:
-    """Create a styled metric card with gradient background."""
-    subtitle_html = f"<p style='margin: 0.25rem 0 0 0; opacity: 0.8; font-size: 0.75rem;'>{subtitle}</p>" if subtitle else ""
-
-    return f"""
-    <div style='background: {gradient};
-                padding: 1rem;
-                border-radius: 8px;
-                text-align: center;
-                color: white;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                margin-bottom: 0.5rem;
-                cursor: pointer;
-                transition: transform 0.2s ease;'>
-        <h4 style='margin: 0; font-size: 1.5rem; font-weight: 600;'>{value}</h4>
-        <p style='margin: 0.25rem 0 0 0; opacity: 0.9; font-size: 0.85rem;'>{title}</p>
-        {subtitle_html}
-    </div>
-    """
-
-
 def render_apply_cancel_buttons(apply_label="Apply", cancel_label="Cancel", on_apply=None, on_cancel=None):
     """Render a row of Apply/Cancel buttons with optional callbacks."""
     col1, col2 = st.columns(2)
@@ -264,7 +243,6 @@ def edit_anisotropy_dialog():
     # Use the same popover/slider logic as in tissue_config
     new_g = render_parameter_control_with_popover(
         label="Anisotropy (g)",
-        param_type="slider",
         value=current_g,
         min_value=0.0,
         max_value=1.0,
@@ -313,7 +291,6 @@ def edit_scattering_power_dialog():
 
     new_b = render_parameter_control_with_popover(
         label="Scattering Power (b)",
-        param_type="number_input",
         value=current_b,
         min_value=0.5,
         max_value=2.0,
@@ -360,7 +337,6 @@ def edit_scattering_scale_dialog():
 
     new_a = render_parameter_control_with_popover(
         label="Scattering Scale (a)",
-        param_type="number_input",
         value=current_a,
         min_value=0.5,
         max_value=2.0,
@@ -391,58 +367,111 @@ def edit_scattering_scale_dialog():
     render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
 
 
-def create_info_card(title: str, content: str, icon: str = "ℹ️") -> str:
-    """Create an information card with consistent styling."""
-    return f"""
-    <div style='background: white; 
-                border: 1px solid #e0e0e0;
-                border-left: 4px solid #0f4c81;
-                padding: 1rem; 
-                border-radius: 5px; 
-                margin: 1rem 0;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);'>
-        <h4 style='margin: 0 0 0.5rem 0; color: #0f4c81;'>{icon} {title}</h4>
-        <p style='margin: 0; color: #666;'>{content}</p>
-    </div>
+def render_anisotropy_control(current_g: float, a: float) -> float:
     """
+    Renders a Streamlit control for the anisotropy parameter (g) and its
+    associated scattering coefficient (a).
+    """
+    from src.components.tissue_config import render_parameter_control_with_popover
+    import numpy as np
+
+    st.write("Adjust the anisotropy parameter (g):")
+
+    new_g = render_parameter_control_with_popover(
+        label="Anisotropy (g)",
+        value=current_g,
+        min_value=0.0,
+        max_value=1.0,
+        step=0.05,
+        help_text="Controls directional scattering: g=0 (isotropic) to g=1 (forward only)",
+        popover_title="\U0001F4CA Anisotropy Impact",
+        popover_help="Click to see how anisotropy affects scattering",
+        popover_values=np.linspace(0.1, 0.99, 100),
+        popover_coefficients=a / (1 - np.linspace(0.1, 0.99, 100)),
+        popover_param_name="Anisotropy",
+        popover_current_value=current_g,
+        popover_line_color='blue',
+        popover_formula=r"\mu_s = \frac{\mu_s'}{1-g} \\ = \frac{a}{1-\color{red}{" +
+        f"{current_g:.2f}" + r"}}",
+        popover_markdown="""
+            - Higher values → more forward scattering
+            - Lower values → more uniform scattering
+            - Brain tissue typically ≈ 0.9
+
+            *g represents the average cosine of the scattering angle*
+        """,
+        is_slider=True
+    )
+
+    def apply():
+        st.session_state.tissue_params["g"] = new_g
+        st.rerun()
+    render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
 
 
-def create_section_header(title: str, subtitle: Optional[str] = None) -> None:
-    """Create a consistent section header."""
-    subtitle_html = f"<p style='color: #666; font-size: 1.1rem; margin: 0.5rem 0 1rem 0;'>{subtitle}</p>" if subtitle else ""
-
+def inject_button_style(key: str, gradient: str):
+    """Inject custom CSS for a specific Streamlit button using its key."""
     st.markdown(f"""
-    <div style='margin: 2rem 0 1rem 0;'>
-        <h2 style='color: #0f4c81; margin: 0; font-size: 1.8rem; border-bottom: 2px solid #0f4c81; padding-bottom: 0.5rem;'>
-            {title}
-        </h2>
-        {subtitle_html}
-    </div>
+    <style>
+    div[data-testid="stButton"][data-testid="{key}"] > button {{
+        background: {gradient} !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+        text-align: center !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.3s ease !important;
+        white-space: pre-line !important;
+        height: auto !important;
+        min-height: 90px !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }}
+    div[data-testid="stButton"][data-testid="{key}"] > button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
+        transition: left 0.5s !important;
+    }}
+    div[data-testid="stButton"][data-testid="{key}"] > button:hover {{
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+    }}
+    div[data-testid="stButton"][data-testid="{key}"] > button:hover::before {{
+        left: 100% !important;
+    }}
+    div[data-testid="stButton"][data-testid="{key}"] > button:active {{
+        transform: translateY(-1px) scale(1.01) !important;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15) !important;
+    }}
+    /* Style the text inside the button */
+    div[data-testid="stButton"][data-testid="{key}"] > button > div {{
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 100% !important;
+    }}
+    div[data-testid="stButton"][data-testid="{key}"] > button > div > div:first-child {{
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 0.25rem !important;
+        line-height: 1.2 !important;
+    }}
+    div[data-testid="stButton"][data-testid="{key}"] > button > div > div:last-child {{
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        opacity: 0.9 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }}
+    </style>
     """, unsafe_allow_html=True)
-
-
-def create_status_badge(status: str, color: str = "green") -> str:
-    """Create a status badge."""
-    color_map = {
-        "green": "#28a745",
-        "blue": "#007bff",
-        "orange": "#fd7e14",
-        "red": "#dc3545",
-        "gray": "#6c757d"
-    }
-
-    bg_color = color_map.get(color, color_map["gray"])
-
-    return f"""
-    <span style='background: {bg_color}; 
-                 color: white; 
-                 padding: 0.25rem 0.75rem; 
-                 border-radius: 15px; 
-                 font-size: 0.8rem; 
-                 font-weight: 500;'>
-        {status}
-    </span>
-    """
 
 
 def render_dashboard_metrics(metrics: Dict[str, Any]) -> None:
@@ -461,12 +490,12 @@ def render_dashboard_metrics(metrics: Dict[str, Any]) -> None:
     for i, (col, (key, metric)) in enumerate(zip(cols, metrics.items())):
         with col:
             gradient = gradients[i % len(gradients)]
-
-            # Create clickable card using button with custom styling
+            button_key = f"card_{key}"
             button_text = f"{metric.get('value', 'N/A')}\n{metric.get('title', key)}"
+            inject_button_style(button_key, gradient)
             if st.button(
                 button_text,
-                key=f"card_{key}",
+                key=button_key,
                 help=f"Click to edit {metric.get('title', key).lower()}",
                 use_container_width=True
             ):
@@ -487,76 +516,6 @@ def render_dashboard_metrics(metrics: Dict[str, Any]) -> None:
                     edit_scattering_power_dialog()
                 elif key == "scattering_scale":
                     edit_scattering_scale_dialog()
-
-            # Apply custom styling to make the button look like the original card
-            st.markdown(f"""
-            <style>
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button {{
-                background: {gradient} !important;
-                color: white !important;
-                border: none !important;
-                border-radius: 8px !important;
-                padding: 1rem !important;
-                text-align: center !important;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-                transition: all 0.3s ease !important;
-                white-space: pre-line !important;
-                height: auto !important;
-                min-height: 90px !important;
-                position: relative !important;
-                overflow: hidden !important;
-            }}
-            
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button::before {{
-                content: '' !important;
-                position: absolute !important;
-                top: 0 !important;
-                left: -100% !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
-                transition: left 0.5s !important;
-            }}
-            
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button:hover {{
-                transform: translateY(-3px) scale(1.02) !important;
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
-            }}
-            
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button:hover::before {{
-                left: 100% !important;
-            }}
-            
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button:active {{
-                transform: translateY(-1px) scale(1.01) !important;
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15) !important;
-            }}
-            
-            /* Style the text inside the button */
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button > div {{
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                height: 100% !important;
-            }}
-            
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button > div > div:first-child {{
-                font-size: 1.5rem !important;
-                font-weight: 700 !important;
-                margin-bottom: 0.25rem !important;
-                line-height: 1.2 !important;
-            }}
-            
-            div.stHorizontalBlock > div:nth-child({i+1}) .stButton > button > div > div:last-child {{
-                font-size: 0.85rem !important;
-                font-weight: 500 !important;
-                opacity: 0.9 !important;
-                text-transform: uppercase !important;
-                letter-spacing: 0.5px !important;
-            }}
-            </style>
-            """, unsafe_allow_html=True)
 
 
 def create_collapsible_section(title: str, content_func, default_expanded: bool = False, help_text: str = None) -> None:

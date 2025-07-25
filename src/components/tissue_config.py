@@ -163,7 +163,6 @@ def create_parameter_relationship_plot(
 
 def render_parameter_control_with_popover(
     label: str,
-    param_type: str,
     value: float,
     min_value: float,
     max_value: float,

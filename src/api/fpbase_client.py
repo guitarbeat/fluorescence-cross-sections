@@ -79,11 +79,14 @@ class FPbaseAPI:
         url = f"{self.BASE_URL.rstrip('/')}/{self.ENDPOINTS[endpoint].lstrip('/')}"
 
         try:
-            logger.info(f"Querying FPbase API: {url} with params: {validated_params}")
-            response = self.session.get(url, params=validated_params, timeout=timeout)
+            logger.info(
+                f"Querying FPbase API: {url} with params: {validated_params}")
+            response = self.session.get(
+                url, params=validated_params, timeout=timeout)
 
             if response.status_code == 404:
-                logger.warning("No results found. Try adjusting your search criteria.")
+                logger.warning(
+                    "No results found. Try adjusting your search criteria.")
                 return response
 
             response.raise_for_status()
@@ -101,9 +104,11 @@ class FPbaseAPI:
         # Validate numerical parameters
         if "min_brightness" in validated:
             try:
-                validated["min_brightness"] = float(validated["min_brightness"])
+                validated["min_brightness"] = float(
+                    validated["min_brightness"])
             except ValueError:
-                logger.warning("Invalid min_brightness value, removing from query")
+                logger.warning(
+                    "Invalid min_brightness value, removing from query")
                 validated.pop("min_brightness")
 
         if "wavelength_range" in validated:
@@ -113,7 +118,8 @@ class FPbaseAPI:
                 validated["two_photon_peak__lte"] = float(max_wave)
                 validated.pop("wavelength_range")
             except (ValueError, TypeError):
-                logger.warning("Invalid wavelength_range value, removing from query")
+                logger.warning(
+                    "Invalid wavelength_range value, removing from query")
                 validated.pop("wavelength_range")
 
         return validated
@@ -169,7 +175,6 @@ class FPbaseAPI:
 
         except Exception as e:
             logger.error(f"Search failed: {str(e)}")
-            logger.exception("Full traceback:")  # This will log the full stack trace
+            # This will log the full stack trace
+            logger.exception("Full traceback:")
             raise FPbaseAPIError(f"Search failed: {str(e)}") from e
-
-
