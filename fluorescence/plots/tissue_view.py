@@ -16,10 +16,10 @@ import numpy.typing as npt
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.config import DEFAULT_TISSUE_PARAMS
+from fluorescence.config import DEFAULT_TISSUE_PARAMS
 
-from ..components.laser_manager import overlay_lasers
-from ..utils.data_loader import load_water_absorption_data  # Updated import
+from fluorescence.components.laser_manager import overlay_lasers
+from fluorescence.utils.data_loader import load_water_absorption_data  # Updated import
 from plotly.subplots import make_subplots
 
 logger = logging.getLogger(__name__)

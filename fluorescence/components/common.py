@@ -7,19 +7,19 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src.components.ui_components import (
+from fluorescence.components.ui_components import (
     render_data_editor,
     render_save_button,
     render_plot_with_settings,
 )
-from src.config import (
+from fluorescence.config import (
     UI_TEXTS,
     FLUOROPHORE_COLUMN_CONFIG,
     FLUOROPHORE_COLUMN_ORDER,
 )
-from src.plots.cross_section_plot import create_cross_section_plot, get_marker_settings, marker_settings_ui_simple
-from src.plots.tissue_view import create_tissue_plot
-from src.core import (
+from fluorescence.plots.cross_section_plot import create_cross_section_plot, get_marker_settings, marker_settings_ui_simple
+from fluorescence.plots.tissue_view import create_tissue_plot
+from fluorescence.core import (
     FluorophoreService,
     PlotDataService,
     get_cached_tissue_data,
@@ -27,7 +27,7 @@ from src.core import (
 
 logger = logging.getLogger(__name__)
 
-# get_cached_tissue_data moved to src.core
+# get_cached_tissue_data moved to fluorescence.core
 
 
 def _render_cross_sections_plot(df: pd.DataFrame, height: int = 600) -> None:

@@ -27,7 +27,7 @@ def render_close_button(label="Close"):
 @st.dialog("Edit Depth")
 def edit_depth_dialog():
     """Dialog for editing tissue depth."""
-    from src.config import DEFAULT_TISSUE_PARAMS
+    from fluorescence.config import DEFAULT_TISSUE_PARAMS
 
     current_depth = st.session_state.tissue_params.get(
         "depth", DEFAULT_TISSUE_PARAMS["depth"])
@@ -102,7 +102,7 @@ def edit_wavelength_dialog():
 @st.dialog("Edit Water Content")
 def edit_water_dialog():
     """Dialog for editing tissue water content."""
-    from src.config import DEFAULT_TISSUE_PARAMS
+    from fluorescence.config import DEFAULT_TISSUE_PARAMS
 
     current_water = st.session_state.tissue_params.get(
         "water_content", DEFAULT_TISSUE_PARAMS["water_content"])
@@ -132,7 +132,7 @@ def edit_laser_dialog():
     st.write("Configure laser settings:")
 
     try:
-        from src.components.laser_manager import render_laser_manager
+        from fluorescence.components.laser_manager import render_laser_manager
         render_laser_manager()
     except Exception as e:
         st.error(f"Error loading laser configuration: {e}")
@@ -152,7 +152,7 @@ def edit_fluorophores_dialog():
     with tab1:
         # Show the existing fluorophore data editor
         try:
-            from src.components.common import render_fluorophore_data_editor
+            from fluorescence.components.common import render_fluorophore_data_editor
             render_fluorophore_data_editor()
         except Exception as e:
             st.error(f"Error loading fluorophore editor: {e}")
@@ -160,8 +160,8 @@ def edit_fluorophores_dialog():
     with tab2:
         # Show the fluorophore viewer with cross-section data
         try:
-            from src.utils.data_loader import load_cross_section_data
-            from src.components.fluorophore_viewer import render_fluorophore_viewer
+            from fluorescence.utils.data_loader import load_cross_section_data
+            from fluorescence.components.fluorophore_viewer import render_fluorophore_viewer
 
             cross_sections = load_cross_section_data()
             if cross_sections:
@@ -216,7 +216,7 @@ def edit_fluorophores_dialog():
     with tab3:
         # Show the FPbase search functionality
         try:
-            from src.api.search_form import render_search_panel
+            from fluorescence.api.search_form import render_search_panel
             render_search_panel(key_prefix="dialog_search_")
         except Exception as e:
             st.error(f"Error loading FPbase search: {e}")
@@ -230,8 +230,8 @@ def edit_fluorophores_dialog():
 @st.dialog("Edit Anisotropy (g)")
 def edit_anisotropy_dialog():
     """Dialog for editing anisotropy (g) parameter."""
-    from src.config import DEFAULT_TISSUE_PARAMS
-    from src.components.tissue_config import render_parameter_control_with_popover
+    from fluorescence.config import DEFAULT_TISSUE_PARAMS
+    from fluorescence.components.tissue_config import render_parameter_control_with_popover
     import numpy as np
 
     params = st.session_state.tissue_params
@@ -276,8 +276,8 @@ def edit_anisotropy_dialog():
 @st.dialog("Edit Scattering Power (b)")
 def edit_scattering_power_dialog():
     """Dialog for editing scattering power (b) parameter."""
-    from src.config import DEFAULT_TISSUE_PARAMS
-    from src.components.tissue_config import render_parameter_control_with_popover
+    from fluorescence.config import DEFAULT_TISSUE_PARAMS
+    from fluorescence.components.tissue_config import render_parameter_control_with_popover
     import numpy as np
 
     params = st.session_state.tissue_params
@@ -322,8 +322,8 @@ def edit_scattering_power_dialog():
 @st.dialog("Edit Scattering Scale (a)")
 def edit_scattering_scale_dialog():
     """Dialog for editing scattering scale (a) parameter."""
-    from src.config import DEFAULT_TISSUE_PARAMS
-    from src.components.tissue_config import render_parameter_control_with_popover
+    from fluorescence.config import DEFAULT_TISSUE_PARAMS
+    from fluorescence.components.tissue_config import render_parameter_control_with_popover
     import numpy as np
 
     params = st.session_state.tissue_params
@@ -372,7 +372,7 @@ def render_anisotropy_control(current_g: float, a: float) -> float:
     Renders a Streamlit control for the anisotropy parameter (g) and its
     associated scattering coefficient (a).
     """
-    from src.components.tissue_config import render_parameter_control_with_popover
+    from fluorescence.components.tissue_config import render_parameter_control_with_popover
     import numpy as np
 
     st.write("Adjust the anisotropy parameter (g):")

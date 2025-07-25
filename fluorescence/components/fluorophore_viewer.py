@@ -18,9 +18,10 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from ..plots.zipfel_cross_sections import plot_cross_section
+from fluorescence.plots.zipfel_cross_sections import plot_cross_section
 
 logger = logging.getLogger(__name__)
+
 
 @st.cache_data
 def fetch_image_content(url: str):
@@ -32,6 +33,7 @@ def fetch_image_content(url: str):
     except requests.exceptions.RequestException as e:
         logger.warning(f"Failed to fetch image {url}: {e}")
     return None
+
 
 def get_reference_image_url(fluorophore_name: str) -> str:
     """
@@ -47,9 +49,11 @@ def get_reference_image_url(fluorophore_name: str) -> str:
     }
 
     # Use corrected filename if it exists, otherwise use original
-    corrected_name = filename_corrections.get(fluorophore_name, fluorophore_name)
+    corrected_name = filename_corrections.get(
+        fluorophore_name, fluorophore_name)
 
     return f"{base_url}/{corrected_name}.jpg"
+
 
 def _calculate_column_stats(df: pd.DataFrame, columns: list, prefix: str = "") -> Dict[str, float]:
     """Helper function to calculate statistics for multiple columns."""
@@ -62,27 +66,30 @@ def _calculate_column_stats(df: pd.DataFrame, columns: list, prefix: str = "") -
         stats[f"{col_prefix}mean_cross_section"] = df[col].mean()
     return stats
 
+
 def calculate_fluorophore_stats(df: pd.DataFrame, fluorophore_name: str) -> Dict[str, float]:
     """Calculate statistics for the fluorophore data."""
     stats = {}
 
     if fluorophore_name == "IntrinsicFluorophores":
         # Calculate stats for each fluorophore
-        intrinsic_columns = ["riboflavin", "folic_acid", "cholecalciferol", "retinol"]
+        intrinsic_columns = ["riboflavin",
+                             "folic_acid", "cholecalciferol", "retinol"]
         stats.update(_calculate_column_stats(df, intrinsic_columns))
 
     elif fluorophore_name == "NADH-ProteinBound":
         # Calculate stats for each form
         nadh_columns = ["gm_mean", "gm_mdh", "gm_ad"]
         stats.update(_calculate_column_stats(df, nadh_columns))
-        
+
         # Add standard deviation if available
         if "sd" in df.columns:
             stats["mean_std_dev"] = df["sd"].mean()
 
     else:
         # Standard statistics for single-trace fluorophores
-        cross_section_col = "cross_section" if "cross_section" in df.columns else df.columns[1]
+        cross_section_col = "cross_section" if "cross_section" in df.columns else df.columns[
+            1]
         peak_idx = df[cross_section_col].idxmax()
         stats["peak_wavelength"] = df.loc[peak_idx, "wavelength"]
         stats["peak_cross_section"] = df.loc[peak_idx, cross_section_col]
@@ -92,36 +99,43 @@ def calculate_fluorophore_stats(df: pd.DataFrame, fluorophore_name: str) -> Dict
 
     return stats
 
+
 def format_stats(stats: Dict[str, float]) -> str:
     """Format statistics for display."""
     formatted = []
     for key, value in stats.items():
         if "wavelength" in key:
-            formatted.append(f"**{key.replace('_', ' ').title()}:** {value:.0f} nm")
+            formatted.append(
+                f"**{key.replace('_', ' ').title()}:** {value:.0f} nm")
         elif "cross_section" in key:
-            formatted.append(f"**{key.replace('_', ' ').title()}:** {value:.2e} GM")
+            formatted.append(
+                f"**{key.replace('_', ' ').title()}:** {value:.2e} GM")
         elif "std_dev" in key:
-            formatted.append(f"**{key.replace('_', ' ').title()}:** {value:.2e}")
+            formatted.append(
+                f"**{key.replace('_', ' ').title()}:** {value:.2e}")
     return "\n\n".join(formatted)
+
 
 def handle_component_error(operation: str, fluorophore_name: str, error: Exception) -> None:
     """Handle errors in component operations with consistent logging and user feedback."""
     logger.error(f"Error {operation} for {fluorophore_name}: {error}")
-    
+
     # Define error messages for different operations
     error_messages = {
         "plotting data": f"Error plotting data for {fluorophore_name}: {str(error)}",
         "displaying reference image": "Could not display reference image."
     }
-    
+
     # Get the appropriate error message or use a default
-    message = error_messages.get(operation, f"Error in {operation}: {str(error)}")
-    
+    message = error_messages.get(
+        operation, f"Error in {operation}: {str(error)}")
+
     # Display appropriate UI feedback
     if operation == "plotting data":
         st.error(message)
     else:
         st.warning(message)
+
 
 def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefix: str = "") -> None:
     """Render the fluorophore viewer component."""
@@ -151,7 +165,8 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
                 width=700,
                 show_error_bars=True
             )
-            st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_plot")
+            st.plotly_chart(fig, use_container_width=True,
+                            key=f"{key_prefix}_plot")
         except Exception as e:
             handle_component_error("plotting data", selected_fluorophore, e)
 
@@ -174,9 +189,11 @@ def render_fluorophore_viewer(cross_sections: Dict[str, pd.DataFrame], key_prefi
                     use_container_width=True
                 )
             else:
-                st.info(f"Reference image not found or failed to load for {selected_fluorophore}.")
+                st.info(
+                    f"Reference image not found or failed to load for {selected_fluorophore}.")
         except Exception as e:
-            handle_component_error("displaying reference image", selected_fluorophore, e)
+            handle_component_error(
+                "displaying reference image", selected_fluorophore, e)
 
     # Data Table Section
     with st.expander("Raw Data", expanded=False):

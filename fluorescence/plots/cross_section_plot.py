@@ -19,8 +19,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from ..components.laser_manager import overlay_lasers
-from src.config import (
+from fluorescence.components.laser_manager import overlay_lasers
+from fluorescence.config import (
     DARK_THEME,
     LIGHT_THEME,
     CrossSectionPlotConfig,
@@ -28,7 +28,7 @@ from src.config import (
     FLOATING_ELEMENT_THEME,
     get_common_colorbar_config,
 )
-from ..plots.tissue_view import calculate_tissue_parameters
+from fluorescence.plots.tissue_view import calculate_tissue_parameters
 
 logger = logging.getLogger(__name__)
 

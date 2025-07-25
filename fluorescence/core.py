@@ -7,16 +7,16 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src.api.fpbase_client import FPbaseAPI
-from src.components.laser_manager import initialize_laser_data
-from src.config import (
+from fluorescence.api.fpbase_client import FPbaseAPI
+from fluorescence.components.laser_manager import initialize_laser_data
+from fluorescence.config import (
     BASIC_FLUOROPHORE_COLUMNS,
     DEFAULT_GLOBAL_PARAMS,
     DEFAULT_TISSUE_PARAMS,
     FLUOROPHORE_CSV,
     SHARED_PLOT_CONFIG
 )
-from src.utils.data_loader import load_cross_section_data, load_fluorophore_data, compile_fluorophore_data
+from fluorescence.utils.data_loader import load_cross_section_data, load_fluorophore_data, compile_fluorophore_data
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ class PlotDataService:
 @st.cache_data(ttl=300)
 def get_cached_tissue_data(wavelengths: np.ndarray, depth: float, norm_wavelength: float) -> dict:
     """Cache tissue calculations to improve performance."""
-    from src.plots.tissue_view import calculate_tissue_parameters
+    from fluorescence.plots.tissue_view import calculate_tissue_parameters
     return calculate_tissue_parameters(
         wavelengths=wavelengths,
         depth=depth,

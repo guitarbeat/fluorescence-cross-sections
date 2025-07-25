@@ -8,7 +8,7 @@ import streamlit as st
 
 # Project directories
 ROOT_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT_DIR / "data"
+DATA_DIR = ROOT_DIR / "fluorescence" / "data"
 
 # Common file paths
 FLUOROPHORE_CSV = DATA_DIR / "fluorophores.csv"

@@ -19,8 +19,8 @@ import streamlit as st
 
 
 # Changed from relative to absolute import
-from src.utils.data_loader import load_water_absorption_data
-from src.config import TISSUE_PLOT_CONFIG, TISSUE_PARAMETER_CONFIGS, DEFAULT_TISSUE_PARAMS
+from fluorescence.utils.data_loader import load_water_absorption_data
+from fluorescence.config import TISSUE_PLOT_CONFIG, TISSUE_PARAMETER_CONFIGS, DEFAULT_TISSUE_PARAMS
 
 # Formula display configuration
 MAIN_FORMULA_SIZE = r"\Large"  # Size for the main formula

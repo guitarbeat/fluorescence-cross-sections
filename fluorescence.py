@@ -1,7 +1,7 @@
 """Entry point for the Deep Tissue Imaging Optimizer."""
-from src.config import DEFAULT_TISSUE_PARAMS
-from src.components.dashboard_utils import add_dashboard_css, render_dashboard_metrics
-from src.core import initialize_session_state
+from fluorescence.config import DEFAULT_TISSUE_PARAMS
+from fluorescence.components.dashboard_utils import add_dashboard_css, render_dashboard_metrics
+from fluorescence.core import initialize_session_state
 import streamlit as st
 import numpy as np
 
@@ -51,16 +51,16 @@ def main():
 
     with col1:
         try:
-            from src.components.common import _render_cross_sections_plot
+            from fluorescence.components.common import _render_cross_sections_plot
             _render_cross_sections_plot(st.session_state.fluorophore_df)
         except Exception as e:
             st.error(f"Error: {e}")
 
     with col2:
         try:
-            from src.components.common import _render_tissue_penetration_plot
+            from fluorescence.components.common import _render_tissue_penetration_plot
             _render_tissue_penetration_plot()
-            from src.components.tissue_config import render_scattering_popover, render_absorption_popover, render_transmission_popover
+            from fluorescence.components.tissue_config import render_scattering_popover, render_absorption_popover, render_transmission_popover
             params = st.session_state.tissue_params
             a = params.get("a", DEFAULT_TISSUE_PARAMS["a"])
             b = params.get("b", DEFAULT_TISSUE_PARAMS["b"])
@@ -72,7 +72,7 @@ def main():
                 "normalization_wavelength", 1300)
             # Compute mus_scattering and mua_lambda for transmission popover
             mus_scattering = a * (ref_wavelength / 500) ** (-b) / (1 - g)
-            from src.utils.data_loader import load_water_absorption_data
+            from fluorescence.utils.data_loader import load_water_absorption_data
             water_data = load_water_absorption_data()
             mua_lambda = float(
                 np.interp(ref_wavelength, water_data["wavelength"], water_data["absorption"]))

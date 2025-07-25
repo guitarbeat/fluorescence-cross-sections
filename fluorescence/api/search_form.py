@@ -13,7 +13,7 @@ from typing import Any, Dict
 import pandas as pd
 import streamlit as st
 
-from src.api.fpbase_client import FPbaseAPI
+from fluorescence.api.fpbase_client import FPbaseAPI
 
 
 # Removed unused function download_results

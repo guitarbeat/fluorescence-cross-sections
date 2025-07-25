@@ -20,7 +20,7 @@ from backoff import expo, on_exception
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from src.api.fpbase_types import FPbaseAPIError, ProteinData
+from fluorescence.api.fpbase_types import FPbaseAPIError, ProteinData
 
 logger = logging.getLogger(__name__)
 

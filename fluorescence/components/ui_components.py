@@ -2,7 +2,7 @@
 from typing import Any, List, Tuple, Optional, Dict
 
 import streamlit as st
-from src.components.plot_utils import render_simple_plotly_chart
+from fluorescence.components.plot_utils import render_simple_plotly_chart
 
 
 # Removed unused function render_parameter_control
