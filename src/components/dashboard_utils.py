@@ -10,10 +10,10 @@ def create_metric_card(title: str, value: str, gradient: str, subtitle: Optional
     subtitle_html = f"<p style='margin: 0.25rem 0 0 0; opacity: 0.8; font-size: 0.75rem;'>{subtitle}</p>" if subtitle else ""
 
     return f"""
-    <div style='background: {gradient}; 
-                padding: 1rem; 
-                border-radius: 8px; 
-                text-align: center; 
+    <div style='background: {gradient};
+                padding: 1rem;
+                border-radius: 8px;
+                text-align: center;
                 color: white;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 margin-bottom: 0.5rem;
@@ -24,6 +24,25 @@ def create_metric_card(title: str, value: str, gradient: str, subtitle: Optional
         {subtitle_html}
     </div>
     """
+
+
+def render_apply_cancel_buttons(apply_label="Apply", cancel_label="Cancel", on_apply=None, on_cancel=None):
+    """Render a row of Apply/Cancel buttons with optional callbacks."""
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button(apply_label, type="primary", use_container_width=True):
+            if on_apply:
+                on_apply()
+    with col2:
+        if st.button(cancel_label, use_container_width=True):
+            if on_cancel:
+                on_cancel()
+
+
+def render_close_button(label="Close"):
+    st.divider()
+    if st.button(label, use_container_width=True):
+        st.rerun()
 
 
 @st.dialog("Edit Depth")
@@ -45,15 +64,10 @@ def edit_depth_dialog():
         help="Tissue penetration depth for analysis"
     )
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Apply", type="primary", use_container_width=True):
-            st.session_state.tissue_params["depth"] = new_depth
-            st.rerun()
-
-    with col2:
-        if st.button("Cancel", use_container_width=True):
-            st.rerun()
+    def apply():
+        st.session_state.tissue_params["depth"] = new_depth
+        st.rerun()
+    render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
 
 
 @st.dialog("Wavelength Settings", width="large")
@@ -97,18 +111,13 @@ def edit_wavelength_dialog():
 
     st.divider()
 
-    # Apply/Cancel buttons
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Apply Changes", type="primary", use_container_width=True):
-            st.session_state.global_params["normalization_wavelength"] = new_wavelength
-            st.session_state.global_params["wavelength_range"] = new_range
-            st.success("Wavelength settings updated!")
-            st.rerun()
-
-    with col2:
-        if st.button("Cancel", use_container_width=True):
-            st.rerun()
+    def apply():
+        st.session_state.global_params["normalization_wavelength"] = new_wavelength
+        st.session_state.global_params["wavelength_range"] = new_range
+        st.success("Wavelength settings updated!")
+        st.rerun()
+    render_apply_cancel_buttons(
+        apply_label="Apply Changes", on_apply=apply, on_cancel=st.rerun)
 
 
 @st.dialog("Edit Water Content")
@@ -132,15 +141,10 @@ def edit_water_dialog():
         help="Percentage of water content in tissue"
     )
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Apply", type="primary", use_container_width=True):
-            st.session_state.tissue_params["water_content"] = new_water_percent / 100
-            st.rerun()
-
-    with col2:
-        if st.button("Cancel", use_container_width=True):
-            st.rerun()
+    def apply():
+        st.session_state.tissue_params["water_content"] = new_water_percent / 100
+        st.rerun()
+    render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
 
 
 @st.dialog("Laser Configuration", width="large")
@@ -154,10 +158,7 @@ def edit_laser_dialog():
     except Exception as e:
         st.error(f"Error loading laser configuration: {e}")
 
-    # Close button
-    st.divider()
-    if st.button("Close", use_container_width=True):
-        st.rerun()
+    render_close_button()
 
 
 @st.dialog("Manage Fluorophores", width="large")
@@ -247,6 +248,149 @@ def edit_fluorophores_dialog():
         st.rerun()
 
 
+@st.dialog("Edit Anisotropy (g)")
+def edit_anisotropy_dialog():
+    """Dialog for editing anisotropy (g) parameter."""
+    from src.config import DEFAULT_TISSUE_PARAMS
+    from src.components.tissue_config import render_parameter_control_with_popover
+    import numpy as np
+
+    params = st.session_state.tissue_params
+    current_g = params.get("g", DEFAULT_TISSUE_PARAMS["g"])
+    a = params.get("a", DEFAULT_TISSUE_PARAMS["a"])
+
+    st.write("Adjust the anisotropy parameter (g):")
+
+    # Use the same popover/slider logic as in tissue_config
+    new_g = render_parameter_control_with_popover(
+        label="Anisotropy (g)",
+        param_type="slider",
+        value=current_g,
+        min_value=0.0,
+        max_value=1.0,
+        step=0.05,
+        help_text="Controls directional scattering: g=0 (isotropic) to g=1 (forward only)",
+        popover_title="\U0001F4CA Anisotropy Impact",
+        popover_help="Click to see how anisotropy affects scattering",
+        popover_values=np.linspace(0.1, 0.99, 100),
+        popover_coefficients=a / (1 - np.linspace(0.1, 0.99, 100)),
+        popover_param_name="Anisotropy",
+        popover_current_value=current_g,
+        popover_line_color='blue',
+        popover_formula=r"\mu_s = \frac{\mu_s'}{1-g} \\ = \frac{a}{1-\color{red}{" +
+        f"{current_g:.2f}" + r"}}",
+        popover_markdown="""
+            - Higher values → more forward scattering
+            - Lower values → more uniform scattering
+            - Brain tissue typically ≈ 0.9
+
+            *g represents the average cosine of the scattering angle*
+        """,
+        is_slider=True
+    )
+
+    def apply():
+        st.session_state.tissue_params["g"] = new_g
+        st.rerun()
+    render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
+
+
+@st.dialog("Edit Scattering Power (b)")
+def edit_scattering_power_dialog():
+    """Dialog for editing scattering power (b) parameter."""
+    from src.config import DEFAULT_TISSUE_PARAMS
+    from src.components.tissue_config import render_parameter_control_with_popover
+    import numpy as np
+
+    params = st.session_state.tissue_params
+    current_b = params.get("b", DEFAULT_TISSUE_PARAMS["b"])
+    a = params.get("a", DEFAULT_TISSUE_PARAMS["a"])
+    g = params.get("g", DEFAULT_TISSUE_PARAMS["g"])
+    ref_wavelength = st.session_state.global_params.get(
+        "normalization_wavelength", 1300)
+
+    st.write("Adjust the scattering power (b):")
+
+    new_b = render_parameter_control_with_popover(
+        label="Scattering Power (b)",
+        param_type="number_input",
+        value=current_b,
+        min_value=0.5,
+        max_value=2.0,
+        step=0.05,
+        help_text="Wavelength dependence (≈1.37 for brain tissue)",
+        popover_title="\U0001F4C8 Wavelength Dependence Impact",
+        popover_help="Click to see how scattering power affects wavelength dependence",
+        popover_values=np.linspace(0.5, 2.0, 100),
+        popover_coefficients=a *
+        (ref_wavelength / 500) ** (-np.linspace(0.5, 2.0, 100)) / (1 - g),
+        popover_param_name="Scattering Power (b)",
+        popover_current_value=current_b,
+        popover_line_color='blue',
+        popover_formula=r"\mu_s' = a \cdot \left(\frac{\lambda}{500}\right)^{-b} \\ = a \cdot \left(\frac{\lambda}{500}\right)^{-\color{red}{" + f"{current_b:.2f}" + r"}}",
+        popover_markdown="""
+            - Controls wavelength dependence
+            - Higher b → stronger λ dependence
+            - Brain tissue b ≈ 1.37
+        """,
+        is_slider=False
+    )
+
+    def apply():
+        st.session_state.tissue_params["b"] = new_b
+        st.rerun()
+    render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
+
+
+@st.dialog("Edit Scattering Scale (a)")
+def edit_scattering_scale_dialog():
+    """Dialog for editing scattering scale (a) parameter."""
+    from src.config import DEFAULT_TISSUE_PARAMS
+    from src.components.tissue_config import render_parameter_control_with_popover
+    import numpy as np
+
+    params = st.session_state.tissue_params
+    current_a = params.get("a", DEFAULT_TISSUE_PARAMS["a"])
+    b = params.get("b", DEFAULT_TISSUE_PARAMS["b"])
+    g = params.get("g", DEFAULT_TISSUE_PARAMS["g"])
+    ref_wavelength = st.session_state.global_params.get(
+        "normalization_wavelength", 1300)
+
+    st.write("Adjust the scattering scale (a):")
+
+    new_a = render_parameter_control_with_popover(
+        label="Scattering Scale (a)",
+        param_type="number_input",
+        value=current_a,
+        min_value=0.5,
+        max_value=2.0,
+        step=0.1,
+        help_text="Scattering amplitude [mm⁻¹]",
+        popover_title="\U0001F4C9 Scattering Amplitude Impact",
+        popover_help="Click to see how scattering scale affects overall scattering",
+        popover_values=np.linspace(0.5, 2.0, 100),
+        popover_coefficients=np.linspace(
+            0.5, 2.0, 100) * (ref_wavelength / 500) ** (-b) / (1 - g),
+        popover_param_name="Scattering Scale (a)",
+        popover_current_value=current_a,
+        popover_line_color='blue',
+        popover_formula=r"\mu_s = a \cdot \text{(wavelength term)} \\ = \color{red}{" +
+        f"{current_a:.2f}" +
+        r"}\ \text{mm}^{-1} \cdot \text{(wavelength term)}",
+        popover_markdown="""
+            - Controls overall scattering strength
+            - Higher a → more scattering
+            - Brain tissue a ≈ 1.1 mm⁻¹
+        """,
+        is_slider=False
+    )
+
+    def apply():
+        st.session_state.tissue_params["a"] = new_a
+        st.rerun()
+    render_apply_cancel_buttons(on_apply=apply, on_cancel=st.rerun)
+
+
 def create_info_card(title: str, content: str, icon: str = "ℹ️") -> str:
     """Create an information card with consistent styling."""
     return f"""
@@ -333,10 +477,16 @@ def render_dashboard_metrics(metrics: Dict[str, Any]) -> None:
                     edit_wavelength_dialog()
                 elif key == "water":
                     edit_water_dialog()
+                elif key == "anisotropy":
+                    edit_anisotropy_dialog()
                 elif key == "fluorophores":
                     edit_fluorophores_dialog()
                 elif key == "laser":
                     edit_laser_dialog()
+                elif key == "scattering_power":
+                    edit_scattering_power_dialog()
+                elif key == "scattering_scale":
+                    edit_scattering_scale_dialog()
 
             # Apply custom styling to make the button look like the original card
             st.markdown(f"""

@@ -2,6 +2,7 @@
 from typing import Any, List, Tuple, Optional, Dict
 
 import streamlit as st
+from src.components.plot_utils import render_simple_plotly_chart
 
 
 def render_section_header(title: str, description: Optional[str] = None) -> None:
@@ -34,12 +35,7 @@ def render_plot_with_settings(
     if title:
         st.markdown(f"### {title}")
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        theme="streamlit",
-        config={"displayModeBar": True, "responsive": True},
-    )
+    render_simple_plotly_chart(fig)
 
     if settings_component:
         with st.popover(settings_title, help=settings_help):

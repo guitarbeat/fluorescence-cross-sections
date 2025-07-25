@@ -23,6 +23,7 @@ from src.core import (
     PlotDataService,
     get_cached_tissue_data,
 )
+from src.components.plot_utils import render_simple_plotly_chart
 
 logger = logging.getLogger(__name__)
 
@@ -57,12 +58,7 @@ def _render_cross_sections_plot(df: pd.DataFrame, height: int = 600) -> None:
     fig.update_layout(height=height)
 
     # Simple plot rendering without settings to avoid column nesting
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        theme="streamlit",
-        config={"displayModeBar": True, "responsive": True},
-    )
+    render_simple_plotly_chart(fig)
 
 
 def _render_fluorophore_data_editor() -> None:
@@ -153,7 +149,7 @@ def _render_tissue_penetration_plot(height: int = 600) -> None:
     )
     fig.update_layout(height=height)
 
-    st.plotly_chart(fig, use_container_width=True, theme="streamlit")
+    render_simple_plotly_chart(fig)
 
 
 def render_fluorophore_data_editor() -> None:

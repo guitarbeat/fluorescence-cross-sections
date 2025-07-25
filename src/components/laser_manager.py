@@ -70,18 +70,9 @@ def initialize_laser_data() -> pd.DataFrame:
 
 
 def get_laser_df() -> pd.DataFrame:
-    """Get laser DataFrame from Google Sheets or fallback to CSV."""
+    """Get laser DataFrame from CSV only (Google Sheets integration removed)."""
     if "laser_df" not in st.session_state:
-        # Try to get data from Google Sheets first
-        sheets_data = fetch_data("lasers")
-
-        if sheets_data is not None:
-            # Convert Google Sheets data to DataFrame
-            st.session_state.laser_df = pd.DataFrame(sheets_data)
-        else:
-            # Fallback to CSV if Google Sheets fails
-            st.session_state.laser_df = initialize_laser_data()
-
+        st.session_state.laser_df = initialize_laser_data()
     return st.session_state.laser_df
 
 
@@ -114,13 +105,8 @@ def add_laser(name: str, start_nm: float, end_nm: float, color: str) -> bool:
 
 
 def save_laser_data(df: pd.DataFrame) -> None:
-    """Save laser data to both Google Sheets and CSV."""
+    """Save laser data to CSV only (Google Sheets integration removed)."""
     try:
-        # Save to Google Sheets
-        data = df.to_dict('records')
-        send_data("lasers", data)
-
-        # Backup to CSV
         LASER_DATA_PATH.parent.mkdir(exist_ok=True)
         df.to_csv(LASER_DATA_PATH, index=False)
     except Exception as e:
@@ -240,22 +226,9 @@ def render_laser_manager() -> None:
             render_laser_editor()
 
 
-def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:
-    """Configure the plot layout for laser overlays."""
-    main_domain = [0, 0.85]
-
-    # Configure axis domains
-    if plot_type == "tissue":
-        fig.update_layout(
-            yaxis=dict(domain=main_domain), yaxis2=dict(domain=main_domain)
-        )
-    else:  # cross_section
-        fig.update_layout(yaxis=dict(domain=main_domain))
-
-    # Update layout with transparent background and hidden axes
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+def get_laser_overlay_axes_layout():
+    """Return the shared axis layout for laser overlays."""
+    return dict(
         yaxis3=dict(
             domain=[0.87, 0.92],
             showticklabels=False,
@@ -285,6 +258,26 @@ def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:
             mirror=False,
             showgrid=False,
         ),
+    )
+
+
+def configure_plot_layout(fig: go.Figure, plot_type: str) -> None:
+    """Configure the plot layout for laser overlays."""
+    main_domain = [0, 0.85]
+
+    # Configure axis domains
+    if plot_type == "tissue":
+        fig.update_layout(
+            yaxis=dict(domain=main_domain), yaxis2=dict(domain=main_domain)
+        )
+    else:  # cross_section
+        fig.update_layout(yaxis=dict(domain=main_domain))
+
+    # Update layout with transparent background and hidden axes
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        **get_laser_overlay_axes_layout()
     )
 
 

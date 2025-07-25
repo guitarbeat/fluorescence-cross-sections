@@ -43,25 +43,38 @@ def get_marker_styles(num_traces: int) -> List[Tuple[str, str]]:
     ]
 
 
+def add_cross_section_trace(fig, x, y, name, marker, line, error_y=None, hovertemplate=None):
+    fig.add_trace(
+        go.Scatter(
+            x=x,
+            y=y,
+            name=name,
+            mode="lines+markers",
+            line=line,
+            marker=marker,
+            error_y=error_y,
+            hovertemplate=hovertemplate
+        )
+    )
+
+
 def _add_intrinsic_fluorophore_traces(fig, df, marker_styles, show_error_bars):
     for idx, col in enumerate([c for c in df.columns if c != "wavelength"]):
         marker_symbol, color = marker_styles[idx % len(marker_styles)]
         display_name = col.replace('_', ' ').title()
         y_values = pd.to_numeric(df[col], errors='coerce')
-        fig.add_trace(
-            go.Scatter(
-                x=df["wavelength"],
-                y=y_values,
-                name=display_name,
-                mode="lines+markers",
-                line=dict(color=color, width=2),
-                marker=dict(symbol=marker_symbol, size=8, color=color),
-                hovertemplate=(
-                    f"{display_name}<br>" +
-                    "Wavelength: %{x} nm<br>" +
-                    "Cross Section: %{y:.2e} GM<br>" +
-                    "<extra></extra>"
-                )
+        add_cross_section_trace(
+            fig,
+            x=df["wavelength"],
+            y=y_values,
+            name=display_name,
+            marker=dict(symbol=marker_symbol, size=8, color=color),
+            line=dict(color=color, width=2),
+            hovertemplate=(
+                f"{display_name}<br>" +
+                "Wavelength: %{x} nm<br>" +
+                "Cross Section: %{y:.2e} GM<br>" +
+                "<extra></extra>"
             )
         )
 
@@ -83,16 +96,14 @@ def _add_nadh_proteinbound_traces(fig, df, marker_styles, show_error_bars):
                 thickness=1,
                 width=3
             )
-        fig.add_trace(
-            go.Scatter(
-                x=df["wavelength"],
-                y=df[col],
-                name=name,
-                mode="lines+markers",
-                line=dict(color=color, width=2),
-                marker=dict(symbol=marker_symbol, size=8, color=color),
-                error_y=error_y
-            )
+        add_cross_section_trace(
+            fig,
+            x=df["wavelength"],
+            y=df[col],
+            name=name,
+            marker=dict(symbol=marker_symbol, size=8, color=color),
+            line=dict(color=color, width=2),
+            error_y=error_y
         )
 
 
@@ -110,16 +121,14 @@ def _add_default_fluorophore_trace(fig, df, marker_styles, selected_fluorophore,
         if len(df.columns) == 3 and show_error_bars
         else None
     )
-    fig.add_trace(
-        go.Scatter(
-            x=df["wavelength"],
-            y=df["cross_section"],
-            name=selected_fluorophore,
-            mode="lines+markers",
-            line=dict(color=color, width=2),
-            marker=dict(symbol=marker_symbol, size=8, color=color),
-            error_y=error_y
-        )
+    add_cross_section_trace(
+        fig,
+        x=df["wavelength"],
+        y=df["cross_section"],
+        name=selected_fluorophore,
+        marker=dict(symbol=marker_symbol, size=8, color=color),
+        line=dict(color=color, width=2),
+        error_y=error_y
     )
 
 

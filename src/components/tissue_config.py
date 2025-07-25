@@ -20,34 +20,44 @@ import streamlit as st
 
 # Changed from relative to absolute import
 from src.utils.data_loader import load_water_absorption_data
+from src.config import TISSUE_PLOT_CONFIG, TISSUE_PARAMETER_CONFIGS, DEFAULT_TISSUE_PARAMS
 
 # Formula display configuration
 MAIN_FORMULA_SIZE = r"\Large"  # Size for the main formula
 FORMULA_SIZE = r"\large"      # Size for other formulas
 FORMULA_SPACING = 2          # Number of blank lines after formulas
 
+# Parameter colors for consistent styling
+A_COLOR = "#2ca02c"  # Green for scattering scale (a)
+G_COLOR = "#ff7f0e"  # Orange for anisotropy (g)
+W_COLOR = "#9467bd"  # Purple for water content (w)
+MU_S_COLOR = "#1f77b4"  # Blue for scattering coefficient
+MU_A_COLOR = "#d62728"  # Red for absorption coefficient
+Z_COLOR = "#6c63ff"  # Purple for depth (z)
+B_COLOR = "#d62728"  # Red for scattering power (b)
+
 # Plot configuration
-PLOT_CONFIG = {
-    "height": 300,
-    "small_height": 250,  # Increased height for parameter plots
-    "margin": dict(l=20, r=20, t=40, b=20),  # Adjusted margins
-    "small_margin": dict(l=20, r=20, t=40, b=20),
-    "hovermode": 'x unified',
-    "wavelength_range": [800, 2400],
-    "reference_wavelength": 1300,
-    "showlegend": False,  # Hide legend by default
-    "aspect_ratio": 1.2,  # For more square-like appearance
-}
+# PLOT_CONFIG = {
+#     "height": 300,
+#     "small_height": 250,  # Increased height for parameter plots
+#     "margin": dict(l=20, r=20, t=40, b=20),  # Adjusted margins
+#     "small_margin": dict(l=20, r=20, t=40, b=20),
+#     "hovermode": 'x unified',
+#     "wavelength_range": [800, 2400],
+#     "reference_wavelength": 1300,
+#     "showlegend": False,  # Hide legend by default
+#     "aspect_ratio": 1.2,  # For more square-like appearance
+# }
 
 # Default tissue parameters to match the paper
-DEFAULT_TISSUE_PARAMS = {
-    "depth": 1.0,  # 1mm depth as shown in image
-    "water_content": 0.75,  # 75% as specified
-    "g": 0.9,  # Matches paper
-    "a": 1.1,  # 1.1 mm^-1 as specified
-    "b": 1.37,  # Matches paper
-    "absorption_threshold": 50,  # Percentage threshold for shading
-}
+# DEFAULT_TISSUE_PARAMS = {
+#     "depth": 1.0,  # 1mm depth as shown in image
+#     "water_content": 0.75,  # 75% as specified
+#     "g": 0.9,  # Matches paper
+#     "a": 1.1,  # 1.1 mm^-1 as specified
+#     "b": 1.37,  # Matches paper
+#     "absorption_threshold": 50,  # Percentage threshold for shading
+# }
 
 
 def create_coefficient_plot(
@@ -71,9 +81,9 @@ def create_coefficient_plot(
 
     # Add reference point
     ref_idx = np.abs(
-        wavelengths - PLOT_CONFIG["reference_wavelength"]).argmin()
+        wavelengths - TISSUE_PLOT_CONFIG["reference_wavelength"]).argmin()
     fig.add_trace(go.Scatter(
-        x=[PLOT_CONFIG["reference_wavelength"]],
+        x=[TISSUE_PLOT_CONFIG["reference_wavelength"]],
         y=[y_values[ref_idx]],
         mode='markers',
         showlegend=False,
@@ -85,9 +95,9 @@ def create_coefficient_plot(
         title=title,
         xaxis_title="Wavelength (nm)",
         yaxis_title=f"{title} (mm⁻¹)",
-        height=PLOT_CONFIG["height"],
-        margin=PLOT_CONFIG["margin"],
-        hovermode=PLOT_CONFIG["hovermode"],
+        height=TISSUE_PLOT_CONFIG["height"],
+        margin=TISSUE_PLOT_CONFIG["margin"],
+        hovermode=TISSUE_PLOT_CONFIG["hovermode"],
         showlegend=False
     )
 
@@ -139,12 +149,13 @@ def create_parameter_relationship_plot(
         ),
         xaxis_title=param_name,
         yaxis_title="Coefficient (mm⁻¹)",
-        height=PLOT_CONFIG["small_height"],
-        margin=PLOT_CONFIG["small_margin"],
+        height=TISSUE_PLOT_CONFIG["small_height"],
+        margin=TISSUE_PLOT_CONFIG["small_margin"],
         hovermode='x unified',
         showlegend=False,
         # Make plot more square-like
-        width=PLOT_CONFIG["small_height"] * PLOT_CONFIG["aspect_ratio"]
+        width=TISSUE_PLOT_CONFIG["small_height"] *
+        TISSUE_PLOT_CONFIG["aspect_ratio"]
     )
 
     return fig
@@ -203,6 +214,11 @@ def render_parameter_control_with_popover(
     return param
 
 
+def render_tissue_parameter_controls(params, ref_wavelength=None):
+    """No longer renders any controls; all are in dashboard. Returns None."""
+    return None
+
+
 def render_scattering_section(col, params) -> tuple[float, float, float]:
     """
     Render the scattering properties section.
@@ -220,7 +236,8 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
 
     with plot_col:
         # Main scattering plot
-        wavelengths = np.linspace(*PLOT_CONFIG["wavelength_range"], 1000)
+        wavelengths = np.linspace(
+            *TISSUE_PLOT_CONFIG["wavelength_range"], 1000)
         mus_prime = params['a'] * (wavelengths / 500) ** (-params['b'])
         mus = mus_prime / (1 - params['g'])
 
@@ -247,92 +264,7 @@ def render_scattering_section(col, params) -> tuple[float, float, float]:
         st.latex("\\begin{align*}" + scattering_formula + "\\end{align*}")
 
     with controls_col:
-        st.markdown("### Parameter Controls")
-
-        # Column 1: Anisotropy
-        g = render_parameter_control_with_popover(
-            label="Anisotropy (g)",
-            param_type="slider",
-            value=params["g"],
-            min_value=0.0,
-            max_value=1.0,
-            step=0.05,
-            help_text="Controls directional scattering: g=0 (isotropic) to g=1 (forward only)",
-            popover_title="📊 Anisotropy Impact",
-            popover_help="Click to see how anisotropy affects scattering",
-            popover_values=np.linspace(0.1, 0.99, 100),
-            popover_coefficients=params['a'] /
-            (1 - np.linspace(0.1, 0.99, 100)),
-            popover_param_name="Anisotropy",
-            popover_current_value=params["g"],
-            popover_line_color='blue',
-            popover_formula=r"\begin{align*}\mu_s &= \frac{\mu_s'}{1-g} \\ &= \frac{a}{1-\color{red}{" +
-            f"{params['g']:.2f}" + "}}\end{align*}",
-            popover_markdown="""
-                - Higher values → more forward scattering
-                - Lower values → more uniform scattering
-                - Brain tissue typically ≈ 0.9
-
-                *g represents the average cosine of the scattering angle*
-            """,
-            is_slider=True
-        )
-
-        # Column 2: Scattering power (b)
-        b = render_parameter_control_with_popover(
-            label="Scattering Power (b)",
-            param_type="number_input",
-            value=params["b"],
-            min_value=0.5,
-            max_value=2.0,
-            step=0.05,
-            help_text="Wavelength dependence (≈1.37 for brain tissue)",
-            popover_title="📈 Wavelength Dependence Impact",
-            popover_help="Click to see how scattering power affects wavelength dependence",
-            popover_values=np.linspace(0.5, 2.0, 100),
-            popover_coefficients=params['a'] * (PLOT_CONFIG["reference_wavelength"] /
-                                                500) ** (-np.linspace(0.5, 2.0, 100)) / (1 - params['g']),
-            popover_param_name="Scattering Power (b)",
-            popover_current_value=params["b"],
-            popover_line_color='blue',
-            popover_formula=r"\begin{align*}\mu_s' &= a \cdot \left(\frac{\lambda}{500}\right)^{-b} \\ &= a \cdot \left(\frac{\lambda}{500}\right)^{-\color{red}{" +
-            f"{params['b']:.2f}" + "}}\end{align*}",
-            popover_markdown="""
-                - Controls wavelength dependence
-                - Higher b → stronger λ dependence
-                - Brain tissue b ≈ 1.37
-            """,
-            is_slider=False
-        )
-
-        # Column 3: Scattering scale (a)
-        a = render_parameter_control_with_popover(
-            label="Scattering Scale (a)",
-            param_type="number_input",
-            value=params["a"],
-            min_value=0.5,
-            max_value=2.0,
-            step=0.1,
-            help_text="Scattering amplitude [mm⁻¹]",
-            popover_title="📉 Scattering Amplitude Impact",
-            popover_help="Click to see how scattering scale affects overall scattering",
-            popover_values=np.linspace(0.5, 2.0, 100),
-            popover_coefficients=np.linspace(0.5, 2.0, 100) *
-            (PLOT_CONFIG["reference_wavelength"] /
-             500) ** (-params['b']) / (1 - params['g']),
-            popover_param_name="Scattering Scale (a)",
-            popover_current_value=params["a"],
-            popover_line_color='blue',
-            popover_formula=r"\begin{align*}\mu_s &= a \cdot \text{(wavelength term)} \\ &= \color{red}{" +
-            f"{params['a']:.2f}" +
-            "}\text{ mm}^{-1} \cdot \text{(wavelength term)}\end{align*}",
-            popover_markdown="""
-                - Controls overall scattering strength
-                - Higher a → more scattering
-                - Brain tissue a ≈ 1.1 mm⁻¹
-            """,
-            is_slider=False
-        )
+        g, b, a = render_tissue_parameter_controls(params)
 
     return g, b, a
 
@@ -355,7 +287,8 @@ def render_absorption_section(col, params) -> float:
     with plot_col:
         # Main absorption plot
         water_data = load_water_absorption_data()
-        wavelengths = np.linspace(*PLOT_CONFIG["wavelength_range"], 1000)
+        wavelengths = np.linspace(
+            *TISSUE_PLOT_CONFIG["wavelength_range"], 1000)
         mua = np.interp(
             wavelengths, water_data["wavelength"], water_data["absorption"])
         mua = mua * params['water_content'] / 10
@@ -372,238 +305,88 @@ def render_absorption_section(col, params) -> float:
         # Absorption formula below the plot
         st.markdown("#### Absorption Formula")
         absorption_formula = (
-            f"{FORMULA_SIZE} \\mu_a(\\lambda) &= \\mu_a^{{\\lambda}} \\cdot w \\\\" + "\n"
-            f"                                &= \\mu_a^{{\\lambda}} \\cdot \\color{{red}}{{{params['water_content']:.2f}}}"
+            f"{FORMULA_SIZE} \\mu_a(\\lambda) &= \\mu_a^{{\\lambda}} \\cdot w \\" + "\n"
+            f"                                &= \\mu_a^{{\\lambda}} \\cdot \\color{{#d62728}}{{{params['water_content']:.2f}}}"
         )
         st.latex("\\begin{align*}" + absorption_formula + "\\end{align*}")
 
-    with controls_col:
-        st.markdown("### Parameter Controls")
         # Water content is now managed in the dashboard; just display the value
-        st.markdown(f"**Water Content:** {params['water_content']:.2f}")
 
 
-def render_math_view():
-    """Render the tissue penetration controls with improved layout."""
-    # Initialize tissue parameters in session state if not present
-    st.session_state.setdefault("tissue_params", DEFAULT_TISSUE_PARAMS.copy())
-    params = st.session_state.tissue_params
-    a = params["a"]
-    b = params["b"]
-    g = params["g"]
-    water_content = params["water_content"]
+# --- POPUP RENDERERS FOR MATHEMATICAL MODEL ---
+def render_scattering_popover(a, g, b, ref_wavelength):
+    mus_scattering = a * (ref_wavelength / 500) ** (-b) / (1 - g)
+    with st.popover("Scattering Coefficient (μₛ)", use_container_width=True):
+        st.markdown('<div style="text-align: center;">',
+                    unsafe_allow_html=True)
+        st.subheader("Scattering Coefficient (μₛ)")
+        st.markdown(
+            f"Describes how light is scattered in tissue. Depends on wavelength (λ), "
+            f"scattering scale $\\color{{{A_COLOR}}}{{a}}$, anisotropy $\\color{{{G_COLOR}}}{{g}}$, and power $\\color{{{B_COLOR}}}{{b}}$.",
+            unsafe_allow_html=True
+        )
+        scattering_formula = rf"""
+\mu_s(\lambda) = \frac{{\color{{{A_COLOR}}}{{a}}}}{{1-\color{{{G_COLOR}}}{{g}}}}
+\left(\frac{{\lambda}}{{500}}\right)^{{-\color{{{B_COLOR}}}{{b}}}}
+\\[1em]
+\mu_s({ref_wavelength}) = \color{{{MU_S_COLOR}}}{{{mus_scattering:.3f}}} = \frac{{\color{{{A_COLOR}}}{{{a:.2f}}}}}{{1-\color{{{G_COLOR}}}{{{g:.2f}}}}}
+\left(\frac{{{ref_wavelength}}}{{500}}\right)^{{-\color{{{B_COLOR}}}{{{b:.2f}}}}}
+"""
+        st.latex(scattering_formula)
+        st.markdown(
+            f'<span style="font-size: 0.8em; color: #888;">*$\\color{{{A_COLOR}}}{{a}}$: scattering scale, $\\color{{{G_COLOR}}}{{g}}$: anisotropy, $\\color{{{B_COLOR}}}{{b}}$: scattering power*</span>',
+            unsafe_allow_html=True
+        )
+        add_formula_spacing()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Get global parameters from app.py session state
-    wavelength_range = st.session_state.global_params.get(
-        "wavelength_range", (800, 2400))
-    ref_wavelength = st.session_state.global_params.get(
-        "normalization_wavelength", 1300)
 
-    # Update plot config with global settings
-    PLOT_CONFIG["wavelength_range"] = wavelength_range
-    PLOT_CONFIG["reference_wavelength"] = ref_wavelength
+def render_absorption_popover(water_content, ref_wavelength):
+    water_data = load_water_absorption_data()
+    mua_lambda = float(
+        np.interp(ref_wavelength, water_data["wavelength"], water_data["absorption"]))
+    with st.popover("Absorption Coefficient (μₐ)", use_container_width=True):
+        st.markdown('<div style="text-align: center;">',
+                    unsafe_allow_html=True)
+        st.subheader("Absorption Coefficient (μₐ)")
+        st.markdown(
+            f"Describes how light is absorbed in tissue, primarily by water content $\\color{{{W_COLOR}}}{{w}}$. "
+            f"Data is interpolated from water absorption tables.",
+            unsafe_allow_html=True
+        )
+        absorption_formula = rf"""
+\mu_a(\lambda) = \mu_a^{{\lambda}} \cdot w
+\\[1em]
+\mu_a({ref_wavelength}) = \color{{#888}}{{{mua_lambda:.3f}}} \cdot \color{{{W_COLOR}}}{{{water_content:.2f}}}
+"""
+        st.latex(absorption_formula)
+        st.markdown(
+            f'<span style="font-size: 0.8em; color: #888;">*$\\color{{{W_COLOR}}}{{w}}$: water content, $\\color{{#888}}{{\\mu_a^\\lambda}}$: water absorption at $\\lambda$*</span>',
+            unsafe_allow_html=True
+        )
+        add_formula_spacing()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Create main container for the math view
-    main_container = st.container()
 
-    with main_container:
-        depth = params.get("depth", 1.0)
-        # Place everything inside the Mathematical Model expander for a unified, beautiful layout
-        DIALOG_COLOR = "#6c63ff"  # Color for depth, matching dashboard dialog button
-
-        # Centralized Parameter Controls section at the top, outside expander
-        st.subheader("Parameter Controls")
-        param_col1, param_col2, param_col3, param_col4 = st.columns(4)
-        with param_col1:
-            g = render_parameter_control_with_popover(
-                label="Anisotropy (g)",
-                param_type="slider",
-                value=params["g"],
-                min_value=0.0,
-                max_value=1.0,
-                step=0.05,
-                help_text="Controls directional scattering: g=0 (isotropic) to g=1 (forward only)",
-                popover_title="📊 Anisotropy Impact",
-                popover_help="Click to see how anisotropy affects scattering",
-                popover_values=np.linspace(0.1, 0.99, 100),
-                popover_coefficients=params['a'] /
-                (1 - np.linspace(0.1, 0.99, 100)),
-                popover_param_name="Anisotropy",
-                popover_current_value=params["g"],
-                popover_line_color='blue',
-                popover_formula=r"\begin{align*}\mu_s &= \frac{\mu_s'}{1-g} \\ &= \frac{a}{1-\color{red}{" +
-                f"{params['g']:.2f}" + "}}\end{align*}",
-                popover_markdown="""
-                    - Higher values → more forward scattering
-                    - Lower values → more uniform scattering
-                    - Brain tissue typically ≈ 0.9
-
-                    *g represents the average cosine of the scattering angle*
-                """,
-                is_slider=True
-            )
-
-        with param_col2:
-            b = render_parameter_control_with_popover(
-                label="Scattering Power (b)",
-                param_type="number_input",
-                value=params["b"],
-                min_value=0.5,
-                max_value=2.0,
-                step=0.05,
-                help_text="Wavelength dependence (≈1.37 for brain tissue)",
-                popover_title="📈 Wavelength Dependence Impact",
-                popover_help="Click to see how scattering power affects wavelength dependence",
-                popover_values=np.linspace(0.5, 2.0, 100),
-                popover_coefficients=params['a'] * (ref_wavelength /
-                                                    500) ** (-np.linspace(0.5, 2.0, 100)) / (1 - params['g']),
-                popover_param_name="Scattering Power (b)",
-                popover_current_value=params["b"],
-                popover_line_color='blue',
-                popover_formula=r"\begin{align*}\mu_s' &= a \cdot \left(\frac{\lambda}{500}\right)^{-b} \\ &= a \cdot \left(\frac{\lambda}{500}\right)^{-\color{red}{" +
-                f"{params['b']:.2f}" + "}}\end{align*}",
-                popover_markdown="""
-                    - Controls wavelength dependence
-                    - Higher b → stronger λ dependence
-                    - Brain tissue b ≈ 1.37
-                """,
-                is_slider=False
-            )
-
-        with param_col3:
-            a = render_parameter_control_with_popover(
-                label="Scattering Scale (a)",
-                param_type="number_input",
-                value=params["a"],
-                min_value=0.5,
-                max_value=2.0,
-                step=0.1,
-                help_text="Scattering amplitude [mm⁻¹]",
-                popover_title="📉 Scattering Amplitude Impact",
-                popover_help="Click to see how scattering scale affects overall scattering",
-                popover_values=np.linspace(0.5, 2.0, 100),
-                popover_coefficients=np.linspace(0.5, 2.0, 100) *
-                (ref_wavelength /
-                 500) ** (-params['b']) / (1 - params['g']),
-                popover_param_name="Scattering Scale (a)",
-                popover_current_value=params["a"],
-                popover_line_color='blue',
-                popover_formula=r"\begin{align*}\mu_s &= a \cdot \text{(wavelength term)} \\ &= \color{red}{" +
-                f"{params['a']:.2f}" +
-                "}\text{ mm}^{-1} \cdot \text{(wavelength term)}\end{align*}",
-                popover_markdown="""
-                    - Controls overall scattering strength
-                    - Higher a → more scattering
-                    - Brain tissue a ≈ 1.1 mm⁻¹
-                """,
-                is_slider=False
-            )
-
-        with param_col4:
-            st.markdown(
-                f"**Water Content:** {water_content:.2f}")
-            with st.popover("💧 Water Content Impact", help="Click to see how water content affects absorption"):
-                w_values = np.linspace(0, 1, 100)
-                water_data = load_water_absorption_data()
-                base_absorption = np.interp(
-                    ref_wavelength, water_data["wavelength"], water_data["absorption"]) / 10
-                mua_w = base_absorption * w_values
-                w_fig = create_parameter_relationship_plot(
-                    w_values, mua_w, "Water Content", water_content, 'red')
-                st.plotly_chart(w_fig, use_container_width=True)
-                st.markdown("**Impact of Water Content:**")
-                st.latex(r"\begin{align*}\mu_a &= \mu_a^{\lambda} \cdot w \\ &= \mu_a^{\lambda} \cdot \color{red}{" +
-                         f"{water_content:.2f}" + "}\end{align*}")
-                st.markdown(
-                    "- Controls absorption strength\n- Linear relationship with absorption\n- Brain tissue ≈ 75% water\n- Major peaks at 1450nm and 1950nm")
-
-        with st.expander("📐 Mathematical Model", expanded=True):
-
-            # Columns for scattering and absorption
-            scattering_col, absorption_col = st.columns(2)
-
-            # Section 1: Prominent explanation of Scattering Coefficient
-            with scattering_col:
-                st.subheader("Scattering Coefficient (μₛ)")
-                st.markdown(r"""
-                    The scattering coefficient describes how light is scattered in tissue. 
-                    It depends on wavelength (λ), anisotropy (g), scattering scale (a), and scattering power (b).
-                    
-                    **Formula:**
-                """)
-                scattering_formula = (
-                    f"{FORMULA_SIZE} \\mu_s(\\lambda) &= \\frac{{a}}{{1-g}} \\cdot "
-                    r"\left(\frac{\lambda}{500}\right)^{-b} \\" +
-                    "\n"  # Add line break
-                    f"&= \\frac{{\\color{{red}}{{{a:.2f}}}}}"
-                    f"{{1-\\color{{red}}{{{g:.2f}}}}} \\cdot "
-                    r"\left(\frac{\lambda}{500}\right)^{" +
-                    f"\\color{{red}}{{-{b:.2f}}}" + "}"
-                )
-                st.latex("\\begin{align*}" +
-                         scattering_formula + "\\end{align*}")
-                # Recalculate with updated values
-                mus_scattering = a * (ref_wavelength / 500) ** (-b) / (1 - g)
-                st.markdown(
-                    f"At normalized wavelength {ref_wavelength} nm: μₛ = {mus_scattering:.3f} mm⁻¹")
-                add_formula_spacing()
-
-            # Section 2: Prominent explanation of Absorption Coefficient
-            with absorption_col:
-                st.subheader("Absorption Coefficient (μₐ)")
-                st.markdown(r"""
-                    The absorption coefficient describes how light is absorbed in tissue, 
-                    primarily by water content (w). Data is interpolated from water absorption tables.
-                    
-                    **Formula:**
-                """)
-                absorption_formula = (
-                    f"{FORMULA_SIZE} \\mu_a(\\lambda) &= \\mu_a^{{\\lambda}} \\cdot w \\\\" + "\n"
-                    f"                                &= \\mu_a^{{\\lambda}} \\cdot \\color{{red}}{{{water_content:.2f}}}"
-                )
-                st.latex("\\begin{align*}" +
-                         absorption_formula + "\\end{align*}")
-
-                water_data = load_water_absorption_data()
-                mua = np.interp(
-                    ref_wavelength, water_data["wavelength"], water_data["absorption"]) * water_content / 10
-                st.markdown(
-                    f"At normalized wavelength {ref_wavelength} nm: μₐ = {mua:.3f} mm⁻¹")
-                add_formula_spacing()
-
-            # Section 3: Transmission explanation (full width)
-            st.subheader("Transmission (T)")
-            st.markdown(r"""
-                Transmission combines scattering and absorption to model light penetration at depth z.
-            """)
-            depth_str = '{:.1f}'.format(depth)
-            main_formula_with_depth = (
-                MAIN_FORMULA_SIZE +
-                " T(\\lambda, z) &= e^{{-(\\color{#1f77b4}{{\\mu_s}}(\\lambda) + \\color{#d62728}{{\\mu_a}}(\\lambda))z}} \\" + "\n"
-                "&= e^{{-(\\color{#1f77b4}{{\\mu_s}}(\\lambda) + \\color{#d62728}{{\\mu_a}}(\\lambda)) \\cdot \\color{" +
-                DIALOG_COLOR + "}{" + depth_str + "}}} \\" + "\n"
-                "&= e^{-\\mu_{\\text{total}}(\\lambda) \\cdot z}"
-            )
-            st.latex("\\begin{align*}" +
-                     main_formula_with_depth + "\\end{align*}")
-
-            # Integrated variable descriptions with color explanations
-            st.markdown(r"""
-                where:
-                - T(λ,z) is the transmission at wavelength λ and depth z
-                - $ \color{#1f77b4}{\mu_s}(\lambda) $ is the scattering coefficient
-                - $ \color{#d62728}{\mu_a}(\lambda) $ is the absorption coefficient
-                - μ_total = μₛ + μₐ is the total attenuation coefficient
-                - The $ \color{%s}{z} $ depth value is set in the dashboard dialog
-            """ % DIALOG_COLOR)
-    # Update session state
-    try:
-        st.session_state.tissue_params.update({
-            "water_content": water_content,  # No change, as it's managed elsewhere
-            "g": g,
-            "a": a,
-            "b": b,
-            "depth": depth,
-        })
-    except (ValueError, TypeError, AttributeError) as e:
-        st.error(f"Error updating parameters: {str(e)}")
+def render_transmission_popover(mus_scattering, mua_lambda, water_content, ref_wavelength, depth):
+    depth_str = '{:.1f}'.format(depth)
+    with st.popover("Transmission (T)", use_container_width=True):
+        st.markdown('<div style="text-align: center;">',
+                    unsafe_allow_html=True)
+        st.subheader("Transmission (T)")
+        st.markdown(
+            f"Transmission combines scattering and absorption to model light penetration at depth $\\color{{{Z_COLOR}}}{{z}}$. The formula below shows how the total attenuation depends on the scattering and absorption coefficients and the depth.",
+            unsafe_allow_html=True
+        )
+        transmission_formula = rf"""
+T(\lambda, z) = e^{{-(\color{{{MU_S_COLOR}}}{{\mu_s}}(\lambda) + \color{{{MU_A_COLOR}}}{{\mu_a}}(\lambda)) \color{{{Z_COLOR}}}{{z}}}}
+\\[1em]
+T({ref_wavelength}, {depth_str}) = e^{{-({mus_scattering:.3f} + \color{{#888}}{{{mua_lambda:.3f}}} \cdot \color{{{W_COLOR}}}{{{water_content:.2f}}}) \cdot \color{{{Z_COLOR}}}{{{depth_str}}}}}
+"""
+        st.latex(transmission_formula)
+        st.markdown(
+            f'<span style="font-size: 0.8em; color: #888;">*$\\color{{{MU_S_COLOR}}}{{\\mu_s}}$: scattering, $\\color{{{MU_A_COLOR}}}{{\\mu_a}}$: absorption, $\\color{{{Z_COLOR}}}{{z}}$: depth, $\\color{{#888}}{{\\mu_a^\\lambda}}$: water absorption at $\\lambda$*</span>',
+            unsafe_allow_html=True
+        )
+        add_formula_spacing()
+        st.markdown('</div>', unsafe_allow_html=True)

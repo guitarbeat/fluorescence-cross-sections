@@ -49,9 +49,11 @@ DARK_THEME = {
     "font_color": "#FFFFFF"
 }
 
+
 def get_theme_colors():
     """Get theme-aware colors based on Streamlit theme"""
     return DARK_THEME if st.session_state.get("theme") == "dark" else LIGHT_THEME
+
 
 # Style configuration
 STYLE_CONFIG = {
@@ -94,12 +96,13 @@ FLOATING_ELEMENT_THEME = {
     "borderwidth": 1,
 }
 
+
 def get_common_colorbar_config(title: str = "Normalized<br>Photon<br>Fraction",
-                              x: float = 0.98,
-                              y: float = 0.15,
-                              len: float = 0.3,
-                              tickvals: list = None,
-                              ticktext: list = None) -> dict:
+                               x: float = 0.98,
+                               y: float = 0.15,
+                               len: float = 0.3,
+                               tickvals: list = None,
+                               ticktext: list = None) -> dict:
     """Get common colorbar configuration to eliminate duplicate code."""
     config = dict(
         title=title,
@@ -121,6 +124,7 @@ def get_common_colorbar_config(title: str = "Normalized<br>Photon<br>Fraction",
         config["ticktext"] = ticktext
 
     return config
+
 
 # UI configuration
 PLOT_CONFIG = {
@@ -170,7 +174,8 @@ FLUOROPHORE_COLUMN_CONFIG = {
     },
 }
 
-FLUOROPHORE_COLUMN_ORDER = ["Visible", "Name", "Wavelength", "Cross_Section", "Reference"]
+FLUOROPHORE_COLUMN_ORDER = ["Visible", "Name",
+                            "Wavelength", "Cross_Section", "Reference"]
 
 # Parameter configurations
 PARAMETER_CONFIGS = {
@@ -205,6 +210,8 @@ UI_TEXTS = {
 }
 
 # Plot configuration classes
+
+
 @dataclass
 class CrossSectionPlotConfig:
     """Configuration for two-photon cross-section plots."""
@@ -217,7 +224,7 @@ class CrossSectionPlotConfig:
     heatmap_extension_factor: float = 3.0
     heatmap_opacity: float = 0.6
     marker_size: int = 12
-    
+
     heatmap_colorscale: List[List] = field(
         default_factory=lambda: [
             [0, "rgba(255, 180, 180, 0.5)"],
@@ -226,7 +233,7 @@ class CrossSectionPlotConfig:
             [1, "rgba(180, 180, 255, 0.5)"],
         ]
     )
-    
+
     default_marker_styles: Dict[str, Tuple[str, str]] = field(
         default_factory=lambda: {
             "Dana et al. (2016)": ("circle", "#1f77b4"),
@@ -236,6 +243,38 @@ class CrossSectionPlotConfig:
             "Xu et al. (1996)": ("triangle-down", "#7f7f7f")
         }
     )
+
+    @staticmethod
+    def get_xaxis_config(wavelength_range, font):
+        return dict(
+            title="Wavelength (nm)",
+            range=wavelength_range,
+            showgrid=True,
+            gridcolor="rgba(128, 128, 128, 0.15)",
+            zeroline=SHARED_PLOT_CONFIG["zeroline"],
+            titlefont=font,
+            tickfont=font,
+            linecolor="rgba(128, 128, 128, 0.4)",
+            constrain="domain",
+        )
+
+    @staticmethod
+    def get_yaxis_config(cross_section_range, font):
+        return dict(
+            title="Peak 2PA Cross Section (GM)",
+            type="log",
+            range=cross_section_range,
+            showgrid=True,
+            gridcolor="rgba(128, 128, 128, 0.15)",
+            zeroline=SHARED_PLOT_CONFIG["zeroline"],
+            titlefont=font,
+            tickfont=font,
+            linecolor="rgba(128, 128, 128, 0.4)",
+            dtick=0.5,
+            scaleanchor="x",
+            scaleratio=1,
+            constrain="domain",
+        )
 
     def get_extended_wavelength_range(self, current_range: Tuple[float, float]) -> Tuple[float, float]:
         """Calculate extended wavelength range for heatmap"""
@@ -253,32 +292,8 @@ class CrossSectionPlotConfig:
                 text="Two-Photon Cross Sections",
                 font=dict(size=16)
             ),
-            "xaxis": dict(
-                title="Wavelength (nm)",
-                range=self.wavelength_range,
-                showgrid=True,
-                gridcolor="rgba(128, 128, 128, 0.15)",
-                zeroline=SHARED_PLOT_CONFIG["zeroline"],
-                titlefont=self.font,
-                tickfont=self.font,
-                linecolor="rgba(128, 128, 128, 0.4)",
-                constrain="domain",
-            ),
-            "yaxis": dict(
-                title="Peak 2PA Cross Section (GM)",
-                type="log",
-                range=self.cross_section_range,
-                showgrid=True,
-                gridcolor="rgba(128, 128, 128, 0.15)",
-                zeroline=SHARED_PLOT_CONFIG["zeroline"],
-                titlefont=self.font,
-                tickfont=self.font,
-                linecolor="rgba(128, 128, 128, 0.4)",
-                dtick=0.5,
-                scaleanchor="x",
-                scaleratio=1,
-                constrain="domain",
-            ),
+            "xaxis": self.get_xaxis_config(self.wavelength_range, self.font),
+            "yaxis": self.get_yaxis_config(self.cross_section_range, self.font),
             "margin": self.margin,
             "autosize": True,
             "showlegend": True,
@@ -288,6 +303,7 @@ class CrossSectionPlotConfig:
             "height": self.width,
         }
 
+
 @dataclass
 class TissuePlotConfig:
     """Configuration for tissue penetration plots."""
@@ -296,7 +312,7 @@ class TissuePlotConfig:
     margin: dict = field(default_factory=lambda: SHARED_PLOT_CONFIG["margin"])
     font: dict = field(default_factory=lambda: SHARED_PLOT_CONFIG["font"])
     wavelength_range: Tuple[float, float] = (700, 2400)
-    
+
     photon_fraction_line: dict = field(
         default_factory=lambda: dict(color="blue", width=2)
     )
@@ -304,17 +320,36 @@ class TissuePlotConfig:
         default_factory=lambda: dict(color="red", width=2)
     )
 
-# Default parameters
+
+# Tissue modeling plot configuration
+TISSUE_PLOT_CONFIG = {
+    "height": 300,
+    "small_height": 250,
+    "margin": dict(l=20, r=20, t=40, b=20),
+    "small_margin": dict(l=20, r=20, t=40, b=20),
+    "hovermode": 'x unified',
+    "wavelength_range": [800, 2400],
+    "reference_wavelength": 1300,
+    "showlegend": False,
+    "aspect_ratio": 1.2,
+}
+
+TISSUE_PARAMETER_CONFIGS = {
+    "g": {"min_value": 0.0, "max_value": 1.0, "step": 0.05, "default": 0.9},
+    "a": {"min_value": 0.5, "max_value": 2.0, "step": 0.1, "default": 1.1},
+    "b": {"min_value": 0.5, "max_value": 2.0, "step": 0.05, "default": 1.37},
+    "water_content": {"min_value": 0.0, "max_value": 1.0, "step": 0.05, "default": 0.75},
+    "depth": {"min_value": 0.1, "max_value": 2.0, "step": 0.01, "default": 1.0},
+    "absorption_threshold": {"default": 50},
+}
+
+DEFAULT_TISSUE_PARAMS = {
+    k: v["default"] for k, v in TISSUE_PARAMETER_CONFIGS.items() if "default" in v
+}
+
+# Default global parameters
 DEFAULT_GLOBAL_PARAMS = {
     "wavelength_range": SHARED_PLOT_CONFIG["wavelength_range"],
     "normalization_wavelength": 1300,
     "absorption_threshold": 50,
-}
-
-DEFAULT_TISSUE_PARAMS = {
-    "depth": 1.0,
-    "water_content": 0.75,
-    "g": 0.9,  # anisotropy parameter
-    "b": 1.37,  # scattering_power
-    "a": 1.0,   # scattering_scale
 }
